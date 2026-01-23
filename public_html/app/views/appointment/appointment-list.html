@@ -1,0 +1,290 @@
+<!--
+
+ ============ APPOINTMENT LIST VIEW ============ 
+<script type="text/ng-template" id="appointment-list.html">
+<div class="container-fluid mt-4">
+    <h2 class="fw-bold mb-4">
+        <i class="fas fa-calendar-alt text-primary"></i> Appointment List
+    </h2>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Appt ID</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="appt in appointments">
+                            <td><span class="badge bg-primary">{{appt.tokenNumber}}</span></td>
+                            <td>{{appt.appointmentId}}</td>
+                            <td>{{appt.patientName}}</td>
+                            <td>{{appt.doctorName}}</td>
+                            <td>{{appt.appointmentDate}}</td>
+                            <td>{{appt.appointmentTime.hour}}:{{appt.appointmentTime.minute}}</td>
+                            <td>
+                                <span class="badge" ng-class="{
+                                    'bg-success': appt.status === 'Booked',
+                                    'bg-primary': appt.status === 'Checked-In',
+                                    'bg-secondary': appt.status === 'Completed'
+                                }">{{appt.status}}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-success" ng-if="appt.status === 'Booked'" 
+                                        ng-click="checkinAppointment(appt.appointmentId)">
+                                    <i class="fas fa-check"></i> Check-in
+                                </button>
+                                <button class="btn btn-sm btn-danger" ng-if="appt.status === 'Booked'" 
+                                        ng-click="cancelAppointment(appt.appointmentId)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>-->
+
+
+<!-- ============================================
+     APPOINTMENT LIST VIEW - COMPLETE & FIXED
+     ============================================ -->
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold">
+                        <i class="fas fa-calendar-alt text-primary"></i> Appointment List
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Appointments</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button class="btn btn-primary" ng-click="loadAppointments()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <a href="#!/appointment/book" class="btn btn-success ms-2">
+                        <i class="fas fa-plus"></i> Book New
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">Filter by Status</label>
+                    <select class="form-select" ng-model="filterStatus" ng-change="filterAppointments()">
+                        <option value="">All Status</option>
+                        <option value="SCHEDULED">Scheduled</option>
+                        <option value="CHECKED_IN">Checked In</option>
+                        <option value="IN_CONSULTATION">In Consultation</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="CANCELLED">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" 
+                           ng-model="searchQuery" 
+                           placeholder="Patient name or PIN...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" 
+                           ng-model="filterDate"
+                           ng-change="loadAppointmentsByDate()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-secondary w-100" ng-click="clearFilters()">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div ng-if="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Loading appointments...</p>
+    </div>
+
+    <!-- Appointments Table -->
+    <div class="card" ng-if="!loading">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> 
+                    Appointments ({{filteredAppointments.length}})
+                </h5>
+                <span class="badge bg-light text-dark">
+                    Total: {{appointments.length}}
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- No Data -->
+            <div ng-if="filteredAppointments.length === 0" class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <h5>No appointments found</h5>
+                <p class="mb-0">Try adjusting your filters or book a new appointment.</p>
+            </div>
+
+            <!-- Table -->
+            <div ng-if="filteredAppointments.length > 0" class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Token</th>
+                            <th>Appt ID</th>
+                            <th>Patient Name</th>
+                            <th>PIN</th>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>CVR</th>
+                            <th>Status</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="appt in filteredAppointments | filter:searchQuery | orderBy:'-appointmentDate'"
+                            ng-class="{
+                                'table-warning': appt.status === 'CHECKED_IN',
+                                'table-primary': appt.status === 'IN_CONSULTATION',
+                                'table-success': appt.status === 'COMPLETED'
+                            }">
+                            <td>
+                                <span class="badge bg-dark fs-6">{{appt.tokenNumber}}</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{appt.appointmentId}}</small>
+                            </td>
+                            <td>
+                                <strong>{{appt.patientName}}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{appt.pinNumber}}</span>
+                            </td>
+                            <td>
+                                {{appt.doctorName}}
+                            </td>
+                            <td>
+                                {{appt.appointmentDate | date:'dd-MM-yyyy'}}
+                            </td>
+                            <td>
+                                {{formatTime(appt.appointmentTime)}}
+                            </td>
+                            <td>
+                                <span ng-if="appt.cvrNumber" class="badge bg-success">
+                                    {{appt.cvrNumber}}
+                                </span>
+                                <span ng-if="!appt.cvrNumber" class="text-muted small">
+                                    Not created
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge" ng-class="{
+                                    'bg-secondary': appt.status === 'SCHEDULED',
+                                    'bg-warning': appt.status === 'CHECKED_IN',
+                                    'bg-primary': appt.status === 'IN_CONSULTATION',
+                                    'bg-success': appt.status === 'COMPLETED',
+                                    'bg-danger': appt.status === 'CANCELLED'
+                                }">
+                                    {{appt.status}}
+                                </span>
+                            </td>
+                            <td>
+                                <small>{{appt.appointmentType}}</small>
+                            </td>
+                            <td>
+                                <!-- Check-in Button (Only for SCHEDULED) -->
+                                <button class="btn btn-sm btn-success me-1" 
+                                        ng-if="appt.status === 'SCHEDULED'" 
+                                        ng-click="checkinAppointment(appt)"
+                                        title="Check-in Patient">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                
+                                <!-- View Patient -->
+                                <a class="btn btn-sm btn-outline-info me-1" 
+                                   href="#!/patient/details/{{appt.pinNumber}}"
+                                   title="View Patient">
+                                    <i class="fas fa-user"></i>
+                                </a>
+                                
+                                <!-- View CVR (if exists) -->
+                                <a class="btn btn-sm btn-outline-success me-1" 
+                                   ng-if="appt.cvrNumber"
+                                   href="#!/cvr/details/{{appt.cvrNumber}}"
+                                   title="View CVR">
+                                    <i class="fas fa-file-medical"></i>
+                                </a>
+                                
+                                <!-- Cancel Button (Only for SCHEDULED) -->
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        ng-if="appt.status === 'SCHEDULED'" 
+                                        ng-click="cancelAppointment(appt)"
+                                        title="Cancel Appointment">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-hover tbody tr {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.table-hover tbody tr:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.badge {
+    font-size: 0.9em;
+    padding: 0.4em 0.8em;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+

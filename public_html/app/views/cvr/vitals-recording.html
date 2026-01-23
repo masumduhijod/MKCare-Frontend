@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!--<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div>TODO write content</div>
+    </body>
+</html>-->  
+
+<!-- ============ VITALS RECORDING VIEW ============ -->
+<!-- File: app/views/cvr/vitals-recording.html -->
+<script type="text/ng-template" id="vitals-recording.html">
+<div class="container-fluid mt-4">
+    <h2 class="fw-bold mb-4">
+        <i class="fas fa-heartbeat text-danger"></i> Record Vitals
+    </h2>
+
+    <!-- CVR Info -->
+    <div ng-if="cvr" class="alert alert-info mb-4">
+        <h6><strong>CVR:</strong> {{cvr.cvrNumber}}</h6>
+        <p class="mb-0"><strong>Patient:</strong> {{cvr.patientName}}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form ng-submit="recordVitals()">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Temperature (°F) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.1" class="form-control" ng-model="vitals.temperatureF" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Blood Pressure <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="vitals.bloodPressure" 
+                               placeholder="120/80" ng-blur="validateBloodPressure()" required>
+                        <small class="text-danger" ng-if="bpError">{{bpError}}</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Pulse Rate (bpm) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" ng-model="vitals.pulseRate" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Respiratory Rate</label>
+                        <input type="number" class="form-control" ng-model="vitals.respiratoryRate">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">SpO2 (%)</label>
+                        <input type="number" step="0.1" class="form-control" ng-model="vitals.spo2Percentage">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Weight (kg)</label>
+                        <input type="number" step="0.1" class="form-control" ng-model="vitals.weightKg" 
+                               ng-change="calculateBMI()">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Height (cm)</label>
+                        <input type="number" step="0.1" class="form-control" ng-model="vitals.heightCm" 
+                               ng-change="calculateBMI()">
+                    </div>
+                    <div class="col-md-4 mb-3" ng-if="bmi">
+                        <label class="form-label">BMI (Calculated)</label>
+                        <input type="text" class="form-control" value="{{bmi}}" readonly>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success btn-lg me-2" ng-disabled="loading">
+                            <i class="fas fa-save"></i> Record Vitals
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-lg" ng-click="cancel()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</script>
+

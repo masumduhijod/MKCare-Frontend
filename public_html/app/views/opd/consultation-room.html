@@ -1,0 +1,254 @@
+<!-- ============================================
+     CONSULTATION ROOM VIEW
+     File: app/views/opd/consultation-room.html
+     ============================================ -->
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Patient Info Panel -->
+        <div class="col-md-3">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user-injured"></i> Patient Info</h5>
+                </div>
+                <div class="card-body" ng-if="patient">
+                    <p><strong>Name:</strong> {{patient.firstName}} {{patient.lastName}}</p>
+                    <p><strong>PIN:</strong> {{patient.pinNumber}}</p>
+                    <p><strong>Age/Gender:</strong> {{patient.age}} / {{patient.gender}}</p>
+                    <p><strong>Contact:</strong> {{patient.contactNumber}}</p>
+                    <p><strong>Blood Group:</strong> {{patient.bloodGroup}}</p>
+                    
+                    <hr>
+                    
+                    <button class="btn btn-sm btn-info w-100 mb-2" 
+                            ng-click="toggleHistory()">
+                        <i class="fas fa-history"></i> 
+                        {{showHistory ? 'Hide' : 'Show'}} History
+                    </button>
+                </div>
+            </div>
+
+            <!-- Patient History Panel -->
+            <div class="card" ng-if="showHistory">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-history"></i> Previous Consultations</h6>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <div ng-if="patientHistory.length === 0" class="alert alert-sm alert-info">
+                        No previous consultations
+                    </div>
+                    
+                    <div ng-repeat="history in patientHistory" class="mb-3 p-2 border-bottom">
+                        <p class="mb-1">
+                            <strong>Date:</strong> {{history.consultationDate | date:'dd-MM-yyyy'}}
+                        </p>
+                        <p class="mb-1"><strong>Diagnosis:</strong> {{history.diagnosis}}</p>
+                        <button class="btn btn-sm btn-outline-primary" 
+                                ng-click="loadPreviousConsultation(history)">
+                            <i class="fas fa-copy"></i> Load Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consultation Form -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="fas fa-stethoscope"></i> Consultation Room</h4>
+                        <div>
+                            <button class="btn btn-outline-secondary btn-sm me-2" 
+                                    ng-click="cancelConsultation()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button class="btn btn-success btn-sm" 
+                                    ng-click="saveConsultation()">
+                                <i class="fas fa-save"></i> Save Consultation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Tab Navigation -->
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link" 
+                               ng-class="{'active': activeTab === 'soap'}"
+                               ng-click="switchTab('soap')"
+                               href="javascript:void(0)">
+                                SOAP Format
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" 
+                               ng-class="{'active': activeTab === 'traditional'}"
+                               ng-click="switchTab('traditional')"
+                               href="javascript:void(0)">
+                                Traditional Format
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- SOAP Format Tab -->
+                    <div ng-show="activeTab === 'soap'">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>S</strong>ubjective <span class="text-danger">*</span></label>
+                                <textarea class="form-control" rows="3" 
+                                          ng-model="consultation.subjective"
+                                          placeholder="Patient's complaints and symptoms..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>O</strong>bjective <span class="text-danger">*</span></label>
+                                <textarea class="form-control" rows="3" 
+                                          ng-model="consultation.objective"
+                                          placeholder="Clinical findings, vitals, examination..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>A</strong>ssessment <span class="text-danger">*</span></label>
+                                <textarea class="form-control" rows="3" 
+                                          ng-model="consultation.assessment"
+                                          placeholder="Diagnosis, differential diagnosis..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>P</strong>lan <span class="text-danger">*</span></label>
+                                <textarea class="form-control" rows="3" 
+                                          ng-model="consultation.plan"
+                                          placeholder="Treatment plan, medications, follow-up..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Traditional Format Tab -->
+                    <div ng-show="activeTab === 'traditional'">
+                        <!-- Quick Templates -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Common Complaints:</label>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-secondary me-1 mb-1" 
+                                            ng-repeat="complaint in templates.commonComplaints"
+                                            ng-click="addTemplate('chiefComplaint', complaint)">
+                                        {{complaint}}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Common Diagnoses:</label>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-secondary me-1 mb-1" 
+                                            ng-repeat="diagnosis in templates.commonDiagnoses"
+                                            ng-click="addTemplate('diagnosis', diagnosis)">
+                                        {{diagnosis}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Chief Complaint <span class="text-danger">*</span></label>
+                                <textarea class="form-control" rows="2" 
+                                          ng-model="consultation.chiefComplaint"
+                                          placeholder="Patient's main complaints..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Present Illness</label>
+                                <textarea class="form-control" rows="2" 
+                                          ng-model="consultation.presentIllness"
+                                          placeholder="History of present illness..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Examination Findings</label>
+                                <textarea class="form-control" rows="2" 
+                                          ng-model="consultation.examinationFindings"
+                                          placeholder="Clinical examination findings..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Diagnosis <span class="text-danger">*</span></label>
+                                <textarea class="form-control" rows="2" 
+                                          ng-model="consultation.diagnosis"
+                                          placeholder="Primary diagnosis..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Treatment Plan</label>
+                                <textarea class="form-control" rows="3" 
+                                          ng-model="consultation.treatmentPlan"
+                                          placeholder="Treatment plan and recommendations..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Follow-up Section (Common for both formats) -->
+                    <hr>
+                    <h5>Follow-up Details</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       ng-model="consultation.followUpRequired"
+                                       id="followUpRequired">
+                                <label class="form-check-label" for="followUpRequired">
+                                    Follow-up Required
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3" ng-if="consultation.followUpRequired">
+                            <label class="form-label">Follow-up Date</label>
+                            <input type="date" class="form-control" 
+                                   ng-model="consultation.followUpDate">
+                        </div>
+                        
+                        <div class="col-md-12 mb-3" ng-if="consultation.followUpRequired">
+                            <label class="form-label">Follow-up Instructions</label>
+                            <textarea class="form-control" rows="2" 
+                                      ng-model="consultation.followUpInstructions"
+                                      placeholder="Instructions for follow-up visit..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Styles -->
+<style>
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-tabs .nav-link {
+    color: #495057;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+textarea.form-control {
+    resize: vertical;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+</style>

@@ -1,0 +1,572 @@
+<!--<!DOCTYPE html>
+
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div>TODO write content</div>
+    </body>
+</html>
+
+ Dashboard Page 
+<div class="container-fluid mt-4">
+     Welcome Header 
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">
+                <i class="fas fa-tachometer-alt text-primary"></i> 
+                Welcome, {{currentUser.fullName}}
+            </h2>
+            <p class="text-muted">Role: <span class="badge bg-primary">{{userRole}}</span></p>
+        </div>
+    </div>
+
+     Loading Spinner 
+    <div ng-if="loading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted mt-3">Loading dashboard...</p>
+    </div>
+
+     Statistics Cards 
+    <div ng-if="!loading" class="row mb-4">
+         Total Patients 
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card primary">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h3>{{stats.totalPatients}}</h3>
+                        <p class="mb-0">Total Patients</p>
+                    </div>
+                    <i class="fas fa-user-injured fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+         Total Doctors 
+        <div class="col-md-3 col-sm-6 mb-3" ng-if="hasRole(['ADMIN', 'RECEPTIONIST'])">
+            <div class="stat-card success">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h3>{{stats.totalDoctors}}</h3>
+                        <p class="mb-0">Total Doctors</p>
+                    </div>
+                    <i class="fas fa-user-md fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+         Today's Appointments 
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card warning">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h3>{{stats.todayAppointments}}</h3>
+                        <p class="mb-0">Today's Appointments</p>
+                    </div>
+                    <i class="fas fa-calendar-check fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+         Today's CVRs 
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card info">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h3>{{stats.todayCVRs}}</h3>
+                        <p class="mb-0">Today's Visits</p>
+                    </div>
+                    <i class="fas fa-file-medical fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     Quick Actions Section 
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">
+                <i class="fas fa-bolt text-warning"></i> Quick Actions
+            </h4>
+        </div>
+
+         Receptionist Quick Actions 
+        <div ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="quick-action-card" ng-click="registerPatient()">
+                    <i class="fas fa-user-plus"></i>
+                    <h5>Register Patient</h5>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="quick-action-card" ng-click="bookAppointment()">
+                    <i class="fas fa-calendar-plus"></i>
+                    <h5>Book Appointment</h5>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="quick-action-card" ng-click="createCVR()">
+                    <i class="fas fa-file-medical-alt"></i>
+                    <h5>Create Visit (CVR)</h5>
+                </div>
+            </div>
+        </div>
+
+         Doctor Quick Actions 
+        <div ng-if="hasRole(['DOCTOR'])">
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="quick-action-card" ng-click="viewQueue()">
+                    <i class="fas fa-users"></i>
+                    <h5>My Queue</h5>
+                    <p class="text-muted mb-0">{{stats.pendingConsultations}} waiting</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="quick-action-card">
+                    <i class="fas fa-stethoscope"></i>
+                    <h5>Consultation Room</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     Today's Appointments Table 
+    <div class="row" ng-if="todayAppointments && todayAppointments.length > 0">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-day text-primary"></i> Today's Appointments
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr ng-repeat="appt in todayAppointments">
+                                    {{ appt | json }}
+                                </tr>
+                                <tr>
+                                    <th>Token</th>
+                                    <th>Patient Name</th>
+                                    <th>Doctor Name</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+  <tr ng-repeat="appt in todayAppointments | limitTo:10">
+    <td>
+      <span class="badge bg-primary">{{ appt.pinNumber }}</span>
+    </td>
+    <td>{{ appt.patientName }}</td>
+    <td>{{ appt.doctorName }}</td>
+    <td>{{ appt.appointmentTime }}</td>
+    <td>
+      <span class="badge"
+            ng-class="{
+              'bg-success': appt.status === 'Booked',
+              'bg-primary': appt.status === 'Checked-In',
+              'bg-warning': appt.status === 'In Consultation',
+              'bg-secondary': appt.status === 'Completed'
+            }">
+        {{ appt.status }}
+      </span>
+    </td>
+    <td>{{ appt.appointmentType }}</td>
+  </tr>
+</tbody>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     Today's CVRs Table 
+    <div class="row mt-4" ng-if="todayCVRs && todayCVRs.length > 0">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-medical text-success"></i> Today's Visits (CVRs)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>CVR Number</th>
+                                    <th>Patient Name</th>
+                                    <th>Visit Type</th>
+                                    <th>Chief Complaint</th>
+                                    <th>Doctor</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="cvr in todayCVRs | limitTo:10">
+                                    <td><strong>{{cvr.cvrNumber}}</strong></td>
+                                    <td>{{cvr.patientName}}</td>
+                                    <td>{{cvr.visitType}}</td>
+                                    <td>{{cvr.chiefComplaint}}</td>
+                                    <td>{{cvr.doctorName}}</td>
+                                    <td>
+                                        <span class="badge" 
+                                              ng-class="{
+                                                  'bg-warning': cvr.status === 'Pending',
+                                                  'bg-primary': cvr.status === 'Checked-In',
+                                                  'bg-success': cvr.status === 'Completed'
+                                              }">
+                                            {{cvr.status}}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>-->
+
+
+<!-- Dashboard Page - FIXED -->
+<div class="container-fluid mt-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">
+                <i class="fas fa-tachometer-alt text-primary"></i> 
+                Welcome, {{currentUser.fullName}}
+            </h2>
+            <p class="text-muted">Role: <span class="badge bg-primary">{{userRole}}</span></p>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div ng-if="loading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted mt-3">Loading dashboard...</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div ng-if="!loading" class="row mb-4">
+        <!-- Total Patients -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card primary">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h3>{{stats.totalPatients}}</h3>
+                        <p class="mb-0">Total Patients</p>
+                    </div>
+                    <i class="fas fa-user-injured fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Doctors -->
+        <div class="col-md-3 col-sm-6 mb-3" ng-if="hasRole(['ADMIN', 'RECEPTIONIST'])">
+            <div class="stat-card success">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h3>{{stats.totalDoctors}}</h3>
+                        <p class="mb-0">Total Doctors</p>
+                    </div>
+                    <i class="fas fa-user-md fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Appointments -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card warning">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h3>{{stats.todayAppointments}}</h3>
+                        <p class="mb-0">Today's Appointments</p>
+                    </div>
+                    <i class="fas fa-calendar-check fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's CVRs -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card info">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h3>{{stats.todayCVRs}}</h3>
+                        <p class="mb-0">Today's Visits</p>
+                    </div>
+                    <i class="fas fa-file-medical fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">
+                <i class="fas fa-bolt text-warning"></i> Quick Actions
+            </h4>
+        </div>
+
+        <!-- Receptionist Quick Actions -->
+        <div ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])" class="row">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="quick-action-card" ng-click="registerPatient()">
+                    <i class="fas fa-user-plus"></i>
+                    <h5>Register Patient</h5>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="quick-action-card" ng-click="bookAppointment()">
+                    <i class="fas fa-calendar-plus"></i>
+                    <h5>Book Appointment</h5>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="quick-action-card" ng-click="createCVR()">
+                    <i class="fas fa-file-medical-alt"></i>
+                    <h5>Create Visit (CVR)</h5>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor Quick Actions -->
+        <div ng-if="hasRole(['DOCTOR'])" class="row">
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="quick-action-card" ng-click="viewQueue()">
+                    <i class="fas fa-users"></i>
+                    <h5>My Queue</h5>
+                    <p class="text-muted mb-0">{{stats.pendingConsultations}} waiting</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="quick-action-card">
+                    <i class="fas fa-stethoscope"></i>
+                    <h5>Consultation Room</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ FIXED: Today's Appointments Table -->
+    <div class="row" ng-if="todayAppointments && todayAppointments.length > 0">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-day"></i> Today's Appointments
+                        </h5>
+                        <span class="badge bg-light text-dark">
+                            {{todayAppointments.length}} appointments
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Token</th>
+                                    <th>Patient Name</th>
+                                    <th>PIN</th>
+                                    <th>Doctor Name</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Type</th>
+                                    <th>CVR</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="appt in todayAppointments | limitTo:20">
+                                    <td>
+                                        <span class="badge bg-dark fs-6">{{appt.tokenNumber}}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{appt.patientName}}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{appt.pinNumber}}</span>
+                                    </td>
+                                    <td>
+                                        {{appt.doctorName}}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-clock text-muted"></i> 
+                                        {{appt.appointmentTime}}
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="getStatusClass(appt.status)">
+                                            {{appt.status}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{appt.appointmentType}}
+                                    </td>
+                                    <td>
+                                        <span ng-if="appt.cvrNumber" class="badge bg-success">
+                                            {{appt.cvrNumber}}
+                                        </span>
+                                        <span ng-if="!appt.cvrNumber" class="text-muted small">
+                                            Not created
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's CVRs Table -->
+    <div class="row mt-4" ng-if="todayCVRs && todayCVRs.length > 0">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-medical"></i> Today's Visits (CVRs)
+                        </h5>
+                        <span class="badge bg-light text-dark">
+                            {{todayCVRs.length}} visits
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>CVR Number</th>
+                                    <th>Patient Name</th>
+                                    <th>PIN</th>
+                                    <th>Visit Type</th>
+                                    <th>Chief Complaint</th>
+                                    <th>Doctor</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="cvr in todayCVRs | limitTo:20">
+                                    <td>
+                                        <strong class="text-primary">{{cvr.cvrNumber}}</strong>
+                                    </td>
+                                    <td>{{cvr.patientName}}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{cvr.pinNumber}}</span>
+                                    </td>
+                                    <td>{{cvr.visitType}}</td>
+                                    <td>{{cvr.chiefComplaint}}</td>
+                                    <td>{{cvr.doctorName}}</td>
+                                    <td>
+                                        <span class="badge" 
+                                              ng-class="{
+                                                  'bg-warning': cvr.status === 'PENDING',
+                                                  'bg-primary': cvr.status === 'IN_PROGRESS',
+                                                  'bg-success': cvr.status === 'COMPLETED'
+                                              }">
+                                            {{cvr.status}}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Data Messages -->
+    <div ng-if="!loading && todayAppointments.length === 0 && todayCVRs.length === 0" class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <h5>No appointments or visits for today</h5>
+                <p class="mb-0">Start by booking an appointment or registering a patient.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-card.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.stat-card.success { background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); }
+.stat-card.warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.stat-card.info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+
+.quick-action-card {
+    padding: 2rem;
+    text-align: center;
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: white;
+}
+
+.quick-action-card:hover {
+    border-color: #0d6efd;
+    background: #f8f9fa;
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.quick-action-card i {
+    font-size: 3rem;
+    color: #0d6efd;
+    margin-bottom: 1rem;
+}
+
+.quick-action-card h5 {
+    margin: 0;
+    color: #333;
+}
+
+.card {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.opacity-50 {
+    opacity: 0.5;
+}
+</style>

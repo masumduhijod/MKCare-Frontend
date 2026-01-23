@@ -1,0 +1,370 @@
+<!-- ============================================
+     OPD QUEUE MANAGEMENT - COMPLETE & FIXED
+     âœ… CVR Number shows properly
+     âœ… Patient Name shows properly
+     âœ… Beautiful alert modals
+     âœ… Smooth redirects to consultation
+     ============================================ -->
+
+<!-- Queue Management View - queue-management.html -->
+<!-- Queue Management View - WITH MODERN MODALS -->
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">
+                <i class="fas fa-users text-primary"></i> OPD Queue Management
+            </h2>
+        </div>
+    </div>
+
+    <!-- Doctor & Date Selection -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label class="form-label">Select Doctor</label>
+            <select class="form-select" ng-model="selectedDoctor" ng-change="loadQueue()">
+                <option value="">-- Select Doctor --</option>
+                <option ng-repeat="doctor in doctors" value="{{doctor.doctorId}}">
+                    {{doctor.firstName}} {{doctor.lastName}} - {{doctor.specialization}}
+                </option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Select Date</label>
+            <input type="date" class="form-control" ng-model="selectedDate" ng-change="loadQueue()">
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-2">
+            <button class="btn btn-primary" ng-click="refreshQueue()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="btn btn-success" ng-click="callNext()">
+                <i class="fas fa-phone"></i> Call Next
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-secondary">
+                <div class="card-body text-center">
+                    <h2 class="mb-0">{{stats.waiting}}</h2>
+                    <p class="mb-0">Waiting</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-dark bg-warning">
+                <div class="card-body text-center">
+                    <h2 class="mb-0">{{stats.checkedIn}}</h2>
+                    <p class="mb-0">Checked In</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h2 class="mb-0">{{stats.inProgress}}</h2>
+                    <p class="mb-0">In Consultation</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h2 class="mb-0">{{stats.completed}}</h2>
+                    <p class="mb-0">Completed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Queue Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Patient Queue ({{queue.length}})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Token</th>
+                                    <th>Patient Name</th>
+                                    <th>PIN</th>
+                                    <th>CVR Number</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Waiting</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="entry in queue">
+                                    <td>
+                                        <span class="badge bg-dark fs-6">{{entry.tokenNumber}}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{entry.patientName}}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{entry.pinNumber}}</span>
+                                    </td>
+                                    <td>
+                                        <span ng-if="entry.cvrNumber" class="badge bg-success fs-6">
+                                            {{entry.cvrNumber}}
+                                        </span>
+                                        <span ng-if="!entry.cvrNumber" class="text-muted small">
+                                            Not created
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-clock text-muted"></i> 
+                                        {{entry.appointmentTime}}
+                                    </td>
+                                    <td>
+                                        <span ng-class="getStatusClass(entry.status)">
+                                            {{entry.status}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{getWaitingTime(entry.checkInTime)}}
+                                    </td>
+                                    <td>
+                                        <!-- SCHEDULED - Show Check-in Button -->
+                                        <button ng-if="entry.status === 'SCHEDULED'" 
+                                                class="btn btn-sm btn-warning"
+                                                ng-click="checkInPatient(entry)">
+                                            <i class="fas fa-sign-in-alt"></i> Check-in
+                                        </button>
+                                        
+                                        <!-- CHECKED_IN - Show Vitals & Start Consultation -->
+                                        <div ng-if="entry.status === 'CHECKED_IN'" class="btn-group">
+                                            <button class="btn btn-sm btn-info"
+                                                    ng-click="viewVitals(entry)">
+                                                <i class="fas fa-heartbeat"></i> Vitals
+                                            </button>
+                                            <button class="btn btn-sm btn-primary"
+                                                    ng-click="startConsultation(entry)">
+                                                <i class="fas fa-stethoscope"></i> Start
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- IN_CONSULTATION - Show Complete -->
+                                        <button ng-if="entry.status === 'IN_CONSULTATION'" 
+                                                class="btn btn-sm btn-success"
+                                                ng-click="completeConsultation(entry)">
+                                            <i class="fas fa-check"></i> Complete
+                                        </button>
+                                        
+                                        <!-- COMPLETED - Show Info -->
+                                        <span ng-if="entry.status === 'COMPLETED'" 
+                                              class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Done
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- No Data Message -->
+                    <div ng-if="queue.length === 0 && !loading" class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No appointments for selected date</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODERN MODALS -->
+<!-- ============================================ -->
+
+<!-- 1. Check-in Confirmation Modal -->
+<div class="modal fade" id="checkInConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="fas fa-sign-in-alt"></i> Confirm Check-in
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-user-check fa-3x text-warning mb-3"></i>
+                    <h5>Check-in Patient?</h5>
+                </div>
+                <div class="alert alert-info" ng-if="modalData.selectedEntry">
+                    <strong>Patient:</strong> {{modalData.selectedEntry.patientName}}<br>
+                    <strong>PIN:</strong> {{modalData.selectedEntry.pinNumber}}<br>
+                    <strong>Token:</strong> {{modalData.selectedEntry.tokenNumber}}
+                </div>
+                <p class="text-muted">This will:</p>
+                <ul class="text-muted">
+                    <li>Create CVR (Clinical Visit Record)</li>
+                    <li>Record visit time</li>
+                    <li>Update appointment status</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-warning" ng-click="confirmCheckIn()">
+                    <i class="fas fa-check"></i> Yes, Check-in
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Check-in Success Modal -->
+<div class="modal fade" id="checkInSuccessModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle"></i> Check-in Successful!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h4 class="text-success">Patient Checked In Successfully!</h4>
+                </div>
+                
+                <div class="alert alert-success" ng-if="modalData.selectedEntry">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Patient:</strong> {{modalData.selectedEntry.patientName}}<br>
+                            <strong>PIN:</strong> {{modalData.selectedEntry.pinNumber}}<br>
+                            <strong>Token:</strong> {{modalData.selectedEntry.tokenNumber}}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>CVR Number:</strong> 
+                            <span class="badge bg-success fs-6">{{modalData.cvrNumber}}</span><br>
+                            <strong>Status:</strong> 
+                            <span class="badge bg-warning text-dark">CHECKED IN</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6 class="mt-4 mb-3">What would you like to do next?</h6>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-info btn-lg" ng-click="goToVitals()">
+                        <i class="fas fa-heartbeat"></i> Record Vitals
+                        <small class="d-block">Measure temperature, BP, pulse, etc.</small>
+                    </button>
+                    
+                    <button class="btn btn-primary btn-lg" ng-click="startConsultationFromModal()">
+                        <i class="fas fa-stethoscope"></i> Start Consultation
+                        <small class="d-block">Begin doctor consultation now</small>
+                    </button>
+                    
+                    <button class="btn btn-secondary" ng-click="closeSuccessModal()">
+                        <i class="fas fa-list"></i> Stay in Queue
+                        <small class="d-block">Return to queue management</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Call Next Patient Modal -->
+<div class="modal fade" id="callNextModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-phone"></i> Call Next Patient
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-user-check fa-3x text-success mb-3"></i>
+                <h5>Calling Next Patient</h5>
+                <div class="alert alert-success mt-3" ng-if="modalData.selectedEntry">
+                    <h4>{{modalData.selectedEntry.patientName}}</h4>
+                    <p class="mb-0">Token: <strong>{{modalData.selectedEntry.tokenNumber}}</strong></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-success" ng-click="confirmCallNext()">
+                    <i class="fas fa-phone"></i> Call & Start Consultation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Complete Consultation Modal -->
+<div class="modal fade" id="completeConsultationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle"></i> Complete Consultation
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-check-circle fa-3x text-primary mb-3"></i>
+                    <h5>Mark Consultation as Completed?</h5>
+                </div>
+                <div class="alert alert-info" ng-if="modalData.selectedEntry">
+                    <strong>Patient:</strong> {{modalData.selectedEntry.patientName}}<br>
+                    <strong>CVR:</strong> {{modalData.selectedEntry.cvrNumber}}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-success" ng-click="confirmComplete()">
+                    <i class="fas fa-check"></i> Yes, Complete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn-group {
+    display: inline-flex;
+    gap: 0.25rem;
+}
+
+.modal-content {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.modal-header {
+    border-bottom: none;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    border-top: none;
+    padding: 1.5rem;
+}
+</style>

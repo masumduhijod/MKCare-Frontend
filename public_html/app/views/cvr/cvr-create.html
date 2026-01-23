@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!--<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div>TODO write content</div>
+    </body>
+</html>-->  
+
+
+<!-- ============ CVR CREATE VIEW ============ -->
+<!-- File: app/views/cvr/cvr-create.html -->
+<script type="text/ng-template" id="cvr-create.html">
+<div class="container-fluid mt-4">
+    <h2 class="fw-bold mb-4">
+        <i class="fas fa-file-medical-alt text-primary"></i> Create Visit (CVR)
+    </h2>
+
+    <div class="card">
+        <div class="card-body">
+            <form ng-submit="createCVR()">
+                <!-- Patient Search -->
+                <h5 class="fw-bold mb-3">Patient Information</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Patient PIN <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" ng-model="cvr.pinNumber" required>
+                            <button type="button" class="btn btn-primary" ng-click="searchPatient()">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Details (if found) -->
+                <div ng-if="patient" class="alert alert-success">
+                    <h6><i class="fas fa-user-check"></i> Patient Found</h6>
+                    <p class="mb-0"><strong>Name:</strong> {{patient.fullName}}</p>
+                    <p class="mb-0"><strong>Age/Gender:</strong> {{patient.age}} / {{patient.gender}}</p>
+                    <p class="mb-0"><strong>Contact:</strong> {{patient.contactNumber}}</p>
+                </div>
+
+                <!-- Visit Details -->
+                <h5 class="fw-bold mb-3 mt-4">Visit Details</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Visit Type <span class="text-danger">*</span></label>
+                        <select class="form-select" ng-model="cvr.visitType" required>
+                            <option ng-repeat="type in visitTypeOptions" value="{{type}}">{{type}}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Department <span class="text-danger">*</span></label>
+                        <select class="form-select" ng-model="cvr.department" 
+                                ng-change="loadDoctorsByDepartment()" required>
+                            <option value="">Select Department</option>
+                            <option ng-repeat="dept in departments" value="{{dept}}">{{dept}}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Doctor (Optional)</label>
+                        <select class="form-select" ng-model="cvr.doctorId">
+                            <option value="">Select Doctor</option>
+                            <option ng-repeat="doc in doctors" value="{{doc.doctorId}}">
+                                {{doc.fullName}} - {{doc.specialization}}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Chief Complaint <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="cvr.chiefComplaint" 
+                               placeholder="Main complaint or reason for visit" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Symptoms</label>
+                        <textarea class="form-control" ng-model="cvr.symptoms" rows="3"
+                                  placeholder="Describe symptoms in detail"></textarea>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-lg me-2" ng-disabled="loading || !patient">
+                            <i class="fas fa-save"></i> Create CVR
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg me-2" ng-click="resetForm()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-lg" ng-click="cancel()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</script>

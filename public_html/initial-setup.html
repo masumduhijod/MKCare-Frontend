@@ -1,0 +1,194 @@
+
+<!-- ============================================
+     INITIAL USER REGISTRATION PAGE
+     File: app/views/initial-setup.html
+     ============================================ -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Initial User Setup - Hospital Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .setup-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="setup-card">
+            <div class="text-center mb-4">
+                <i class="fas fa-hospital fa-4x text-primary mb-3"></i>
+                <h2 class="fw-bold">Initial User Setup</h2>
+                <p class="text-muted">Create your first admin user to get started</p>
+            </div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="alert alert-success d-none">
+                <i class="fas fa-check-circle"></i> User created successfully!
+                <br>
+                <strong>Username:</strong> <span id="createdUsername"></span>
+                <br>
+                <a href="index.html" class="btn btn-success mt-2">Go to Login</a>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="alert alert-danger d-none"></div>
+
+            <!-- Registration Form -->
+            <form id="setupForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="firstName" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="lastName" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="username" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="password" required minlength="6">
+                    <small class="text-muted">Minimum 6 characters</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="confirmPassword" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" id="contactNumber" maxlength="10" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Role <span class="text-danger">*</span></label>
+                    <select class="form-select" id="role" required>
+                        <option value="">Select Role</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="RECEPTIONIST">Receptionist</option>
+                        <option value="DOCTOR">Doctor</option>
+                        <option value="NURSE">Nurse</option>
+                        <option value="BILLING">Billing</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-user-plus"></i> Create User
+                </button>
+            </form>
+
+            <div class="text-center mt-4">
+                <p class="text-muted">Already have an account?</p>
+                <a href="index.html" class="btn btn-outline-primary">
+                    <i class="fas fa-sign-in-alt"></i> Go to Login
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script>
+        // API Configuration
+        var API_URL = 'http://localhost:8080'; // Change if different
+
+        document.getElementById('setupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var password = document.getElementById('password').value;
+            var confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validate password match
+            if (password !== confirmPassword) {
+                showError('Passwords do not match!');
+                return;
+            }
+
+            // Prepare user data
+            var userData = {
+                username: document.getElementById('username').value,
+                password: password,
+                email: document.getElementById('email').value,
+                role: document.getElementById('role').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                contactNumber: document.getElementById('contactNumber').value,
+                createdBy: 'SYSTEM'
+            };
+
+            // Show loading
+            var submitBtn = document.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
+            submitBtn.disabled = true;
+
+            // Register user
+            fetch(API_URL + '/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create User';
+                submitBtn.disabled = false;
+
+                if (data.success) {
+                    // Show success
+                    document.getElementById('createdUsername').textContent = userData.username;
+                    document.getElementById('successMessage').classList.remove('d-none');
+                    document.getElementById('setupForm').style.display = 'none';
+                } else {
+                    showError(data.message || 'Registration failed');
+                }
+            })
+            .catch(function(error) {
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create User';
+                submitBtn.disabled = false;
+                showError('Error: ' + error.message);
+            });
+        });
+
+        function showError(message) {
+            var errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('d-none');
+
+            setTimeout(function() {
+                errorDiv.classList.add('d-none');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

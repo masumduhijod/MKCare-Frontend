@@ -1,0 +1,294 @@
+<!-- ============================================
+     VITALS RECORDING VIEW - FIXED
+     ✅ Shows CVR details properly
+     ✅ Better validation
+     ✅ Proper navigation
+     ============================================ -->
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-heartbeat"></i> Record Vitals
+                        </h4>
+                        <div>
+                            <button class="btn btn-outline-light btn-sm me-2" 
+                                    ng-click="cancel()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button class="btn btn-success btn-sm" 
+                                    ng-click="recordVitals()"
+                                    ng-disabled="loading">
+                                <i class="fas fa-save"></i> 
+                                {{loading ? 'Saving...' : 'Save Vitals'}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Loading State -->
+                    <div ng-if="loading && !cvr" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3">Loading CVR details...</p>
+                    </div>
+
+                    <!-- CVR & Patient Info -->
+                    <div ng-if="cvr" class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>CVR Number:</strong><br>
+                                        <span class="fs-5 text-primary">{{cvr.cvrNumber}}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>PIN Number:</strong><br>
+                                        <span class="fs-5">{{cvr.pinNumber}}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Visit Type:</strong><br>
+                                        <span class="badge bg-primary">{{cvr.visitType}}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Visit Date:</strong><br>
+                                        {{cvr.createdAt | date:'dd-MM-yyyy HH:mm'}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vitals Form -->
+                    <div ng-if="cvr">
+                        <h5 class="mb-3">
+                            <i class="fas fa-notes-medical"></i> Vital Signs
+                        </h5>
+
+                        <div class="row">
+                            <!-- Temperature -->
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-thermometer-half"></i> 
+                                    Temperature (°F) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" 
+                                       ng-model="vitals.temperatureF"
+                                       min="90" max="110" step="0.1"
+                                       placeholder="98.6"
+                                       required>
+                                <small class="text-muted">Normal: 97.0 - 99.5°F</small>
+                            </div>
+
+                            <!-- Blood Pressure -->
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-tint"></i> 
+                                    Blood Pressure <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" 
+                                       ng-model="vitals.bloodPressure"
+                                       ng-change="validateBloodPressure()"
+                                       placeholder="120/80"
+                                       pattern="\d{2,3}/\d{2,3}"
+                                       required>
+                                <small ng-if="bpError" class="text-danger">{{bpError}}</small>
+                                <small ng-if="!bpError" class="text-muted">Format: 120/80</small>
+                            </div>
+
+                            <!-- Pulse Rate -->
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-heartbeat"></i> 
+                                    Pulse Rate (bpm) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" 
+                                       ng-model="vitals.pulseRate"
+                                       min="40" max="200"
+                                       placeholder="72"
+                                       required>
+                                <small class="text-muted">Normal: 60-100 bpm</small>
+                            </div>
+
+                            <!-- SpO2 -->
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-lungs"></i> 
+                                    SpO2 (%) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" 
+                                       ng-model="vitals.spo2Percentage"
+                                       min="50" max="100"
+                                       placeholder="98"
+                                       required>
+                                <small class="text-muted">Normal: ≥95%</small>
+                            </div>
+
+                            <!-- Respiratory Rate -->
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-wind"></i> 
+                                    Respiratory Rate (/min)
+                                </label>
+                                <input type="number" class="form-control" 
+                                       ng-model="vitals.respiratoryRate"
+                                       min="8" max="40"
+                                       placeholder="16">
+                                <small class="text-muted">Normal: 12-20 /min</small>
+                            </div>
+
+                            <!-- Weight -->
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-weight"></i> 
+                                    Weight (kg)
+                                </label>
+                                <input type="number" class="form-control" 
+                                       ng-model="vitals.weightKg"
+                                       ng-change="calculateBMI()"
+                                       min="1" max="300" step="0.1"
+                                       placeholder="70.0">
+                            </div>
+
+                            <!-- Height -->
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-ruler-vertical"></i> 
+                                    Height (cm)
+                                </label>
+                                <input type="number" class="form-control" 
+                                       ng-model="vitals.heightCm"
+                                       ng-change="calculateBMI()"
+                                       min="50" max="250"
+                                       placeholder="170">
+                            </div>
+
+                            <!-- BMI Display -->
+                            <div class="col-md-3 mb-3" ng-if="bmi">
+                                <label class="form-label">
+                                    <i class="fas fa-calculator"></i> BMI
+                                </label>
+                                <div class="form-control-plaintext">
+                                    <strong ng-class="bmiClass">{{bmi}}</strong>
+                                    <br>
+                                    <small ng-class="bmiClass">({{bmiCategory}})</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vitals Summary Card -->
+                        <div class="card bg-light mt-4" ng-if="vitals.temperatureF || vitals.bloodPressure">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-clipboard-check"></i> Vitals Summary
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-2" ng-if="vitals.temperatureF">
+                                        <small class="text-muted">Temperature</small>
+                                        <p class="mb-0"><strong>{{vitals.temperatureF}}°F</strong></p>
+                                    </div>
+                                    <div class="col-md-2" ng-if="vitals.bloodPressure">
+                                        <small class="text-muted">BP</small>
+                                        <p class="mb-0"><strong>{{vitals.bloodPressure}}</strong></p>
+                                    </div>
+                                    <div class="col-md-2" ng-if="vitals.pulseRate">
+                                        <small class="text-muted">Pulse</small>
+                                        <p class="mb-0"><strong>{{vitals.pulseRate}} bpm</strong></p>
+                                    </div>
+                                    <div class="col-md-2" ng-if="vitals.spo2Percentage">
+                                        <small class="text-muted">SpO2</small>
+                                        <p class="mb-0"><strong>{{vitals.spo2Percentage}}%</strong></p>
+                                    </div>
+                                    <div class="col-md-2" ng-if="vitals.respiratoryRate">
+                                        <small class="text-muted">RR</small>
+                                        <p class="mb-0"><strong>{{vitals.respiratoryRate}}/min</strong></p>
+                                    </div>
+                                    <div class="col-md-2" ng-if="bmi">
+                                        <small class="text-muted">BMI</small>
+                                        <p class="mb-0" ng-class="bmiClass">
+                                            <strong>{{bmi}}</strong>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Important Notes -->
+                        <div class="alert alert-warning mt-4">
+                            <h6><i class="fas fa-info-circle"></i> Important Notes:</h6>
+                            <ul class="mb-0">
+                                <li>All vital signs marked with <span class="text-danger">*</span> are mandatory</li>
+                                <li>Ensure accurate measurement of vital signs</li>
+                                <li>Weight and height are optional but recommended for BMI calculation</li>
+                                <li>Double-check blood pressure format (e.g., 120/80)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.form-control:focus {
+    border-color: #17a2b8;
+    box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+}
+
+.form-control.ng-invalid.ng-touched {
+    border-color: #dc3545;
+}
+
+.form-control.ng-valid.ng-touched {
+    border-color: #28a745;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+.badge {
+    font-size: 0.9em;
+    padding: 0.4em 0.8em;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+}
+</style>

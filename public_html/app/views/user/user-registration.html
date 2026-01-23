@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!-- User Registration (Admin Only) -->
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!-- User Registration (Admin Only) -->
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">
+                <i class="fas fa-user-plus text-primary"></i> User Registration
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">User Registration</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div ng-if="registeredUser" class="alert alert-success alert-dismissible">
+        <h5><i class="fas fa-check-circle"></i> Success!</h5>
+        <p class="mb-0">User registered successfully!</p>
+        <p class="mb-0"><strong>Username:</strong> {{registeredUser.username}}</p>
+        <p class="mb-0"><strong>Role:</strong> {{registeredUser.role}}</p>
+        <button type="button" class="btn-close" ng-click="registeredUser = null"></button>
+    </div>
+
+    <!-- Registration Form -->
+    <div class="card">
+        <div class="card-body p-4">
+            <form name="userForm" ng-submit="registerUser()">
+                
+                <!-- Personal Information -->
+                <h5 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-user"></i> Personal Information
+                </h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="user.firstName" required>
+                        <div class="invalid-feedback" ng-if="errors.firstName">{{errors.firstName}}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="user.lastName" required>
+                        <div class="invalid-feedback" ng-if="errors.lastName">{{errors.lastName}}</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" ng-model="user.email" required>
+                        <div class="invalid-feedback" ng-if="errors.email">{{errors.email}}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" ng-model="user.contactNumber" 
+                               maxlength="10" required>
+                        <div class="invalid-feedback" ng-if="errors.contactNumber">{{errors.contactNumber}}</div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Account Information -->
+                <h5 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-lock"></i> Account Information
+                </h5>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Username <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="user.username" 
+                               ng-blur="checkUsernameExists()" required>
+                        <small class="text-muted">Must be unique</small>
+                        <div class="invalid-feedback" ng-if="errors.username">{{errors.username}}</div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" ng-model="user.password" 
+                               minlength="6" required>
+                        <small class="text-muted">Minimum 6 characters</small>
+                        <div class="invalid-feedback" ng-if="errors.password">{{errors.password}}</div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" ng-model="confirmPassword" required>
+                        <div class="invalid-feedback" ng-if="errors.confirmPassword">{{errors.confirmPassword}}</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Role <span class="text-danger">*</span></label>
+                        <select class="form-select" ng-model="user.role" required>
+                            <option value="">Select Role</option>
+                            <option value="ADMIN">Admin</option>
+                            <option value="RECEPTIONIST">Receptionist</option>
+                            <option value="DOCTOR">Doctor</option>
+                            <option value="NURSE">Nurse</option>
+                            <option value="BILLING">Billing Staff</option>
+                            <option value="PHARMACIST">Pharmacist</option>
+                            <option value="LAB_TECHNICIAN">Lab Technician</option>
+                        </select>
+                        <div class="invalid-feedback" ng-if="errors.role">{{errors.role}}</div>
+                    </div>
+                </div>
+
+                <!-- Role Descriptions -->
+                <div class="alert alert-info" ng-if="user.role">
+                    <h6 class="fw-bold">{{user.role}} Role Permissions:</h6>
+                    <ul class="mb-0" ng-switch="user.role">
+                        <li ng-switch-when="ADMIN">Full system access, User management, System configuration</li>
+                        <li ng-switch-when="RECEPTIONIST">Patient registration, Appointment booking, Check-in</li>
+                        <li ng-switch-when="DOCTOR">View queue, Consultations, Prescriptions</li>
+                        <li ng-switch-when="NURSE">Record vitals, Patient check-in, CVR management</li>
+                        <li ng-switch-when="BILLING">Create invoices, Process payments, Billing reports</li>
+                        <li ng-switch-when="PHARMACIST">Medicine dispensing, Inventory management</li>
+                        <li ng-switch-when="LAB_TECHNICIAN">Lab test management, Results entry</li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-lg me-2" ng-disabled="loading">
+                            <span ng-if="!loading">
+                                <i class="fas fa-user-plus"></i> Register User
+                            </span>
+                            <span ng-if="loading">
+                                <span class="spinner-border spinner-border-sm"></span> Registering...
+                            </span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg me-2" ng-click="resetForm()">
+                            <i class="fas fa-redo"></i> Reset Form
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-lg" ng-click="cancel()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User List -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-users text-primary"></i> Registered Users
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="u in users">
+                            <td><strong>{{u.username}}</strong></td>
+                            <td>{{u.fullName}}</td>
+                            <td>{{u.email}}</td>
+                            <td><span class="badge bg-primary">{{u.role}}</span></td>
+                            <td>
+                                <span class="badge" ng-class="{
+                                    'bg-success': u.status === 'ACTIVE',
+                                    'bg-danger': u.status === 'INACTIVE'
+                                }">{{u.status}}</span>
+                            </td>
+                            <td>{{u.createdAt | date:'dd-MM-yyyy'}}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" ng-click="openResetPasswordModal(u.username)">
+                                    <i class="fas fa-key"></i> Reset Password
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="resetPasswordModalLabel">
+                    <i class="fas fa-key"></i> Reset Password
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- General Error -->
+                <div ng-if="passwordReset.errors.general" class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-circle"></i> {{passwordReset.errors.general}}
+                    <button type="button" class="btn-close" ng-click="passwordReset.errors.general = ''"></button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Username</label>
+                    <input type="text" class="form-control" value="{{passwordReset.username}}" disabled>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">New Password <span class="text-danger">*</span></label>
+                    <input type="password" 
+                           class="form-control" 
+                           ng-class="{'is-invalid': passwordReset.errors.newPassword}"
+                           ng-model="passwordReset.newPassword" 
+                           placeholder="Enter new password (min 6 characters)"
+                           minlength="6"
+                           required>
+                    <div class="invalid-feedback" ng-if="passwordReset.errors.newPassword">
+                        {{passwordReset.errors.newPassword}}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                    <input type="password" 
+                           class="form-control" 
+                           ng-class="{'is-invalid': passwordReset.errors.confirmPassword}"
+                           ng-model="passwordReset.confirmPassword" 
+                           placeholder="Re-enter new password"
+                           required>
+                    <div class="invalid-feedback" ng-if="passwordReset.errors.confirmPassword">
+                        {{passwordReset.errors.confirmPassword}}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" 
+                        class="btn btn-warning" 
+                        ng-click="submitPasswordReset()" 
+                        ng-disabled="passwordReset.loading || !passwordReset.newPassword || !passwordReset.confirmPassword">
+                    <span ng-if="!passwordReset.loading">
+                        <i class="fas fa-save"></i> Reset Password
+                    </span>
+                    <span ng-if="passwordReset.loading">
+                        <span class="spinner-border spinner-border-sm"></span> Resetting...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

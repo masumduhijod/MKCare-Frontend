@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!-- User List & Management (Admin Only) -->
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">
+                <i class="fas fa-users text-primary"></i> User Management
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">User List</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <button class="btn btn-primary" ng-click="goToRegister()">
+                <i class="fas fa-user-plus"></i> Register New User
+            </button>
+            <button class="btn btn-info ms-2" ng-click="loadUsers()">
+                <i class="fas fa-sync"></i> Refresh
+            </button>
+        </div>
+        <div class="col-md-6 text-end">
+            <span class="badge bg-primary" style="font-size: 1rem; padding: 10px 20px;">
+                Total Users: {{filteredUsers.length}} / {{users.length}}
+            </span>
+        </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Filter by Role</label>
+                    <select class="form-select" ng-model="filterRole" ng-change="applyFilters()">
+                        <option value="">All Roles</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="RECEPTIONIST">Receptionist</option>
+                        <option value="DOCTOR">Doctor</option>
+                        <option value="NURSE">Nurse</option>
+                        <option value="BILLING">Billing</option>
+                        <option value="PHARMACIST">Pharmacist</option>
+                        <option value="LAB_TECHNICIAN">Lab Technician</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Search by Name/Username</label>
+                    <input type="text" class="form-control" ng-model="searchQuery" 
+                           ng-change="applyFilters()"
+                           placeholder="Type to search...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Filter by Status</label>
+                    <select class="form-select" ng-model="filterStatus" ng-change="applyFilters()">
+                        <option value="">All Status</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                        <option value="SUSPENDED">Suspended</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div ng-if="loading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted mt-2">Loading users...</p>
+    </div>
+
+    <!-- User List Table -->
+    <div ng-if="!loading" class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list"></i> All Users
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Created</th>
+                            <th style="width: 180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="user in filteredUsers track by user.userId">
+                            <td>{{$index + 1}}</td>
+                            <td><strong>{{user.username}}</strong></td>
+                            <td>{{user.fullName}}</td>
+                            <td><small>{{user.email}}</small></td>
+                            <td>{{user.contactNumber}}</td>
+                            <td>
+                                <span class="badge" ng-class="{
+                                    'bg-danger': user.role === 'ADMIN',
+                                    'bg-primary': user.role === 'RECEPTIONIST',
+                                    'bg-success': user.role === 'DOCTOR',
+                                    'bg-info': user.role === 'NURSE',
+                                    'bg-warning text-dark': user.role === 'BILLING',
+                                    'bg-secondary': user.role === 'PHARMACIST' || user.role === 'LAB_TECHNICIAN'
+                                }">
+                                    {{user.role}}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge" ng-class="{
+                                    'bg-success': user.status === 'ACTIVE',
+                                    'bg-danger': user.status === 'INACTIVE',
+                                    'bg-warning text-dark': user.status === 'SUSPENDED'
+                                }">
+                                    {{user.status || 'ACTIVE'}}
+                                </span>
+                            </td>
+                            <td>
+                                <small>{{user.lastLogin ? (user.lastLogin | date:'dd-MM-yyyy HH:mm') : 'Never'}}</small>
+                            </td>
+                            <td>
+                                <small>{{user.createdAt | date:'dd-MM-yyyy'}}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-info" 
+                                            ng-click="viewUser(user)"
+                                            title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-warning" 
+                                            ng-click="editUser(user)"
+                                            title="Edit User">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-secondary" 
+                                            ng-click="openResetPasswordModal(user)"
+                                            title="Reset Password">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+                                    <button class="btn btn-danger" 
+                                            ng-click="deleteUser(user)"
+                                            ng-if="user.username !== 'admin'"
+                                            title="Delete User">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- No Users Found -->
+            <div ng-if="filteredUsers.length === 0" class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No users found matching your criteria</p>
+                <button class="btn btn-primary" ng-click="loadUsers()">
+                    <i class="fas fa-sync"></i> Reload Users
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit"></i> Edit User: {{editingUser.username}}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form name="editForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>First Name *</strong></label>
+                                <input type="text" class="form-control" ng-model="editingUser.firstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Last Name</strong></label>
+                                <input type="text" class="form-control" ng-model="editingUser.lastName">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Email *</strong></label>
+                                <input type="email" class="form-control" ng-model="editingUser.email" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Contact Number</strong></label>
+                                <input type="tel" class="form-control" ng-model="editingUser.contactNumber" 
+                                       maxlength="10" pattern="[0-9]{10}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Role *</strong></label>
+                                <select class="form-select" ng-model="editingUser.role" required>
+                                    <option value="ADMIN">Admin</option>
+                                    <option value="RECEPTIONIST">Receptionist</option>
+                                    <option value="DOCTOR">Doctor</option>
+                                    <option value="NURSE">Nurse</option>
+                                    <option value="BILLING">Billing</option>
+                                    <option value="PHARMACIST">Pharmacist</option>
+                                    <option value="LAB_TECHNICIAN">Lab Technician</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Status *</strong></label>
+                                <select class="form-select" ng-model="editingUser.status" required>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="INACTIVE">Inactive</option>
+                                    <option value="SUSPENDED">Suspended</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" ng-click="saveUser()" ng-disabled="editForm.$invalid">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View User Modal -->
+    <div class="modal fade" id="viewUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user"></i> User Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" ng-if="viewingUser">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 40%;">Username</th>
+                            <td>{{viewingUser.username}}</td>
+                        </tr>
+                        <tr>
+                            <th>Full Name</th>
+                            <td>{{viewingUser.fullName}}</td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td>{{viewingUser.email}}</td>
+                        </tr>
+                        <tr>
+                            <th>Contact Number</th>
+                            <td>{{viewingUser.contactNumber || 'N/A'}}</td>
+                        </tr>
+                        <tr>
+                            <th>Role</th>
+                            <td>
+                                <span class="badge bg-primary">{{viewingUser.role}}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td>
+                                <span class="badge" ng-class="{
+                                    'bg-success': viewingUser.status === 'ACTIVE',
+                                    'bg-danger': viewingUser.status === 'INACTIVE',
+                                    'bg-warning text-dark': viewingUser.status === 'SUSPENDED'
+                                }">
+                                    {{viewingUser.status || 'ACTIVE'}}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Created At</th>
+                            <td>{{viewingUser.createdAt | date:'dd-MM-yyyy HH:mm'}}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Login</th>
+                            <td>{{viewingUser.lastLogin ? (viewingUser.lastLogin | date:'dd-MM-yyyy HH:mm') : 'Never'}}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-warning" ng-click="editUser(viewingUser)" data-bs-dismiss="modal">
+                        <i class="fas fa-edit"></i> Edit User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="resetPasswordModalLabel">
+                        <i class="fas fa-key"></i> Reset Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- General Error -->
+                    <div ng-if="passwordReset.errors.general" class="alert alert-danger alert-dismissible fade show">
+                        <i class="fas fa-exclamation-circle"></i> {{passwordReset.errors.general}}
+                        <button type="button" class="btn-close" ng-click="passwordReset.errors.general = ''"></button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Username</label>
+                        <input type="text" class="form-control" value="{{passwordReset.username}}" disabled>
+                    </div>
+
+                    <div class="mb-3" ng-if="passwordReset.fullName">
+                        <label class="form-label fw-bold">Full Name</label>
+                        <input type="text" class="form-control" value="{{passwordReset.fullName}}" disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">New Password <span class="text-danger">*</span></label>
+                        <input type="password" 
+                               class="form-control" 
+                               ng-class="{'is-invalid': passwordReset.errors.newPassword}"
+                               ng-model="passwordReset.newPassword" 
+                               placeholder="Enter new password (min 6 characters)"
+                               minlength="6"
+                               required>
+                        <div class="invalid-feedback" ng-if="passwordReset.errors.newPassword">
+                            {{passwordReset.errors.newPassword}}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                        <input type="password" 
+                               class="form-control" 
+                               ng-class="{'is-invalid': passwordReset.errors.confirmPassword}"
+                               ng-model="passwordReset.confirmPassword" 
+                               placeholder="Re-enter new password"
+                               required>
+                        <div class="invalid-feedback" ng-if="passwordReset.errors.confirmPassword">
+                            {{passwordReset.errors.confirmPassword}}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" 
+                            class="btn btn-warning" 
+                            ng-click="submitPasswordReset()" 
+                            ng-disabled="passwordReset.loading || !passwordReset.newPassword || !passwordReset.confirmPassword">
+                        <span ng-if="!passwordReset.loading">
+                            <i class="fas fa-save"></i> Reset Password
+                        </span>
+                        <span ng-if="passwordReset.loading">
+                            <span class="spinner-border spinner-border-sm"></span> Resetting...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

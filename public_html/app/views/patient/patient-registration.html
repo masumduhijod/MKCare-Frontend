@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!--<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div>TODO write content</div>
+    </body>
+</html>-->
+
+<!-- Patient Registration Form -->
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">
+                <i class="fas fa-user-plus text-primary"></i> Patient Registration
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Patient Registration</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div ng-if="registeredPIN" class="alert alert-success alert-dismissible">
+        <h5><i class="fas fa-check-circle"></i> Success!</h5>
+        <p class="mb-0">Patient registered successfully!</p>
+        <p class="mb-0 fw-bold">PIN Number: {{registeredPIN}}</p>
+        <button type="button" class="btn-close" ng-click="registeredPIN = null"></button>
+    </div>
+
+    <!-- Registration Form -->
+    <div class="card">
+        <div class="card-body p-4">
+            <form name="patientForm" ng-submit="registerPatient()">
+                
+                <!-- Personal Information -->
+                <h5 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-user"></i> Personal Information
+                </h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="patient.firstName" required>
+                        <div class="invalid-feedback" ng-if="errors.firstName">{{errors.firstName}}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="patient.lastName" required>
+                        <div class="invalid-feedback" ng-if="errors.lastName">{{errors.lastName}}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" ng-model="patient.dateOfBirth" required>
+                        <div class="invalid-feedback" ng-if="errors.dateOfBirth">{{errors.dateOfBirth}}</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Gender <span class="text-danger">*</span></label>
+                        <select class="form-select" ng-model="patient.gender" required>
+                            <option value="">Select Gender</option>
+                            <option ng-repeat="gender in genderOptions" value="{{gender}}">{{gender}}</option>
+                        </select>
+                        <div class="invalid-feedback" ng-if="errors.gender">{{errors.gender}}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Blood Group</label>
+                        <select class="form-select" ng-model="patient.bloodGroup">
+                            <option value="">Select Blood Group</option>
+                            <option ng-repeat="bg in bloodGroupOptions" value="{{bg}}">{{bg}}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" ng-model="patient.contactNumber" 
+                               ng-blur="checkContactExists()" maxlength="10" required>
+                        <div class="invalid-feedback" ng-if="errors.contactNumber">{{errors.contactNumber}}</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Alternate Contact</label>
+                        <input type="tel" class="form-control" ng-model="patient.alternateContact" maxlength="10">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" ng-model="patient.email">
+                        <div class="invalid-feedback" ng-if="errors.email">{{errors.email}}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Aadhar Number</label>
+                        <input type="text" class="form-control" ng-model="patient.aadharNumber" maxlength="12">
+                        <div class="invalid-feedback" ng-if="errors.aadharNumber">{{errors.aadharNumber}}</div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Address Information -->
+                <h5 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-map-marker-alt"></i> Address Information
+                </h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Address Line 1</label>
+                        <input type="text" class="form-control" ng-model="patient.addressLine1">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Address Line 2</label>
+                        <input type="text" class="form-control" ng-model="patient.addressLine2">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">City</label>
+                        <input type="text" class="form-control" ng-model="patient.city">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">State</label>
+                        <select class="form-select" ng-model="patient.state">
+                            <option value="">Select State</option>
+                            <option ng-repeat="state in stateOptions" value="{{state}}">{{state}}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Pincode</label>
+                        <input type="text" class="form-control" ng-model="patient.pincode" maxlength="6">
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Emergency Contact -->
+                <h5 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-phone-alt"></i> Emergency Contact
+                </h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Contact Name</label>
+                        <input type="text" class="form-control" ng-model="patient.emergencyContactName">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Contact Number</label>
+                        <input type="tel" class="form-control" ng-model="patient.emergencyContactNumber" maxlength="10">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Relationship</label>
+                        <input type="text" class="form-control" ng-model="patient.emergencyContactRelation" 
+                               placeholder="e.g., Father, Mother, Spouse">
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Insurance Information -->
+                <h5 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-shield-alt"></i> Insurance Information
+                </h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Insurance Provider</label>
+                        <input type="text" class="form-control" ng-model="patient.insuranceProvider">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Insurance ID</label>
+                        <input type="text" class="form-control" ng-model="patient.insuranceId">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Insurance Expiry Date</label>
+                        <input type="date" class="form-control" ng-model="patient.insuranceExpiryDate">
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Additional Information -->
+                <h5 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-info-circle"></i> Additional Information
+                </h5>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Remarks / Notes</label>
+                        <textarea class="form-control" ng-model="patient.remarks" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-lg me-2" ng-disabled="loading">
+                            <span ng-if="!loading">
+                                <i class="fas fa-save"></i> Register Patient
+                            </span>
+                            <span ng-if="loading">
+                                <span class="spinner-border spinner-border-sm"></span> Registering...
+                            </span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg me-2" ng-click="resetForm()">
+                            <i class="fas fa-redo"></i> Reset Form
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-lg" ng-click="cancel()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

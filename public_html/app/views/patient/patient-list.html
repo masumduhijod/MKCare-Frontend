@@ -1,0 +1,195 @@
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">
+                <i class="fas fa-users text-primary"></i> Patient List
+            </h2>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Search Query</label>
+                    <input type="text" 
+                           class="form-control" 
+                           ng-model="searchQuery" 
+                           placeholder="Enter PIN, Name, or Contact"
+                           ng-keypress="$event.keyCode === 13 && searchPatients()">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Search Type</label>
+                    <select class="form-select" ng-model="searchType">
+                        <option value="NAME">Name</option>
+                        <option value="PIN">PIN Number</option>
+                        <option value="CONTACT">Contact</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" 
+                            ng-click="searchPatients()" 
+                            ng-disabled="loading">
+                        <i class="fas fa-search"></i> 
+                        <span ng-if="!loading">Search</span>
+                        <span ng-if="loading">Searching...</span>
+                    </button>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-secondary w-100" 
+                            ng-click="clearSearch()" 
+                            ng-disabled="loading">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div ng-if="loading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Loading patients...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div ng-if="error && !loading" class="alert alert-danger alert-dismissible">
+        <strong><i class="fas fa-exclamation-triangle"></i> Error!</strong> {{error}}
+        <button type="button" class="btn-close" ng-click="error = null"></button>
+    </div>
+
+    <!-- Patient Table -->
+    <div class="card" ng-if="!loading">
+        <div class="card-body">
+            <!-- Empty State -->
+            <div ng-if="patients.length === 0 && !error" class="text-center my-5">
+                <i class="fas fa-user-slash fa-4x text-muted mb-3"></i>
+                <h5>No patients found</h5>
+                <p class="text-muted">Try adjusting your search criteria or add a new patient</p>
+            </div>
+
+            <!-- Results Info -->
+            <div ng-if="patients.length > 0" class="mb-3">
+                <p class="text-muted mb-0">
+                    <i class="fas fa-info-circle"></i> 
+                    Showing {{((currentPage - 1) * itemsPerPage) + 1}} to 
+                    {{currentPage * itemsPerPage > totalItems ? totalItems : currentPage * itemsPerPage}} 
+                    of {{totalItems}} patients
+                </p>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive" ng-if="patients.length > 0">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 120px;">PIN</th>
+                            <th>Name</th>
+                            <th style="width: 80px;">Age</th>
+                            <th style="width: 100px;">Gender</th>
+                            <th style="width: 140px;">Contact</th>
+                            <th style="width: 140px;">Registration Date</th>
+                            <th style="width: 180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="patient in getPaginatedPatients()">
+                            <td><strong class="text-primary">{{patient.pinNumber}}</strong></td>
+                            <td>{{patient.fullName}}</td>
+                            <td>{{patient.age}}</td>
+                            <td>{{patient.gender}}</td>
+                            <td>{{patient.contactNumber}}</td>
+                            <td>{{patient.registrationDate | date:'dd-MM-yyyy'}}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-primary" 
+                                            ng-click="viewPatient(patient.pinNumber)"
+                                            title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-success" 
+                                            ng-click="createCVR(patient.pinNumber)"
+                                            title="Create CVR">
+                                        <i class="fas fa-file-medical"></i>
+                                    </button>
+                                    <button class="btn btn-info" 
+                                            ng-click="bookAppointment(patient.pinNumber)"
+                                            title="Book Appointment">
+                                        <i class="fas fa-calendar"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav ng-if="getTotalPages() > 1" aria-label="Patient list pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item" ng-class="{disabled: currentPage === 1}">
+                        <a class="page-link" 
+                           ng-click="currentPage > 1 && changePage(currentPage - 1)" 
+                           style="cursor: pointer;"
+                           tabindex="{{currentPage === 1 ? -1 : 0}}">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    
+                    <li class="page-item" 
+                        ng-repeat="page in getPageNumbers()" 
+                        ng-class="{active: currentPage === page}">
+                        <a class="page-link" 
+                           ng-click="changePage(page)"
+                           style="cursor: pointer;">
+                            {{page}}
+                        </a>
+                    </li>
+                    
+                    <li class="page-item" ng-class="{disabled: currentPage === getTotalPages()}">
+                        <a class="page-link" 
+                           ng-click="currentPage < getTotalPages() && changePage(currentPage + 1)"
+                           style="cursor: pointer;"
+                           tabindex="{{currentPage === getTotalPages() ? -1 : 0}}">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.pagination {
+    margin-top: 1rem;
+}
+
+.page-link {
+    color: #0d6efd;
+}
+
+.page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+</style>

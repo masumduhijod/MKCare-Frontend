@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<div class="container-fluid mt-4">
+    <h2 class="fw-bold mb-4">
+        <i class="fas fa-user-md text-primary"></i> Doctor List
+    </h2>
+
+    <div class="card">
+        <div class="card-body">
+            <div ng-if="loading" class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+            </div>
+
+            <div ng-if="!loading" class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Doctor ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Specialization</th>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="doctor in doctors">
+                            <td><span class="badge bg-info">{{doctor.doctorId}}</span></td>
+                            <td>Dr. {{doctor.firstName}} {{doctor.lastName}}</td>
+                            <td>{{doctor.department}}</td>
+                            <td>{{doctor.specialization}}</td>
+                            <td>{{doctor.contactNumber}}</td>
+                            <td>
+                                <span class="badge bg-success" ng-if="doctor.status === 'AVAILABLE'">Available</span>
+                                <span class="badge bg-secondary" ng-if="doctor.status !== 'AVAILABLE'">{{doctor.status}}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" ng-click="viewSchedule(doctor.doctorId)">
+                                    <i class="fas fa-calendar"></i> Schedule
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

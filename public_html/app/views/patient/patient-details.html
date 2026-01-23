@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!-- ============ PATIENT DETAILS VIEW ============ -->
+<!-- File: app/views/patient/patient-details.html -->
+
+<div class="container-fluid mt-4">
+    <!-- Header with Back Button -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <button class="btn btn-outline-secondary mb-3" ng-click="goBack()">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </button>
+            <h2 class="fw-bold">
+                <i class="fas fa-user text-primary"></i> Patient Details
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="#!/patient/list">Patient List</a></li>
+                    <li class="breadcrumb-item active">Patient Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div ng-if="loading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Loading patient details...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div ng-if="error && !loading" class="alert alert-danger alert-dismissible">
+        <strong><i class="fas fa-exclamation-triangle"></i> Error!</strong> {{error}}
+        <button type="button" class="btn-close" ng-click="error = null"></button>
+        <div class="mt-3">
+            <button class="btn btn-primary" ng-click="loadPatient()">
+                <i class="fas fa-redo"></i> Retry
+            </button>
+            <button class="btn btn-secondary" ng-click="goBack()">
+                <i class="fas fa-arrow-left"></i> Go Back
+            </button>
+        </div>
+    </div>
+
+    <!-- Patient Details -->
+    <div ng-if="!loading && patient && !error">
+        
+        <!-- Patient Summary Card -->
+        <div class="card mb-4 border-primary">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h3 class="card-title mb-3">
+                            {{patient.fullName}}
+                            <span class="badge bg-success ms-2" ng-if="patient.isActive">Active</span>
+                            <span class="badge bg-danger ms-2" ng-if="!patient.isActive">Inactive</span>
+                        </h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>PIN Number:</strong> 
+                                    <span class="text-primary fs-5">{{patient.pinNumber}}</span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Age:</strong> {{patient.age}} years
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Gender:</strong> {{patient.gender}}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Blood Group:</strong> {{patient.bloodGroup || 'N/A'}}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Contact:</strong> {{patient.contactNumber}}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Registration Date:</strong> {{patient.registrationDate | date:'dd-MM-yyyy'}}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="btn-group-vertical w-100">
+                            <button class="btn btn-success mb-2" ng-click="createCVR()">
+                                <i class="fas fa-file-medical"></i> Create CVR
+                            </button>
+                            <button class="btn btn-info mb-2" ng-click="bookAppointment()">
+                                <i class="fas fa-calendar"></i> Book Appointment
+                            </button>
+                            <button class="btn btn-warning mb-2" ng-click="editPatient()">
+                                <i class="fas fa-edit"></i> Edit Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#personal-info" type="button">
+                    <i class="fas fa-user"></i> Personal Info
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#contact-info" type="button">
+                    <i class="fas fa-phone"></i> Contact Info
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#medical-history" type="button">
+                    <i class="fas fa-notes-medical"></i> Medical History
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#insurance-info" type="button">
+                    <i class="fas fa-shield-alt"></i> Insurance
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            
+            <!-- Personal Info Tab -->
+            <div class="tab-pane fade show active" id="personal-info" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-user text-primary"></i> Personal Information
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">First Name</label>
+                                <p class="fw-bold">{{patient.firstName}}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Last Name</label>
+                                <p class="fw-bold">{{patient.lastName}}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Date of Birth</label>
+                                <p class="fw-bold">{{patient.dateOfBirth | date:'dd-MM-yyyy'}}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Age</label>
+                                <p class="fw-bold">{{patient.age}} years</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Gender</label>
+                                <p class="fw-bold">{{patient.gender}}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Blood Group</label>
+                                <p class="fw-bold">{{patient.bloodGroup || 'Not specified'}}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Aadhar Number</label>
+                                <p class="fw-bold">{{patient.aadharNumber || 'Not provided'}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Info Tab -->
+            <div class="tab-pane fade" id="contact-info" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-phone text-primary"></i> Contact Information
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Primary Contact</label>
+                                <p class="fw-bold">{{patient.contactNumber}}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Alternate Contact</label>
+                                <p class="fw-bold">{{patient.alternateContact || 'Not provided'}}</p>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="text-muted">Email</label>
+                                <p class="fw-bold">{{patient.email || 'Not provided'}}</p>
+                            </div>
+                        </div>
+
+                        <h5 class="card-title mt-4 mb-3">
+                            <i class="fas fa-map-marker-alt text-primary"></i> Address
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="text-muted">Address Line 1</label>
+                                <p class="fw-bold">{{patient.addressLine1 || 'Not provided'}}</p>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="text-muted">Address Line 2</label>
+                                <p class="fw-bold">{{patient.addressLine2 || 'Not provided'}}</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="text-muted">City</label>
+                                <p class="fw-bold">{{patient.city || 'Not provided'}}</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="text-muted">State</label>
+                                <p class="fw-bold">{{patient.state || 'Not provided'}}</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="text-muted">Pincode</label>
+                                <p class="fw-bold">{{patient.pincode || 'Not provided'}}</p>
+                            </div>
+                        </div>
+
+                        <h5 class="card-title mt-4 mb-3">
+                            <i class="fas fa-phone-alt text-danger"></i> Emergency Contact
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="text-muted">Name</label>
+                                <p class="fw-bold">{{patient.emergencyContactName || 'Not provided'}}</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="text-muted">Contact Number</label>
+                                <p class="fw-bold">{{patient.emergencyContactNumber || 'Not provided'}}</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="text-muted">Relationship</label>
+                                <p class="fw-bold">{{patient.emergencyContactRelation || 'Not provided'}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical History Tab -->
+            <div class="tab-pane fade" id="medical-history" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-notes-medical text-primary"></i> Medical History
+                        </h5>
+                        
+                        <div ng-if="loadingHistory" class="text-center my-3">
+                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                            <span class="ms-2">Loading medical history...</span>
+                        </div>
+
+                        <div ng-if="!loadingHistory && !medicalHistory" class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No medical history available for this patient.
+                            <button class="btn btn-sm btn-primary ms-3" ng-click="loadMedicalHistory()">
+                                <i class="fas fa-sync"></i> Load History
+                            </button>
+                        </div>
+
+                        <div ng-if="medicalHistory">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Allergies</label>
+                                    <p class="fw-bold">{{medicalHistory.allergies || 'None'}}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Chronic Diseases</label>
+                                    <p class="fw-bold">{{medicalHistory.chronicDiseases || 'None'}}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Past Surgeries</label>
+                                    <p class="fw-bold">{{medicalHistory.pastSurgeries || 'None'}}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Family History</label>
+                                    <p class="fw-bold">{{medicalHistory.familyHistory || 'None'}}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Smoking Status</label>
+                                    <p class="fw-bold">{{medicalHistory.smokingStatus || 'Not specified'}}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted">Alcohol Consumption</label>
+                                    <p class="fw-bold">{{medicalHistory.alcoholConsumption || 'Not specified'}}</p>
+                                </div>
+                            </div>
+
+                            <h6 class="mt-4 mb-3 text-primary">Vitals</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="text-muted">Height</label>
+                                    <p class="fw-bold">{{medicalHistory.heightCm || 'N/A'}} cm</p>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="text-muted">Weight</label>
+                                    <p class="fw-bold">{{medicalHistory.weightKg || 'N/A'}} kg</p>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="text-muted">BMI</label>
+                                    <p class="fw-bold">{{medicalHistory.bmi || 'N/A'}}</p>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="text-muted">Blood Pressure</label>
+                                    <p class="fw-bold">{{medicalHistory.bloodPressure || 'N/A'}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insurance Tab -->
+            <div class="tab-pane fade" id="insurance-info" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-shield-alt text-primary"></i> Insurance Information
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Insurance Provider</label>
+                                <p class="fw-bold">{{patient.insuranceProvider || 'Not provided'}}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Insurance ID</label>
+                                <p class="fw-bold">{{patient.insuranceId || 'Not provided'}}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted">Expiry Date</label>
+                                <p class="fw-bold">
+                                    {{patient.insuranceExpiryDate ? (patient.insuranceExpiryDate | date:'dd-MM-yyyy') : 'Not provided'}}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Remarks Section -->
+        <div class="card mt-4" ng-if="patient.remarks">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-comment text-primary"></i> Remarks / Notes
+                </h5>
+                <p>{{patient.remarks}}</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+.nav-tabs .nav-link {
+    color: #495057;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.tab-content {
+    min-height: 300px;
+}
+
+label.text-muted {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.card-title {
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.75rem;
+}
+</style>

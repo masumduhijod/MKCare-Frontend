@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">
+                <i class="fas fa-calendar-plus text-primary"></i> Book Appointment
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Book Appointment</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="progress-steps">
+                <div class="step" ng-class="{active: currentStep >= 1, completed: currentStep > 1}">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Patient</div>
+                </div>
+                <div class="step" ng-class="{active: currentStep >= 2, completed: currentStep > 2}">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Doctor</div>
+                </div>
+                <div class="step" ng-class="{active: currentStep >= 3, completed: currentStep > 3}">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Time Slot</div>
+                </div>
+                <div class="step" ng-class="{active: currentStep >= 4}">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Confirm</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div ng-if="loading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Processing...</p>
+    </div>
+
+    <!-- Step 1: Patient Selection - IMPROVED -->
+    <div ng-if="currentStep === 1 && !loading" class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-user"></i> Step 1: Select Patient</h5>
+        </div>
+        <div class="card-body">
+            <!-- Patient Search Options -->
+            <div ng-if="!patient">
+                <!-- Search by PIN or Contact -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Search Patient</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   ng-model="searchQuery"
+                                   placeholder="Enter PIN (e.g., PIN2025000001) or Contact Number (e.g., 9876543210)"
+                                   ng-keypress="$event.keyCode === 13 && searchPatient()">
+                            <button class="btn btn-primary" ng-click="searchPatient()" ng-disabled="!searchQuery">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Enter complete PIN number (starts with PIN) or 10-digit mobile number
+                        </small>
+                    </div>
+                </div>
+
+                <div class="text-center my-4">
+                    <span class="text-muted">--- OR ---</span>
+                </div>
+
+                <!-- Quick Select from Recent Patients -->
+                <div class="row">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Select from Recent Patients</label>
+                        <button class="btn btn-outline-primary btn-sm ms-2" ng-click="loadRecentPatients()" ng-if="!recentPatients || recentPatients.length === 0">
+                            <i class="fas fa-sync"></i> Load Recent Patients
+                        </button>
+
+                        <!-- Recent Patients List -->
+                        <div ng-if="recentPatients && recentPatients.length > 0" class="mt-3">
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-hover">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th>PIN</th>
+                                            <th>Name</th>
+                                            <th>Age/Gender</th>
+                                            <th>Contact</th>
+                                            <th>Blood Group</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="p in recentPatients| limitTo:20">
+                                            <td><span class="badge bg-info">{{p.pinNumber}}</span></td>
+                                            <td><strong>{{p.fullName}}</strong></td>
+                                            <td>{{p.age}} / {{p.gender}}</td>
+                                            <td>{{p.contactNumber}}</td>
+                                            <td>{{p.bloodGroup|| 'N/A'}}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-success" ng-click="selectPatientFromList(p)">
+                                                    <i class="fas fa-check"></i> Select
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div ng-if="recentPatients && recentPatients.length === 0" class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i> No recent patients found. Please search by PIN or Contact.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected Patient Details -->
+            <div ng-if="patient" class="alert alert-success">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5><i class="fas fa-check-circle"></i> Patient Selected</h5>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>PIN:</strong> <span class="badge bg-info fs-6">{{patient.pinNumber}}</span></p>
+                                <p class="mb-2"><strong>Name:</strong> {{patient.fullName}}</p>
+                                <p class="mb-2"><strong>Age/Gender:</strong> {{patient.age}} years / {{patient.gender}}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Contact:</strong> {{patient.contactNumber}}</p>
+                                <p class="mb-2"><strong>Blood Group:</strong> {{patient.bloodGroup|| 'N/A'}}</p>
+                                <p class="mb-2"><strong>Email:</strong> {{patient.email|| 'N/A'}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-primary" ng-click="clearPatientSelection()">
+                        <i class="fas fa-edit"></i> Change
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <a href="#!/dashboard" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button class="btn btn-primary btn-lg" ng-click="nextStep()" ng-disabled="!patient">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Doctor Selection -->
+    <div ng-if="currentStep === 2 && !loading" class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-user-md"></i> Step 2: Select Doctor</h5>
+        </div>
+        <div class="card-body">
+            <!-- Department Selection -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Select Department <span class="text-danger">*</span></label>
+                    <select class="form-select" ng-model="selectedDepartment" 
+                            ng-change="loadDoctors(selectedDepartment)">
+                        <option value="">-- Select Department --</option>
+                        <option ng-repeat="dept in departments" value="{{dept}}">{{dept}}</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Doctor List -->
+            <div class="row" ng-if="doctors.length > 0">
+                <div class="col-md-4 mb-3" ng-repeat="doctor in doctors">
+                    <div class="card doctor-card h-100" 
+                         ng-class="{selected: selectedDoctor && selectedDoctor.doctorId === doctor.doctorId}"
+                         ng-click="selectDoctor(doctor)">
+                        <div class="card-body">
+                            <h6 class="card-title">Dr. {{doctor.firstName}} {{doctor.lastName}}</h6>
+                            <p class="mb-1"><small><i class="fas fa-stethoscope"></i> {{doctor.specialization}}</small></p>
+                            <p class="mb-1"><small><i class="fas fa-building"></i> {{doctor.department}}</small></p>
+                            <p class="mb-1"><small><i class="fas fa-briefcase"></i> {{doctor.experienceYears}} years exp.</small></p>
+                            <p class="mb-0"><small><i class="fas fa-phone"></i> {{doctor.contactNumber}}</small></p>
+                            <div ng-if="selectedDoctor && selectedDoctor.doctorId === doctor.doctorId" 
+                                 class="mt-2">
+                                <span class="badge bg-success w-100">
+                                    <i class="fas fa-check"></i> Selected
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div ng-if="selectedDepartment && doctors.length === 0" class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No doctors available in this department
+            </div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-secondary" ng-click="prevStep()">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button class="btn btn-primary btn-lg" ng-click="nextStep()" ng-disabled="!selectedDoctor">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Date & Slot Selection - UPDATED UI -->
+    <div ng-if="currentStep === 3 && !loading" class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-clock"></i> Step 3: Select Date & Time Slot</h5>
+        </div>
+        <div class="card-body">
+
+            <!-- Available Dates Grid - WITHOUT HEADING -->
+            <div class="mb-4">
+                <div ng-if="availableDates.length === 0" class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Doctor has no active schedule!
+                    <br>Please create schedule in Doctor Schedule Management first.
+                </div>
+
+                <div ng-if="availableDates.length > 0" class="row">
+                    <div class="col-md-2 col-sm-3 col-6 mb-3" ng-repeat="dateInfo in availableDates| limitTo:18">
+                        <button class="btn w-100 date-btn"
+                                ng-class="{
+                                'btn-primary': selectedDate === dateInfo.date,
+                                'btn-outline-primary': selectedDate !== dateInfo.date
+                            }"
+                                ng-click="selectDate(dateInfo.date)">
+                            <small class="d-block">{{dateInfo.displayDate}}</small>
+                            <small class="text-muted">{{dateInfo.dayName}}</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONLY SHOW SLOTS WHEN DATE IS SELECTED -->
+            <div ng-if="selectedDate">
+                <hr>
+
+                <!-- Selected Date Display -->
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-calendar-check"></i> 
+                    <strong>Selected Date:</strong> {{selectedDate| date:'dd MMM yyyy'}} ({{getDayName(selectedDate)}})
+                </div>
+
+                <!-- Available Slots -->
+                <div ng-if="slots.length > 0">
+                    <h6 class="mb-3">🕐 Available Time Slots</h6>
+                    <div class="row">
+                        <div class="col-md-2 col-sm-3 col-6 mb-3" ng-repeat="slot in slots">
+                            <button class="btn w-100 slot-btn"
+                                    ng-class="{
+            'btn-outline-primary': !selectedSlot || selectedSlot.slotId !== slot.slotId,
+            'btn-success': selectedSlot && selectedSlot.slotId === slot.slotId,
+            'btn-outline-secondary': !slot.isAvailable || isSlotExpired(slot.slotTime)
+        }"
+                                    ng-click="selectSlot(slot)"
+                                    ng-disabled="!slot.isAvailable || isSlotExpired(slot.slotTime)">
+                                <i class="fas fa-clock"></i><br>
+                                {{formatSlotTime(slot.slotTime)}}
+                                <br>
+                                <small ng-if="!slot.isAvailable" class="text-danger">Booked</small>
+                                <small ng-if="slot.isAvailable && isSlotExpired(slot.slotTime)" class="text-danger">Expired</small>
+                                <small ng-if="slot.isAvailable && !isSlotExpired(slot.slotTime)" class="text-success">Available</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div ng-if="slots.length === 0 && !loading" class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> No slots available for this date
+                    <button class="btn btn-sm btn-primary ms-3" ng-click="generateSlots()">
+                        <i class="fas fa-plus"></i> Generate Slots
+                    </button>
+                </div>
+            </div>
+
+            <!-- Message when no date selected -->
+            <div ng-if="!selectedDate && availableDates.length > 0" class="alert alert-info">
+                <i class="fas fa-hand-pointer"></i> Please select a date to view available time slots
+            </div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-secondary" ng-click="prevStep()">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button class="btn btn-primary btn-lg" ng-click="nextStep()" ng-disabled="!selectedSlot">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Confirmation -->
+    <div ng-if="currentStep === 4 && !loading && !bookedAppointment" class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-check-circle"></i> Step 4: Confirm Booking</h5>
+        </div>
+        <div class="card-body">
+            <!-- Booking Summary -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-primary mb-3"><i class="fas fa-user"></i> Patient Details</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>Name:</strong></td><td>{{patient.fullName}}</td></tr>
+                        <tr><td><strong>PIN:</strong></td><td><span class="badge bg-info">{{patient.pinNumber}}</span></td></tr>
+                        <tr><td><strong>Age/Gender:</strong></td><td>{{patient.age}} / {{patient.gender}}</td></tr>
+                        <tr><td><strong>Contact:</strong></td><td>{{patient.contactNumber}}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-primary mb-3"><i class="fas fa-calendar"></i> Appointment Details</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>Doctor:</strong></td><td>Dr. {{selectedDoctor.firstName}} {{selectedDoctor.lastName}}</td></tr>
+                        <tr><td><strong>Department:</strong></td><td>{{selectedDoctor.department}}</td></tr>
+                        <tr><td><strong>Date:</strong></td><td>{{appointment.appointmentDate| date:'dd-MM-yyyy'}}</td></tr>
+                        <tr><td><strong>Time:</strong></td><td><span class="badge bg-success">{{formatSlotTime(appointment.appointmentTime)}}</span></td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Additional Details -->
+            <h6 class="text-primary mb-3">Additional Information</h6>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Appointment Type <span class="text-danger">*</span></label>
+                    <select class="form-select" ng-model="appointment.appointmentType" required>
+                        <option value="">-- Select Type --</option>
+                        <option ng-repeat="type in appointmentTypes" value="{{type}}">{{type}}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <label class="form-label">Symptoms / Reason for Visit <span class="text-danger">*</span></label>
+                    <textarea class="form-control" 
+                              ng-model="appointment.symptoms" 
+                              rows="3"
+                              placeholder="Describe the main complaint or reason for this appointment"
+                              required></textarea>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <label class="form-label">Additional Notes (Optional)</label>
+                    <textarea class="form-control" 
+                              ng-model="appointment.notes" 
+                              rows="2"
+                              placeholder="Any other information (medical history, current medications, etc.)"></textarea>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-secondary" ng-click="prevStep()">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button class="btn btn-success btn-lg" ng-click="bookAppointment()" ng-disabled="!appointment.appointmentType || !appointment.symptoms">
+                    <i class="fas fa-check"></i> Confirm & Book Appointment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ BOOKING SUCCESS SCREEN - NO CVR SHOWN -->
+    <div ng-if="bookedAppointment" class="card border-success">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-check-circle"></i> 
+                Appointment Booked Successfully!
+            </h5>
+        </div>
+        <div class="card-body">
+            <!-- Main Success Alert -->
+            <div class="alert alert-success">
+                <h4 class="alert-heading">
+                    <i class="fas fa-check-circle"></i> 
+                    Booking Complete!
+                </h4>
+                <p class="mb-0">
+                    The appointment has been booked successfully. 
+                    <strong>Patient should arrive on time for check-in at OPD.</strong>
+                </p>
+                <hr>
+                <p class="mb-0 text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Note:</strong> CVR (Clinical Visit Record) will be created automatically when patient checks in at OPD reception.
+                </p>
+            </div>
+
+            <!-- Appointment Details Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-calendar"></i> 
+                        Appointment Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Appointment ID:</strong></td>
+                                    <td><span class="text-primary fw-bold">{{bookedAppointment.appointmentId}}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Token Number:</strong></td>
+                                    <td><span class="badge bg-primary fs-5">{{bookedAppointment.tokenNumber}}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Patient Name:</strong></td>
+                                    <td>{{bookedAppointment.patientName}}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>PIN:</strong></td>
+                                    <td><span class="badge bg-info">{{appointment.pinNumber}}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Contact:</strong></td>
+                                    <td>{{patient.contactNumber}}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Doctor:</strong></td>
+                                    <td>Dr. {{bookedAppointment.doctorName}}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Department:</strong></td>
+                                    <td>{{selectedDoctor.department}}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Appointment Date:</strong></td>
+                                    <td><span class="fw-bold">{{bookedAppointment.appointmentDate| date:'dd-MM-yyyy'}}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Appointment Time:</strong></td>
+                                    <td><span class="badge bg-success fs-6">{{formatSlotTime(bookedAppointment.appointmentTime)}}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Type:</strong></td>
+                                    <td>{{appointment.appointmentType}}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td><span class="badge bg-warning">{{bookedAppointment.status}}</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-notes-medical"></i> 
+                        Clinical Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Chief Complaint / Symptoms:</strong></p>
+                            <p class="text-muted">{{appointment.symptoms}}</p>
+                        </div>
+                        <div class="col-md-6" ng-if="appointment.notes">
+                            <p><strong>Additional Notes:</strong></p>
+                            <p class="text-muted">{{appointment.notes}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Important Instructions -->
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle"></i> Important Instructions for Patient:</h6>
+                <ul class="mb-0">
+                    <li><strong>Arrive 15 minutes before appointment time</strong></li>
+                    <li>Bring appointment token number: <strong class="text-primary">{{bookedAppointment.tokenNumber}}</strong></li>
+                    <li>Check-in at OPD reception desk</li>
+                    <li>CVR will be generated during check-in process</li>
+                    <li>Wait in the waiting area after check-in</li>
+                </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <!-- Primary Actions -->
+                <button class="btn btn-success btn-lg" ng-click="bookAnother()">
+                    <i class="fas fa-plus"></i> 
+                    Book Another Appointment
+                </button>
+
+                <!-- Secondary Actions -->
+                <button class="btn btn-outline-secondary btn-lg" 
+                        ng-click="printAppointmentCard()">
+                    <i class="fas fa-print"></i> 
+                    Print Appointment Card
+                </button>
+
+                <a href="#!/appointment/list" 
+                   class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-list"></i> 
+                    View All Appointments
+                </a>
+
+                <a href="#!/patient/details/{{appointment.pinNumber}}" 
+                   class="btn btn-outline-info btn-lg">
+                    <i class="fas fa-user"></i> 
+                    View Patient Details
+                </a>
+
+                <a href="#!/dashboard" 
+                   class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-home"></i> 
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print-only section -->
+    <div class="d-none d-print-block" ng-if="bookedAppointment">
+        <div class="text-center mb-4">
+            <h2>🏥 Hospital Appointment Card</h2>
+            <p>Date: {{bookedAppointment.appointmentDate| date:'dd-MM-yyyy'}}</p>
+        </div>
+
+        <table class="table table-bordered">
+            <tr>
+                <th width="30%">Token Number</th>
+                <td class="fs-3 fw-bold">{{bookedAppointment.tokenNumber}}</td>
+            </tr>
+            <tr>
+                <th>Patient Name</th>
+                <td>{{bookedAppointment.patientName}}</td>
+            </tr>
+            <tr>
+                <th>PIN</th>
+                <td>{{appointment.pinNumber}}</td>
+            </tr>
+            <tr>
+                <th>Contact</th>
+                <td>{{patient.contactNumber}}</td>
+            </tr>
+            <tr>
+                <th>Doctor</th>
+                <td>Dr. {{bookedAppointment.doctorName}}</td>
+            </tr>
+            <tr>
+                <th>Department</th>
+                <td>{{selectedDoctor.department}}</td>
+            </tr>
+            <tr>
+                <th>Appointment Time</th>
+                <td class="fs-4 fw-bold">{{formatSlotTime(bookedAppointment.appointmentTime)}}</td>
+            </tr>
+        </table>
+
+        <div class="alert alert-warning mt-4">
+            <strong>⚠️ Important:</strong>
+            <ul class="mb-0">
+                <li>Please arrive 15 minutes before your appointment time</li>
+                <li>Check-in at OPD reception desk first</li>
+                <li>Bring this appointment card</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<style>
+
+    .gap-2 {
+        gap: 0.5rem !important;
+    }
+
+    @media print {
+        .btn, .card-header, nav, .breadcrumb {
+            display: none !important;
+        }
+
+        body {
+            font-size: 14pt;
+        }
+
+        .alert {
+            page-break-inside: avoid;
+        }
+    }
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: #dee2e6;
+        z-index: 0;
+    }
+
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        opacity: 0.5;
+        z-index: 1;
+    }
+
+    .step.active {
+        opacity: 1;
+    }
+
+    .step.completed .step-number {
+        background-color: #28a745;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        background-color: #6c757d;
+        color: white;
+        border-radius: 50%;
+        margin: 0 auto 0.5rem;
+        font-weight: bold;
+        position: relative;
+        z-index: 2;
+    }
+
+    .step.active .step-number {
+        background-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+    }
+
+    .step-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .doctor-card {
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .doctor-card:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+
+    .doctor-card.selected {
+        border-color: #28a745;
+        background-color: #f8f9fa;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+    }
+
+    .slot-btn {
+        font-size: 0.875rem;
+        padding: 0.75rem 0.5rem;
+        min-height: 70px;
+        transition: all 0.2s;
+    }
+
+    .slot-btn:hover:not(:disabled) {
+        transform: scale(1.05);
+    }
+
+    .slot-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .table-hover tbody tr {
+        cursor: pointer;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    @media print {
+        .sidebar, nav, .btn, .breadcrumb, .progress-steps {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+    }
+
+    .date-btn {
+        font-size: 0.85rem;
+        padding: 0.75rem 0.5rem;
+        min-height: 70px;
+        transition: all 0.2s;
+    }
+
+    .date-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .date-btn.btn-primary {
+        font-weight: bold;
+    }
+
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: #dee2e6;
+        z-index: 0;
+    }
+
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        opacity: 0.5;
+        z-index: 1;
+    }
+
+    .step.active {
+        opacity: 1;
+    }
+
+    .step.completed .step-number {
+        background-color: #28a745;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        background-color: #6c757d;
+        color: white;
+        border-radius: 50%;
+        margin: 0 auto 0.5rem;
+        font-weight: bold;
+        position: relative;
+        z-index: 2;
+    }
+
+    .step.active .step-number {
+        background-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+    }
+
+    .step-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .doctor-card {
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .doctor-card:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+
+    .doctor-card.selected {
+        border-color: #28a745;
+        background-color: #f8f9fa;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+    }
+
+    .slot-btn {
+        font-size: 0.875rem;
+        padding: 0.75rem 0.5rem;
+        min-height: 70px;
+        transition: all 0.2s;
+    }
+
+    .slot-btn:hover:not(:disabled) {
+        transform: scale(1.05);
+    }
+
+    .slot-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .date-btn {
+        font-size: 0.85rem;
+        padding: 0.75rem 0.5rem;
+        min-height: 70px;
+        transition: all 0.2s;
+    }
+
+    .date-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .date-btn.btn-primary {
+        font-weight: bold;
+    }
+
+    .table-hover tbody tr {
+        cursor: pointer;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    @media print {
+        .sidebar, nav, .btn, .breadcrumb, .progress-steps {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+    }
+
+    .gap-2 {
+        gap: 0.5rem !important;
+    }
+
+    @media print {
+        .btn, .card-header, nav, .breadcrumb {
+            display: none !important;
+        }
+    }
+</style>
