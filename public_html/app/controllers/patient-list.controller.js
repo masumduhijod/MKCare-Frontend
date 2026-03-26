@@ -90,18 +90,45 @@ app.controller('PatientListController', ['$scope', '$rootScope', '$location', 'P
         $scope.error = null;
         
         var query = $scope.searchQuery.trim();
-        var type = $scope.searchType || 'NAME';
+        var type = 'NAME';
+        
+        // Smart inference of search type based on query patterns
+        if ((query.toUpperCase().indexOf('PIN') === 0 && query.length >= 10)) {
+            type = 'PIN';
+        } else if (/^\d+$/.test(query) && query.length === 10) {
+            type = 'CONTACT';
+        }
         
         console.log('Searching patients:', query, type);
         
-        PatientService.search(query, type)
+        var request;
+        if (type === 'PIN') {
+            // Use exact PIN search endpoint
+            request = PatientService.getByPin(query);
+        } else if (type === 'CONTACT') {
+            // Use exact Contact search endpoint
+            request = PatientService.getByContact(query);
+        } else {
+            // By name or generic string
+            request = PatientService.search(query);
+        }
+        
+        request
             .then(function(response) {
                 $scope.loading = false;
                 
                 console.log('Search response:', response.data);
                 
                 if (response.data && response.data.success) {
-                    $scope.patients = response.data.data || [];
+                    var data = response.data.data;
+                    
+                    // Normalize to array, since getByPin and getByContact return a single object
+                    if (data && !Array.isArray(data)) {
+                        $scope.patients = [data];
+                    } else {
+                        $scope.patients = data || [];
+                    }
+                    
                     $scope.totalItems = $scope.patients.length;
                     $scope.currentPage = 1; // Reset to first page
                     

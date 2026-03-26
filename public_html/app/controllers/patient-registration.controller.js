@@ -10,8 +10,8 @@
  * Complete patient registration with all fields
  */
 
-app.controller('PatientRegistrationController', ['$scope', '$rootScope', '$location', 'PatientService', 'AuthService',
-    function($scope, $rootScope, $location, PatientService, AuthService) {
+app.controller('PatientRegistrationController', ['$scope', '$rootScope', '$location', '$routeParams', 'PatientService', 'AuthService',
+    function($scope, $rootScope, $location, $routeParams, PatientService, AuthService) {
     
     // Get current user
     var currentUser = AuthService.getCurrentUser();
@@ -52,6 +52,56 @@ app.controller('PatientRegistrationController', ['$scope', '$rootScope', '$locat
     $scope.bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
     $scope.stateOptions = ['Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Gujarat', 'Rajasthan', 
                            'Uttar Pradesh', 'West Bengal', 'Madhya Pradesh', 'Other'];
+
+    $scope.isEditMode = false;
+
+    // Initialization check for Edit Mode
+    $scope.init = function() {
+        if ($routeParams.pinNumber) {
+            $scope.isEditMode = true;
+            var editPin = $routeParams.pinNumber;
+            
+            // Check localStorage first
+            var storedData = localStorage.getItem('editPatient');
+            if (storedData) {
+                var parsedData = JSON.parse(storedData);
+                if (parsedData.pinNumber === editPin) {
+                    $scope.patient = parsedData;
+                    if ($scope.patient.dateOfBirth) {
+                         $scope.patient.dateOfBirth = new Date($scope.patient.dateOfBirth);
+                    }
+                    localStorage.removeItem('editPatient');
+                } else {
+                    $scope.loadPatientData(editPin);
+                }
+            } else {
+                $scope.loadPatientData(editPin);
+            }
+        }
+    };
+
+    $scope.loadPatientData = function(pin) {
+        $scope.loading = true;
+        PatientService.getByPin(pin).then(function(res) {
+            $scope.loading = false;
+            if (res.data && res.data.success) {
+                $scope.patient = res.data.data;
+                // Bind to date element
+                if ($scope.patient.dateOfBirth) {
+                     $scope.patient.dateOfBirth = new Date($scope.patient.dateOfBirth);
+                }
+            } else {
+                if ($rootScope.showAlert) {
+                    $rootScope.showAlert('danger', 'Failed to load patient: ' + res.data.message);
+                }
+            }
+        }).catch(function(error) {
+            $scope.loading = false;
+            if ($rootScope.showAlert) {
+                $rootScope.showAlert('danger', 'Error loading patient details for edit.');
+            }
+        });
+    };
     
     /**
      * Validate Form
@@ -138,33 +188,51 @@ app.controller('PatientRegistrationController', ['$scope', '$rootScope', '$locat
         
         $scope.loading = true;
         
-        PatientService.register($scope.patient)
-            .then(function(response) {
-                $scope.loading = false;
-                
-                if (response.data.success) {
-                    $scope.registeredPIN = response.data.data.pinNumber;
-                    $rootScope.showAlert('success', 'Patient registered successfully! PIN: ' + $scope.registeredPIN);
-                    
-                    // Ask if user wants to create CVR
-                    var createCVR = confirm('Patient registered successfully!\nPIN: ' + $scope.registeredPIN + 
-                                          '\n\nDo you want to create a visit (CVR) for this patient?');
-                    
-                    if (createCVR) {
-                        $location.path('/cvr/create').search({pinNumber: $scope.registeredPIN});
+        if ($scope.isEditMode) {
+            PatientService.update($scope.patient.pinNumber, $scope.patient)
+                .then(function(response) {
+                    $scope.loading = false;
+                    if (response.data.success) {
+                        $rootScope.showAlert('success', 'Patient updated successfully!');
+                        $location.path('/patient/details/' + $scope.patient.pinNumber);
                     } else {
-                        // Reset form
-                        $scope.resetForm();
+                        $rootScope.showAlert('danger', response.data.message || 'Update failed');
                     }
-                } else {
-                    $rootScope.showAlert('danger', response.data.message || 'Registration failed');
-                }
-            })
-            .catch(function(error) {
-                $scope.loading = false;
-                var errorMsg = error.data && error.data.message ? error.data.message : 'Registration failed. Please try again.';
-                $rootScope.showAlert('danger', errorMsg);
-            });
+                })
+                .catch(function(error) {
+                    $scope.loading = false;
+                    var errorMsg = error.data && error.data.message ? error.data.message : 'Update failed. Please try again.';
+                    $rootScope.showAlert('danger', errorMsg);
+                });
+        } else {
+            PatientService.register($scope.patient)
+                .then(function(response) {
+                    $scope.loading = false;
+                    
+                    if (response.data.success) {
+                        $scope.registeredPIN = response.data.data.pinNumber;
+                        $rootScope.showAlert('success', 'Patient registered successfully! PIN: ' + $scope.registeredPIN);
+                        
+                        // Ask if user wants to create appointment or view profile
+                        var viewProfile = confirm('Patient registered successfully!\nPIN: ' + $scope.registeredPIN + 
+                                            '\n\nDo you want to book an appointment for this patient?');
+                        
+                        if (viewProfile) {
+                            $location.path('/appointment/book').search({pinNumber: $scope.registeredPIN});
+                        } else {
+                            // Reset form
+                            $scope.resetForm();
+                        }
+                    } else {
+                        $rootScope.showAlert('danger', response.data.message || 'Registration failed');
+                    }
+                })
+                .catch(function(error) {
+                    $scope.loading = false;
+                    var errorMsg = error.data && error.data.message ? error.data.message : 'Registration failed. Please try again.';
+                    $rootScope.showAlert('danger', errorMsg);
+                });
+        }
     };
     
     /**
@@ -201,11 +269,18 @@ app.controller('PatientRegistrationController', ['$scope', '$rootScope', '$locat
     };
     
     /**
-     * Cancel Registration
+     * Cancel Registration/Edit
      */
     $scope.cancel = function() {
-        if (confirm('Are you sure you want to cancel? All data will be lost.')) {
-            $location.path('/dashboard');
+        if (confirm('Are you sure you want to cancel? Unsaved changes will be lost.')) {
+            if ($scope.isEditMode) {
+                $location.path('/patient/details/' + $scope.patient.pinNumber);
+            } else {
+                $location.path('/dashboard');
+            }
         }
     };
+
+    // Run Init
+    $scope.init();
 }]);

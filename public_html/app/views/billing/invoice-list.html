@@ -1,0 +1,240 @@
+<!-- ============================================
+     INVOICE LIST VIEW
+     File: app/views/billing/invoice-list.html
+     View all invoices with search and filters
+     ============================================ -->
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="fas fa-list"></i> Invoice Management</h4>
+                        <button class="btn btn-light btn-sm" ng-click="createNewInvoice()">
+                            <i class="fas fa-plus"></i> New Invoice
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+<!-- OPD Style Filter Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+
+                    <!-- Select Doctor -->
+                    <div class="col-md-3">
+                        <label class="form-label">Select Doctor</label>
+                        <select class="form-select"
+                                ng-model="selectedDoctorId"
+                                ng-options="doc.doctorId as doc.fullName for doc in doctorList">
+                            <option value="">--- Select Doctor ---</option>
+                        </select>
+                    </div>
+
+                    <!-- Select Date -->
+                    <div class="col-md-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control"
+                               ng-model="selectedDate">
+                    </div>
+
+                    <!-- Search By -->
+                    <div class="col-md-2">
+                        <label class="form-label">Search By</label>
+                        <select class="form-select"
+                                ng-model="filter.searchType"
+                                ng-change="applyFilters()">
+                            <option value="ALL">All Records</option>
+                            <option value="PIN">PIN</option>
+                            <option value="NAME">Patient Name</option>
+                            <option value="INVOICE">Invoice No</option>
+                        </select>
+                    </div>
+
+                    <!-- Search Query -->
+                    <div class="col-md-3">
+                        <label class="form-label">Search Query</label>
+                        <input type="text" class="form-control"
+                               ng-model="filter.searchText"
+                               ng-change="applyFilters()"
+                               placeholder="Enter search term...">
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-md-1 d-grid">
+                        <button class="btn btn-success"
+                                ng-click="refreshInvoices()">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Load Button -->
+                <div class="mt-3">
+                    <button class="btn btn-primary"
+        ng-click="loadCompletedConsultations()">
+    <i class="fas fa-filter"></i> Load Records
+</button>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Invoice List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+<!--                        <h5 class="mb-0">
+                            Invoices ({{filteredInvoices.length}})
+                        </h5>-->
+                    <h5 class="mb-0">Completed Consultations ({{completedConsultations.length}})</h5>
+
+                        <div>
+                            <small class="text-muted">
+                                Page {{pagination.currentPage}} of {{pagination.totalPages}}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div ng-if="loading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+            <th>PIN</th>
+            <th>CVR</th>
+            <th>Consultation Date</th>
+            <!--<th>Doctor</th>-->
+             <th>Status</th>
+            <th>Complaint</th>
+            <th class="text-center">Action</th>
+        </tr>
+    </thead>
+     <tbody>
+<!--        <tr ng-repeat="c in completedConsultations">-->
+<tr ng-repeat="c in getPagedConsultations()">
+
+            <td>
+                <span ng-if="c.patientName">{{c.patientName}}</span>
+                <span ng-if="!c.patientName" class="text-muted">Loading...</span>
+            </td>
+            <td>{{c.pinNumber}}</td>
+             <td>
+        <span ng-if="c.cvrNumber"> {{c.cvrNumber}}</span>
+    </td>
+            <td>{{c.consultationDate | date:'dd-MM-yyyy HH:mm'}}</td>
+<!--            <td>
+                <span ng-if="c.doctorName">{{c.doctorName}}</span>
+                <span ng-if="!c.doctorName" class="text-muted">Loading...</span>
+            </td>-->
+             <td>
+        <span class="badge"
+              ng-class="{
+                  'bg-success': c.status === 'COMPLETED',
+                  'bg-warning': c.status === 'PENDING',
+                  'bg-danger': c.status === 'CANCELLED'
+              }">
+            {{c.status}}
+        </span>
+    </td>
+            <td>{{c.chiefComplaint}}</td>
+        <td class="text-center">
+    <!-- Display status badge -->
+     
+    <span class="badge" 
+          ng-class="{
+              'bg-success': c.displayStatus === 'Done',
+              'bg-warning': c.displayStatus === 'PENDING',
+              'bg-danger': c.displayStatus === 'CANCELLED',
+              'bg-info': c.displayStatus === 'NOT INVOICED'
+          }">
+        {{ c.displayStatus || c.paymentStatus }}
+    </span>
+    
+
+
+    <!-- Create invoice button -->
+    <button ng-if="c.displayStatus === 'NOT INVOICED'"
+        class="btn btn-sm btn-primary ms-1"
+        ng-click="createInvoiceForConsultation(c)">
+    Create Invoice
+</button>
+      <!-- PROCESS PAYMENT -->
+    <button ng-if="c.displayStatus === 'INVOICED'"
+            class="btn btn-sm btn-warning ms-1"
+            ng-click="makePayment(c.invoiceNumber)">
+        Process Payment
+    </button>
+
+</td>
+
+<!--            <td class="text-center">
+                <button class="btn btn-sm btn-primary" 
+                        ng-click="createInvoiceForConsultation(c)">
+                    Create Invoice
+                </button>
+            </td>-->
+        </tr>
+    </tbody>
+</table>
+
+                    <!-- Pagination -->
+                    <div ng-if="pagination.totalPages > 1" class="d-flex justify-content-center mt-4">
+                        <nav>
+                            <ul class="pagination">
+                                <li class="page-item" ng-class="{disabled: pagination.currentPage === 1}">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="goToPage(pagination.currentPage - 1)">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                
+                                <li class="page-item" ng-repeat="page in getPageNumbers()" 
+                                    ng-class="{active: page === pagination.currentPage}">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="goToPage(page)">
+                                        {{page}}
+                                    </a>
+                                </li>
+                                
+                                <li class="page-item" ng-class="{disabled: pagination.currentPage === pagination.totalPages}">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="goToPage(pagination.currentPage + 1)">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+</style>

@@ -1,47 +1,49 @@
-<div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="fw-bold">
-                <i class="fas fa-users text-primary"></i> Patient List
-            </h2>
+<div class="container-fluid px-2 px-md-4 mt-2 fade-in">
+    <!-- Header -->
+    <div class="row mb-3 align-items-center">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary-soft text-primary rounded d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
+                    <i class="fas fa-users fs-5"></i>
+                </div> 
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">Patient Registry</h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0 fs-xs text-muted">
+                            <li class="breadcrumb-item"><a href="#!/dashboard" class="text-decoration-none">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Patient List</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            <div>
+                <a href="#!/patient/register" class="btn btn-primary btn-sm shadow-sm fw-bold rounded-pill px-3">
+                    <i class="fas fa-user-plus me-1"></i> Register New
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Search Bar -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Search Query</label>
-                    <input type="text" 
-                           class="form-control" 
-                           ng-model="searchQuery" 
-                           placeholder="Enter PIN, Name, or Contact"
-                           ng-keypress="$event.keyCode === 13 && searchPatients()">
+    <!-- Modern Search Bar -->
+    <div class="card shadow-sm border-0 mb-3 bg-white" style="border-radius: 8px;">
+        <div class="card-body p-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-8">
+                    <div class="input-group input-group-sm rounded border border-secondary border-opacity-25 bg-light overflow-hidden shadow-sm">
+                        <span class="input-group-text bg-transparent border-0 text-primary"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control border-0 shadow-none bg-transparent ps-1 fw-bold fs-sm" 
+                               ng-model="searchQuery" 
+                               placeholder="Smart Search: Enter Name, PIN or Mobile Number..."
+                               ng-change="searchPatients()"
+                               ng-model-options="{ debounce: 400 }"
+                               ng-keypress="$event.keyCode === 13 && searchPatients()" autofocus>
+                    </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Search Type</label>
-                    <select class="form-select" ng-model="searchType">
-                        <option value="NAME">Name</option>
-                        <option value="PIN">PIN Number</option>
-                        <option value="CONTACT">Contact</option>
-                    </select>
-                </div>
-                <div class="col-md-2 mb-3">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-primary w-100" 
-                            ng-click="searchPatients()" 
-                            ng-disabled="loading">
-                        <i class="fas fa-search"></i> 
-                        <span ng-if="!loading">Search</span>
-                        <span ng-if="loading">Searching...</span>
+                <div class="col-md-4 d-flex gap-2">
+                    <button class="btn btn-primary btn-sm fw-bold px-3 shadow-sm flex-grow-1" ng-click="searchPatients()" ng-disabled="loading">
+                        <i class="fas fa-search me-1"></i> <span ng-if="!loading">Search Data</span><span ng-if="loading">Wait...</span>
                     </button>
-                </div>
-                <div class="col-md-2 mb-3">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-secondary w-100" 
-                            ng-click="clearSearch()" 
-                            ng-disabled="loading">
+                    <button class="btn btn-outline-secondary btn-sm fw-bold px-3 border border-secondary border-opacity-25 shadow-sm bg-light" ng-click="clearSearch()" ng-disabled="loading" title="Reset Filters">
                         <i class="fas fa-redo"></i> Reset
                     </button>
                 </div>
@@ -50,77 +52,68 @@
     </div>
 
     <!-- Loading State -->
-    <div ng-if="loading" class="text-center my-5">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-3">Loading patients...</p>
+    <div ng-if="loading" class="text-center my-5 fade-in">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 fw-bold text-muted fs-sm">Extracting records...</p>
     </div>
 
     <!-- Error Message -->
-    <div ng-if="error && !loading" class="alert alert-danger alert-dismissible">
-        <strong><i class="fas fa-exclamation-triangle"></i> Error!</strong> {{error}}
+    <div ng-if="error && !loading" class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mx-3 mt-3 fs-sm fade-in">
+        <strong><i class="fas fa-exclamation-circle me-2"></i></strong> {{error}}
         <button type="button" class="btn-close" ng-click="error = null"></button>
     </div>
 
     <!-- Patient Table -->
-    <div class="card" ng-if="!loading">
-        <div class="card-body">
+    <div class="card shadow-sm border-0 fade-in" ng-if="!loading" style="border-radius: 8px; overflow: hidden;">
+        <div class="card-body p-0">
             <!-- Empty State -->
-            <div ng-if="patients.length === 0 && !error" class="text-center my-5">
-                <i class="fas fa-user-slash fa-4x text-muted mb-3"></i>
-                <h5>No patients found</h5>
-                <p class="text-muted">Try adjusting your search criteria or add a new patient</p>
+            <div ng-if="patients.length === 0 && !error" class="text-center py-5 bg-light">
+                <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm border" style="width: 70px; height: 70px;">
+                    <i class="fas fa-user-slash fa-2x text-muted opacity-50"></i>
+                </div>
+                <h6 class="fw-bold text-dark">No records found</h6>
+                <p class="text-muted fs-sm mb-0">Try adjusting your filters or search criteria.</p>
             </div>
 
-            <!-- Results Info -->
-            <div ng-if="patients.length > 0" class="mb-3">
-                <p class="text-muted mb-0">
-                    <i class="fas fa-info-circle"></i> 
-                    Showing {{((currentPage - 1) * itemsPerPage) + 1}} to 
+            <!-- Results Info Header -->
+            <div ng-if="patients.length > 0" class="bg-light px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
+                <span class="fs-xs fw-bold text-muted text-uppercase">
+                    <i class="fas fa-database me-1 text-primary"></i> 
+                    Showing {{((currentPage - 1) * itemsPerPage) + 1}} - 
                     {{currentPage * itemsPerPage > totalItems ? totalItems : currentPage * itemsPerPage}} 
-                    of {{totalItems}} patients
-                </p>
+                    of {{totalItems}}
+                </span>
             </div>
 
             <!-- Table -->
-            <div class="table-responsive" ng-if="patients.length > 0">
-                <table class="table table-hover table-bordered">
-                    <thead class="table-light">
+            <div class="table-responsive bg-white" ng-if="patients.length > 0">
+                <table class="table table-hover table-bordered align-middle mb-0 fs-sm modern-table">
+                    <thead class="bg-light text-uppercase text-muted fs-xs" style="border-bottom: 2px solid #eef2f6;">
                         <tr>
-                            <th style="width: 120px;">PIN</th>
-                            <th>Name</th>
-                            <th style="width: 80px;">Age</th>
-                            <th style="width: 100px;">Gender</th>
-                            <th style="width: 140px;">Contact</th>
-                            <th style="width: 140px;">Registration Date</th>
-                            <th style="width: 180px;">Actions</th>
+                            <th class="py-2 ps-3 border-0">PIN</th>
+                            <th class="py-2 border-0">Patient Name</th>
+                            <th class="py-2 border-0">Gender / Age</th>
+                            <th class="py-2 border-0">Contact</th>
+                            <th class="py-2 border-0 text-center">Regist. Date</th>
+                            <th class="py-2 pe-3 text-end border-0">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="patient in getPaginatedPatients()">
-                            <td><strong class="text-primary">{{patient.pinNumber}}</strong></td>
-                            <td>{{patient.fullName}}</td>
-                            <td>{{patient.age}}</td>
-                            <td>{{patient.gender}}</td>
-                            <td>{{patient.contactNumber}}</td>
-                            <td>{{patient.registrationDate | date:'dd-MM-yyyy'}}</td>
-                            <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button class="btn btn-primary" 
-                                            ng-click="viewPatient(patient.pinNumber)"
-                                            title="View Details">
+                        <tr ng-repeat="patient in getPaginatedPatients()" class="transition-row">
+                            <td class="ps-3"><span class="badge bg-primary-soft text-primary border border-primary border-opacity-25 px-2">{{patient.pinNumber}}</span></td>
+                            <td class="fw-bold text-dark">{{patient.fullName}}</td>
+                            <td class="text-muted">{{patient.gender}} / {{patient.age}} Yrs</td>
+                            <td><i class="fas fa-phone-alt text-muted opacity-50 fa-sm me-1"></i> {{patient.contactNumber || 'N/A'}}</td>
+                            <td class="text-center text-muted fs-xs fw-bold">{{patient.registrationDate | date:'dd-MMM-yyyy'}}</td>
+                            <td class="text-end pe-3">
+                                <div class="d-flex justify-content-end gap-1">
+                                    <button class="btn btn-sm btn-light border text-primary fw-bold shadow-sm action-btn-hover" 
+                                            ng-click="viewPatient(patient.pinNumber)" title="Profile">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button class="btn btn-success" 
-                                            ng-click="createCVR(patient.pinNumber)"
-                                            title="Create CVR">
-                                        <i class="fas fa-file-medical"></i>
-                                    </button>
-                                    <button class="btn btn-info" 
-                                            ng-click="bookAppointment(patient.pinNumber)"
-                                            title="Book Appointment">
-                                        <i class="fas fa-calendar"></i>
+                                    <button class="btn btn-sm btn-light border text-info fw-bold shadow-sm action-btn-hover" 
+                                            ng-click="bookAppointment(patient.pinNumber)" title="Book Appointment">
+                                        <i class="fas fa-calendar-plus"></i> <span class="d-none d-lg-inline ms-1fs-xs">Book</span>
                                     </button>
                                 </div>
                             </td>
@@ -129,67 +122,61 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            <nav ng-if="getTotalPages() > 1" aria-label="Patient list pagination">
-                <ul class="pagination justify-content-center mb-0">
-                    <li class="page-item" ng-class="{disabled: currentPage === 1}">
-                        <a class="page-link" 
-                           ng-click="currentPage > 1 && changePage(currentPage - 1)" 
-                           style="cursor: pointer;"
-                           tabindex="{{currentPage === 1 ? -1 : 0}}">
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </a>
-                    </li>
-                    
-                    <li class="page-item" 
-                        ng-repeat="page in getPageNumbers()" 
-                        ng-class="{active: currentPage === page}">
-                        <a class="page-link" 
-                           ng-click="changePage(page)"
-                           style="cursor: pointer;">
-                            {{page}}
-                        </a>
-                    </li>
-                    
-                    <li class="page-item" ng-class="{disabled: currentPage === getTotalPages()}">
-                        <a class="page-link" 
-                           ng-click="currentPage < getTotalPages() && changePage(currentPage + 1)"
-                           style="cursor: pointer;"
-                           tabindex="{{currentPage === getTotalPages() ? -1 : 0}}">
-                            Next <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+            <!-- Pagination Container -->
+            <div class="bg-light p-3 border-top d-flex justify-content-center" ng-if="getTotalPages() > 1 && patients.length > 0">
+                <nav aria-label="Patient list pagination">
+                    <ul class="pagination pagination-sm mb-0 shadow-sm">
+                        <li class="page-item" ng-class="{disabled: currentPage === 1}">
+                            <a class="page-link cursor-pointer fw-bold text-dark px-3" 
+                               ng-click="currentPage > 1 && changePage(currentPage - 1)">
+                                <i class="fas fa-chevron-left me-1 fs-xs"></i> Prev
+                            </a>
+                        </li>
+                        
+                        <li class="page-item" ng-repeat="page in getPageNumbers()" ng-class="{active: currentPage === page}">
+                            <a class="page-link cursor-pointer fw-bold px-3" ng-click="changePage(page)">
+                                {{page}}
+                            </a>
+                        </li>
+                        
+                        <li class="page-item" ng-class="{disabled: currentPage === getTotalPages()}">
+                            <a class="page-link cursor-pointer fw-bold text-dark px-3" 
+                               ng-click="currentPage < getTotalPages() && changePage(currentPage + 1)">
+                                Next <i class="fas fa-chevron-right ms-1 fs-xs"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-.btn-group-sm > .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
+/* Modern Overrides */
+.fade-in { animation: fadeIn 0.3s ease-in; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-.table th {
-    font-weight: 600;
-    background-color: #f8f9fa;
-}
+.fs-xs { font-size: 0.75rem; }
+.fs-sm { font-size: 0.85rem; }
+.cursor-pointer { cursor: pointer; }
 
-.table tbody tr:hover {
-    background-color: #f8f9fa;
-}
+/* Colors */
+.bg-primary-soft { background-color: rgba(99, 102, 241, 0.1); }
+.text-primary { color: #6366f1 !important; }
+.btn-primary { background-color: #6366f1; border-color: #6366f1; }
+.btn-primary:hover { background-color: #4f46e5; border-color: #4f46e5; }
+.text-info { color: #0dcaf0 !important; }
 
-.pagination {
-    margin-top: 1rem;
-}
+/* Table Specific */
+.transition-row { transition: all 0.2s; }
+.transition-row:hover { background: #fdfdfd; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.03); z-index: 10; position: relative; }
+.action-btn-hover:hover { background: #6366f1 !important; color: white !important; border-color: #6366f1 !important; }
+.action-btn-hover.text-info:hover { background: #0dcaf0 !important; border-color: #0dcaf0 !important; }
 
-.page-link {
-    color: #0d6efd;
-}
-
-.page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
+/* Bootstrap standard resets */
+.table th { font-weight: 700; }
+.pagination { margin-top: 0; }
+.page-link { color: #6366f1; }
+.page-item.active .page-link { background-color: #6366f1; border-color: #6366f1; }
 </style>

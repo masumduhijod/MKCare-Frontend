@@ -3,22 +3,25 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/views/opd/prescription-create.html</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/controllers/consultation-room.controller.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/views/opd/consultation-room.html</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/index.html</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/initial-setup.html</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/services/opd.service.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/controllers/dashboard.controller.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/controllers/patient-list.controller.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/views/opd/queue-management.html</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/services/patient.service.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/app.routes.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/controllers/prescription-create.controller.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/controllers/patient-registration.controller.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/controllers/queue-management.controller.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/services/appointment.service.js</file>
-            <file>file:/D:/MdWorkSpace/Microservices/Hospital-Management-Frontend/public_html/app/views/dashboard.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/controllers/payment-processing.controller.js</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/controllers/patient-registration.controller.js</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/opd/opd-list.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/controllers/appointment-booking.controller.js</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/appointment/appointment-booking.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/cvr/vitals-recording.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/patient/patient-list.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/opd/consultation-room.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/app.routes.js</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/controllers/invoice-details.controller.js</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/controllers/vitals-recording.controller.js</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/patient/patient-details.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/billing/invoice-create.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/patient/patient-registration.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/controllers/patient-list.controller.js</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/controllers/invoice-create.controller.js</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/controllers/dashboard.controller.js</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/dashboard.html</file>
+            <file>file:/D:/mduhijod/FinalVersions/HMIS_V1.0%20(2)/HMIS_V1.0/Microservices0903/Microservices/Hospital-Management-Frontend/public_html/app/views/appointment/appointment-list.html</file>
         </group>
     </open-files>
 </project-private>

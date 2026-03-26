@@ -1,0 +1,576 @@
+/* ============================================
+   REPORT MODULE - PROFESSIONAL CSS
+   report.css  (v3.0 — full rebuild)
+   ============================================ */
+
+/* ── Google Font ───────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Base ───────────────────────────────────── */
+.report-page-wrapper {
+    background: #f0f2f5;
+    padding: 24px;
+    min-height: calc(100vh - 120px);
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Filter Card ────────────────────────────── */
+.report-filter-card {
+    border: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+    border-radius: 12px;
+    margin-bottom: 22px;
+    overflow: hidden;
+}
+
+.report-filter-card .card-header {
+    background: linear-gradient(135deg, #1a3a6b 0%, #2563eb 100%);
+    color: white;
+    padding: 14px 20px;
+    border-bottom: none;
+}
+
+.report-filter-card .card-header h5 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.report-filter-card .card-body {
+    background: #fff;
+    padding: 20px;
+}
+
+/* ── Result Card ─────────────────────────────── */
+.report-result-card {
+    border: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.report-result-card .card-header {
+    background: #f8faff;
+    border-bottom: 2px solid #e8eeff;
+    padding: 12px 20px;
+}
+
+/* ── Stat Cards ──────────────────────────────── */
+.stat-card {
+    border: none;
+    border-radius: 12px;
+    text-align: center;
+    padding: 22px 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.stat-card .stat-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-card .stat-label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 6px;
+    opacity: 0.85;
+}
+
+/* ── Table ───────────────────────────────────── */
+.report-table-responsive {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.report-table-responsive .table {
+    margin-bottom: 0;
+    font-size: 13px;
+}
+
+.report-table-responsive .table thead th {
+    background: linear-gradient(135deg, #1a3a6b, #2563eb);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    padding: 11px 13px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
+.report-table-responsive .table tbody td {
+    font-size: 13px;
+    vertical-align: middle;
+    padding: 9px 13px;
+    border-color: #eef0f5;
+}
+
+.report-table-responsive .table tbody tr:hover td {
+    background-color: #f0f5ff;
+}
+
+.report-table-responsive .table tfoot td {
+    background: #f1f5ff;
+    font-weight: 700;
+    border-top: 2px solid #c9d8ff;
+}
+
+/* ── Empty state ─────────────────────────────── */
+.report-empty-state {
+    text-align: center;
+    padding: 70px 20px;
+    color: #b0b8c8;
+}
+
+.report-empty-state i {
+    font-size: 3.8rem;
+    margin-bottom: 18px;
+    display: block;
+}
+
+.report-empty-state p {
+    font-size: 1rem;
+    color: #8898b0;
+}
+
+/* ── Date quick buttons ───────────────────────── */
+.date-quick-btn {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+/* ── Report tile (dashboard) ─────────────────── */
+.report-tile {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 12px !important;
+}
+
+.report-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.13) !important;
+}
+
+/* ── Preview Panel (screen view of report) ───── */
+.report-preview-panel {
+    background: #fff;
+    border: 1px solid #dfe4ee;
+    border-radius: 10px;
+    padding: 30px 36px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    margin-bottom: 16px;
+}
+
+/* ── CLINIC PRINT HEADER (SCREEN PREVIEW) ───── */
+/* Shown on screen after Generate is clicked */
+.clinic-print-header {
+    display: none;
+    /* Hidden by default on screen */
+}
+
+.clinic-print-header.visible-preview {
+    display: block !important;
+    margin-bottom: 20px;
+}
+
+.clinic-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2.5px solid #1a3a6b;
+    padding-bottom: 14px;
+    margin-bottom: 10px;
+    gap: 16px;
+}
+
+.clinic-header-logo {
+    width: 76px;
+    height: 76px;
+    object-fit: contain;
+    border-radius: 50%;
+    border: 2px solid #e2e8f0;
+    background: #f8faff;
+    padding: 3px;
+}
+
+.clinic-header-logo-placeholder {
+    width: 76px;
+    height: 76px;
+    min-width: 76px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a3a6b, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+}
+
+.clinic-header-info {
+    flex: 1;
+    text-align: center;
+}
+
+.clinic-header-info h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1a3a6b;
+    margin: 0 0 3px 0;
+    letter-spacing: 0.01em;
+}
+
+.clinic-header-info p {
+    font-size: 0.82rem;
+    color: #5a6880;
+    margin: 2px 0;
+}
+
+.clinic-header-user {
+    text-align: right;
+    min-width: 150px;
+}
+
+.clinic-header-user .user-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1a3a6b;
+}
+
+.clinic-header-user .user-role {
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: #1a3a6b;
+    color: white;
+    padding: 1px 9px;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 3px 0;
+}
+
+.clinic-header-user .print-date {
+    font-size: 0.72rem;
+    color: #8898b0;
+    margin-top: 4px;
+}
+
+.clinic-header-page {
+    font-size: 0.72rem;
+    color: #8898b0;
+}
+
+.report-print-title {
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a3a6b;
+    border-bottom: 1px dashed #c5d0e8;
+    padding-bottom: 8px;
+    margin-bottom: 0;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* ── Generate + Print action bar ────────────── */
+.report-action-bar {
+    background: #f8faff;
+    border: 1px solid #e2eaff;
+    border-radius: 10px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.report-action-bar .action-info {
+    font-size: 0.82rem;
+    color: #6b7a9a;
+}
+
+/* ── LOV Styles ──────────────────────────────── */
+.lov-display-input {
+    cursor: pointer;
+    background: #f8f9fa !important;
+}
+
+.lov-table tbody tr {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.lov-table tbody tr:hover {
+    background-color: #e8f0fe !important;
+}
+
+/* ============================================
+   SCREEN PRINT PREVIEW (before window.print)
+   ============================================ */
+/* When showing the report on screen after Generate */
+.report-screen-view {
+    background: white;
+    border: 1px solid #d8e0f5;
+    border-radius: 10px;
+    padding: 32px 36px;
+    box-shadow: 0 4px 20px rgba(26, 58, 107, 0.10);
+}
+
+.report-screen-view .clinic-print-header {
+    display: block !important;
+}
+
+/* ============================================
+   PRINT MEDIA STYLES
+   ============================================ */
+@media print {
+
+    /* Hide ALL non-essential UI */
+    nav.top-bar,
+    nav.module-navbar,
+    .report-filter-card,
+    .report-action-bar,
+    .btn-print,
+    .btn-back,
+    .no-print,
+    .alert,
+    .pagination,
+    .stat-card {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        font-size: 10pt;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .container-fluid {
+        padding: 0 !important;
+    }
+
+    .report-page-wrapper {
+        padding: 0 !important;
+        background: white !important;
+    }
+
+    /* Print card borderless */
+    .report-result-card,
+    .report-screen-view,
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    .card-body {
+        padding: 0 !important;
+    }
+
+    /* ── Clinic Header on EVERY Page ── */
+    .clinic-print-header {
+        display: table-header-group !important;
+        width: 100%;
+        position: running(header);
+    }
+
+    .clinic-header-inner {
+        border-bottom: 2.5px solid #1a3a6b;
+        padding-bottom: 10px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        page-break-inside: avoid;
+    }
+
+    .clinic-header-logo {
+        width: 68px;
+        height: 68px;
+        object-fit: contain;
+    }
+
+    .clinic-header-logo-placeholder {
+        width: 68px;
+        height: 68px;
+        min-width: 68px;
+        border-radius: 50%;
+        background: #1a3a6b !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white !important;
+        font-size: 1.6rem;
+    }
+
+    .clinic-header-info h2 {
+        font-size: 15pt;
+        font-weight: 700;
+        color: #1a3a6b !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        margin: 0;
+    }
+
+    .clinic-header-info p {
+        font-size: 8.5pt;
+        color: #444;
+        margin: 1.5px 0;
+    }
+
+    .clinic-header-user {
+        text-align: right;
+        font-size: 8.5pt;
+    }
+
+    .clinic-header-user .user-name {
+        font-size: 9.5pt;
+        font-weight: 700;
+        color: #1a3a6b !important;
+    }
+
+    .clinic-header-user .user-role {
+        background: #1a3a6b !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        padding: 1px 8px;
+        border-radius: 20px;
+        font-size: 7.5pt;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .report-print-title {
+        text-align: center;
+        font-size: 12pt;
+        font-weight: 700;
+        color: #1a3a6b !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        border-bottom: 1px dashed #aaa;
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Page layout */
+    @page {
+        size: A4;
+        margin: 12mm 12mm 18mm 12mm;
+
+        @bottom-right {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 7.5pt;
+            color: #888;
+            font-family: Arial, sans-serif;
+        }
+
+        @bottom-center {
+            content: "Printed: " string(print-date);
+            font-size: 7pt;
+            color: #aaa;
+        }
+    }
+
+    /* ── Table print ── */
+    .table {
+        font-size: 9pt;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .table thead {
+        display: table-header-group;
+        /* repeat header on every page */
+    }
+
+    .table thead th {
+        background: #1a3a6b !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        padding: 5px 8px;
+        font-size: 8.5pt;
+        border: 1px solid #1a3a6b;
+    }
+
+    .table td {
+        padding: 4px 8px;
+        border: 1px solid #d0d8e8;
+        font-size: 9pt;
+    }
+
+    .table tbody tr:nth-child(even) td {
+        background-color: #f4f7ff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .table tfoot td {
+        background: #e8eeff !important;
+        font-weight: 700;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        border-top: 2px solid #1a3a6b;
+    }
+
+    /* Avoid page break inside rows */
+    .table tr {
+        page-break-inside: avoid;
+    }
+
+    /* Badge adjustments for print */
+    .badge {
+        border: 1px solid #555;
+        background: white !important;
+        color: #333 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-size: 7.5pt;
+        padding: 1px 5px;
+    }
+
+    /* Print footer line */
+    .report-print-footer {
+        position: fixed;
+        bottom: 8mm;
+        left: 12mm;
+        right: 12mm;
+        border-top: 1px solid #ccc;
+        padding-top: 4px;
+        font-size: 7pt;
+        color: #888;
+        display: flex;
+        justify-content: space-between;
+    }
+}
+
+/* Screen: hide print header (shown only during window.print) */
+@media screen {
+    .clinic-print-header {
+        display: none;
+    }
+
+    /* But show it inside .report-screen-view (preview section) */
+    .report-screen-view .clinic-print-header {
+        display: block !important;
+    }
+}

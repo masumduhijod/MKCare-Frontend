@@ -1,0 +1,407 @@
+<!-- ============================================================
+     Reports Dashboard - Main Landing Page
+     File: app/views/reports/reports-dashboard.html
+     ============================================================ -->
+
+<div class="container-fluid mt-3">
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0" style="background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%);">
+                <div class="card-body text-white py-4 px-4">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h3 class="mb-1"><i class="fas fa-chart-bar me-2"></i>Reports Dashboard</h3>
+                            <p class="mb-0 opacity-75">All clinic reports — Patient, OPD, Appointment, Billing, Doctor</p>
+                        </div>
+                        <div class="col-auto text-end">
+                            <div class="text-white opacity-75 small">
+                                <i class="fas fa-hospital me-1"></i>{{clinicName}}<br>
+                                <i class="fas fa-user me-1"></i>{{currentUser.fullName}} ({{currentUser.role}})
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Patient Reports Section ── -->
+    <div class="row mb-4" ng-if="canAccess(['ADMIN','DOCTOR','RECEPTIONIST','BILLING'])">
+        <div class="col-12 mb-2">
+            <h5 class="fw-bold text-primary border-bottom pb-2">
+                <i class="fas fa-user-injured me-2"></i>Patient Reports
+            </h5>
+        </div>
+
+        <div class="col-md-4 mb-3" ng-if="canAccess(['ADMIN','RECEPTIONIST'])">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/patient-registration')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-user-plus text-primary fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Patient Registration</h6>
+                            <p class="text-muted small mb-0">All registered patients with date range and status filters</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3" ng-if="canAccess(['ADMIN','DOCTOR'])">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/patient-demographics')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-chart-pie text-info fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Patient Demographics</h6>
+                            <p class="text-muted small mb-0">Gender, age group, blood group & city distribution</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/patient-visit-history')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-history text-warning fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Patient Visit History</h6>
+                            <p class="text-muted small mb-0">All visits for a specific patient using PIN LOV</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── OPD Reports Section ── -->
+    <div class="row mb-4" ng-if="canAccess(['ADMIN','DOCTOR','RECEPTIONIST'])">
+        <div class="col-12 mb-2">
+            <h5 class="fw-bold text-success border-bottom pb-2">
+                <i class="fas fa-clinic-medical me-2"></i>OPD Reports
+            </h5>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/opd-daily')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-calendar-day text-success fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">OPD Daily Report</h6>
+                            <p class="text-muted small mb-0">Today's OPD summary with department-wise stats</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3" ng-if="canAccess(['ADMIN','DOCTOR'])">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/opd-department')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-hospital text-success fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">OPD Department-wise</h6>
+                            <p class="text-muted small mb-0">Patient count per department for date range</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/cvr-summary')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-teal bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px;background:#d1fae5">
+                            <i class="fas fa-file-medical fs-5" style="color:#059669"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">CVR Summary</h6>
+                            <p class="text-muted small mb-0">Search CVR by number, PIN, or date range</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3" ng-if="canAccess(['ADMIN','DOCTOR'])">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/prescriptions')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-pills text-success fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Prescription Report</h6>
+                            <p class="text-muted small mb-0">View prescriptions by PIN, prescription ID, or date</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Appointment Reports ── -->
+    <div class="row mb-4" ng-if="canAccess(['ADMIN','RECEPTIONIST','DOCTOR'])">
+        <div class="col-12 mb-2">
+            <h5 class="fw-bold border-bottom pb-2" style="color:#7c3aed">
+                <i class="fas fa-calendar-check me-2"></i>Appointment Reports
+            </h5>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/appointment-schedule')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px;background:#ede9fe">
+                            <i class="fas fa-calendar-alt fs-5" style="color:#7c3aed"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Appointment Schedule</h6>
+                            <p class="text-muted small mb-0">All appointments by date range, doctor & status</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3" ng-if="canAccess(['ADMIN'])">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/appointment-status')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px;background:#ede9fe">
+                            <i class="fas fa-tasks fs-5" style="color:#7c3aed"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Appointment Status</h6>
+                            <p class="text-muted small mb-0">Count by status: Completed, Cancelled, No-show</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/doctor-availability')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px;background:#ede9fe">
+                            <i class="fas fa-user-clock fs-5" style="color:#7c3aed"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Doctor Availability</h6>
+                            <p class="text-muted small mb-0">Available doctors with slots for any date</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Billing Reports ── -->
+    <div class="row mb-4" ng-if="canAccess(['ADMIN','BILLING','RECEPTIONIST'])">
+        <div class="col-12 mb-2">
+            <h5 class="fw-bold text-danger border-bottom pb-2">
+                <i class="fas fa-file-invoice-dollar me-2"></i>Billing Reports
+            </h5>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/invoice-summary')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-file-invoice text-danger fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Invoice Summary</h6>
+                            <p class="text-muted small mb-0">By PIN, invoice no, or date range</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3" ng-if="canAccess(['ADMIN','BILLING'])">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/payment-collection')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-money-bill-wave text-danger fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Payment Collection</h6>
+                            <p class="text-muted small mb-0">Cash, Card, UPI breakdown by date range</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3" ng-if="canAccess(['ADMIN','BILLING'])">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/outstanding-dues')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-exclamation-triangle text-danger fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Outstanding Dues</h6>
+                            <p class="text-muted small mb-0">All unpaid/partially paid invoices</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3" ng-if="canAccess(['ADMIN'])">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/revenue-analysis')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px">
+                            <i class="fas fa-chart-line text-danger fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Revenue Analysis</h6>
+                            <p class="text-muted small mb-0">Complete revenue breakdown for any period</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Doctor Reports ── -->
+    <div class="row mb-4" ng-if="canAccess(['ADMIN','DOCTOR'])">
+        <div class="col-12 mb-2">
+            <h5 class="fw-bold border-bottom pb-2" style="color:#0f766e">
+                <i class="fas fa-user-md me-2"></i>Doctor Reports
+            </h5>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/doctor-consultation')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px;background:#ccfbf1">
+                            <i class="fas fa-stethoscope fs-5" style="color:#0f766e"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Doctor Consultation</h6>
+                            <p class="text-muted small mb-0">All consultations for a doctor with revenue</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm report-tile" ng-click="go('reports/doctor-schedule')">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;min-width:48px;background:#ccfbf1">
+                            <i class="fas fa-calendar-alt fs-5" style="color:#0f766e"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Doctor Schedule</h6>
+                            <p class="text-muted small mb-0">Weekly schedule slots for all doctors</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <small class="text-primary"><i class="fas fa-arrow-right me-1"></i>View Report</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.report-tile {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 10px !important;
+}
+.report-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12) !important;
+}
+</style>

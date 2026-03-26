@@ -1,0 +1,130 @@
+<!-- ============================================================
+     Report 5: OPD Department-wise Report
+     ============================================================ -->
+<div class="report-page-wrapper" ng-controller="ReportOpdDeptController">
+    <div class="card report-filter-card no-print">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-hospital me-2"></i>OPD Department-wise Report</h5>
+            <a href="#!/reports" class="btn btn-outline-light btn-sm btn-back"><i
+                    class="fas fa-arrow-left me-1"></i>Back</a>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small">From Date *</label>
+                    <input type="date" class="form-control form-control-sm" ng-model="filter.fromDate">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small">To Date *</label>
+                    <input type="date" class="form-control form-control-sm" ng-model="filter.toDate">
+                </div>
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button class="btn btn-primary btn-sm px-3" ng-click="generateReport()" ng-disabled="loading">
+                        <i class="fas fa-chart-bar me-1"></i>
+                        <span ng-if="!loading">Generate</span>
+                        <span ng-if="loading"><span
+                                class="spinner-border spinner-border-sm me-1"></span>Loading...</span>
+                    </button>
+                    <button class="btn btn-success btn-sm btn-print px-3" ng-click="printReport()"
+                        ng-if="deptArr.length > 0">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                </div>
+            </div>
+            <div class="alert alert-danger mt-3 py-2 mb-0" ng-if="errorMsg">
+                <i class="fas fa-exclamation-triangle me-2"></i>{{errorMsg}}
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center py-5" ng-if="loading">
+        <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+        <p class="mt-3 text-muted fw-semibold">Loading department stats...</p>
+    </div>
+    <div class="report-empty-state" ng-if="!reportData && !loading">
+        <i class="fas fa-hospital text-muted"></i>
+        <p>Select a date range and click <strong>Generate</strong></p>
+    </div>
+
+    <div class="report-screen-view" ng-if="reportData && !loading">
+        <clinic-print-header report-title="OPD Department-wise Report"></clinic-print-header>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4 no-print" ng-if="summary">
+            <div class="col-6 col-md-3">
+                <div class="stat-card bg-primary text-white">
+                    <div class="stat-number">{{summary.totalAppointments || 0}}</div>
+                    <div class="stat-label">Total Appointments</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card bg-success text-white">
+                    <div class="stat-number">{{summary.totalCompleted || 0}}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card bg-danger text-white">
+                    <div class="stat-number">{{summary.totalCancelled || 0}}</div>
+                    <div class="stat-label">Cancelled</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card bg-info text-white">
+                    <div class="stat-number">{{deptArr.length}}</div>
+                    <div class="stat-label">Departments</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card report-result-card" ng-if="deptArr.length > 0">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-table me-2"></i>Department-wise Stats
+                    <span class="badge bg-primary ms-2">{{deptArr.length}} departments</span>
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="report-table-responsive">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Department</th>
+                                <th class="text-center">Total Appointments</th>
+                                <th class="text-center">Completed</th>
+                                <th class="text-center">Cancelled</th>
+                                <th>Doctors</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="d in deptArr">
+                                <td>{{$index + 1}}</td>
+                                <td><strong>{{d.dept}}</strong></td>
+                                <td class="text-center"><span class="badge bg-primary">{{d.totalAppointments}}</span>
+                                </td>
+                                <td class="text-center"><span class="badge bg-success">{{d.completed}}</span></td>
+                                <td class="text-center"><span class="badge bg-danger">{{d.cancelled}}</span></td>
+                                <td><span ng-repeat="doc in d.doctors" class="badge bg-secondary me-1">{{doc}}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot ng-if="deptArr.length > 1 && summary">
+                            <tr class="fw-bold" style="background:#f1f5ff">
+                                <td colspan="2" class="text-end">TOTAL</td>
+                                <td class="text-center">{{summary.totalAppointments || 0}}</td>
+                                <td class="text-center text-success">{{summary.totalCompleted || 0}}</td>
+                                <td class="text-center text-danger">{{summary.totalCancelled || 0}}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-empty-state" ng-if="deptArr.length === 0 && reportData">
+            <i class="fas fa-hospital text-muted"></i>
+            <p>No department data found for the selected period</p>
+        </div>
+    </div>
+</div>

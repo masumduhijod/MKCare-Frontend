@@ -10,7 +10,7 @@
  * Clinical Visit Record Management
  */
 
-app.factory('CVRService', ['$http', '$q', function($http, $q) {
+app.factory('CVRService', ['$http', '$q', function ($http, $q) {
     
     var service = {};
     var baseUrl = API_CONFIG.GATEWAY_URL;
@@ -180,7 +180,10 @@ app.factory('CVRService', ['$http', '$q', function($http, $q) {
         var url = baseUrl + API_CONFIG.ENDPOINTS.CVR.GET_VITALS.replace('{cvrNumber}', cvrNumber);
         return $http.get(url);
     };
-    
+        // ✅ ADD THIS after getVitals
+        service.deleteVitals = function (cvrNumber) {
+            return $http.delete(baseUrl + '/cvr/' + cvrNumber + '/vitals');
+        };
         /**
          * Get CVR by Appointment ID - GET /cvr/by-appointment/{appointmentId}
          */
@@ -190,6 +193,15 @@ app.factory('CVRService', ['$http', '$q', function($http, $q) {
             return $http.get(url);
         };
 
+    
+         /**
+          * Get CVR by Appointment ID - GET /cvr/by-appointment/{appointmentId}
+          */
+        service.getByAppointmentId = function (appointmentId) {
+            var url = baseUrl + API_CONFIG.ENDPOINTS.CVR.GET_BY_APPOINTMENT_ID
+                    .replace('{appointmentId}', appointmentId);
+            return $http.get(url);
+        };
     
     return service;
 }]);

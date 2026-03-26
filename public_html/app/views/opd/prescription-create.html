@@ -1,71 +1,77 @@
-<!-- ============================================
-     PRESCRIPTION CREATE VIEW
-     File: app/views/opd/prescription-create.html
-     ============================================ -->
+<!-- Updated Prescription Create with Separate Save and Print Buttons -->
+<div class="container-fluid px-2 px-md-4 mt-2 fade-in">
+    <!-- Header -->
+    <div class="row mb-3 align-items-center">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary-soft text-primary rounded d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
+                    <i class="fas fa-prescription fs-5"></i>
+                </div> 
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">Create Prescription</h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0 fs-xs text-muted">
+                            <li class="breadcrumb-item"><a href="#!/dashboard" class="text-decoration-none">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="#!/opd/queue" class="text-decoration-none">OPD</a></li>
+                            <li class="breadcrumb-item active">Prescription</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm shadow-sm fw-bold rounded-pill px-3" ng-click="cancelPrescription()">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button class="btn btn-info btn-sm shadow-sm fw-bold rounded-pill px-3" ng-click="printPrescription()">
+                    <i class="fas fa-print me-1"></i> Print Preview
+                </button>
+                <button class="btn btn-success btn-sm shadow-sm fw-bold rounded-pill px-3" ng-click="savePrescription()" ng-disabled="prescription.items.length === 0">
+                    <i class="fas fa-save me-1"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
 
-<div class="container-fluid mt-4">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0"><i class="fas fa-prescription"></i> Create Prescription</h4>
-                        <div>
-                            <button class="btn btn-outline-light btn-sm me-2" 
-                                    ng-click="cancelPrescription()">
-                                <i class="fas fa-times"></i> Cancel
-                            </button>
-                            <button class="btn btn-success btn-sm" 
-                                    ng-click="createPrescription()">
-                                <i class="fas fa-save"></i> Save & Print
-                            </button>
-                        </div>
-                    </div>
+            <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-pills text-primary me-2"></i> Prescription Details</h5>
                 </div>
 
                 <div class="card-body">
-                    <!-- Patient & Consultation Info -->
+                    <!-- Patient Info -->
                     <div class="row mb-4" ng-if="consultation">
-                        <div class="col-md-3">
-                            <p><strong>Patient:</strong> {{consultation.patientName}}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <p><strong>PIN:</strong> {{consultation.pinNumber}}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <p><strong>Doctor:</strong> {{consultation.doctorName}}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <p><strong>Date:</strong> {{consultation.consultationDate | date:'dd-MM-yyyy'}}</p>
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <strong>Patient:</strong> {{consultation.patientName}} | 
+                                <strong>PIN:</strong> {{consultation.pinNumber}} | 
+                                <strong>Age/Gender:</strong> {{consultation.patientAge}} / {{consultation.patientGender}}
+                            </div>
                         </div>
                     </div>
-
-                    <hr>
 
                     <!-- Prescription Details -->
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <label class="form-label">Validity (Days) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" 
-                                   ng-model="prescription.validityDays"
-                                   min="1" max="365">
+                            <input type="number" class="form-control" ng-model="prescription.validityDays" min="1" max="365">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">General Instructions</label>
-                            <textarea class="form-control" rows="2" 
-                                      ng-model="prescription.instructions"
+                            <textarea class="form-control" rows="2" ng-model="prescription.instructions" 
                                       placeholder="General instructions for the patient..."></textarea>
                         </div>
                     </div>
 
                     <hr>
 
-                    <!-- Medicine Entry Form -->
+                    <!-- Medicine Entry -->
                     <h5 class="mb-3">Add Medicine</h5>
                     
-                    <!-- Common Medicines Quick Select -->
+                    <!-- Common Medicines -->
                     <div class="mb-3">
-                        <label class="form-label">Quick Select (Common Medicines):</label>
+                        <label class="form-label">Quick Select:</label>
                         <div>
                             <button class="btn btn-sm btn-outline-primary me-2 mb-2" 
                                     ng-repeat="medicine in commonMedicines"
@@ -78,18 +84,12 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Medicine Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" 
-                                   ng-model="currentItem.medicineName"
-                                   placeholder="e.g., Paracetamol">
+                            <input type="text" class="form-control" ng-model="currentItem.medicineName" placeholder="e.g., Paracetamol">
                         </div>
-                        
                         <div class="col-md-2">
                             <label class="form-label">Dosage <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" 
-                                   ng-model="currentItem.dosage"
-                                   placeholder="e.g., 500mg">
+                            <input type="text" class="form-control" ng-model="currentItem.dosage" placeholder="e.g., 500mg">
                         </div>
-                        
                         <div class="col-md-2">
                             <label class="form-label">Frequency <span class="text-danger">*</span></label>
                             <select class="form-select" ng-model="currentItem.frequency">
@@ -97,7 +97,6 @@
                                 <option ng-repeat="freq in frequencies" value="{{freq}}">{{freq}}</option>
                             </select>
                         </div>
-                        
                         <div class="col-md-2">
                             <label class="form-label">Duration <span class="text-danger">*</span></label>
                             <select class="form-select" ng-model="currentItem.duration">
@@ -105,70 +104,52 @@
                                 <option ng-repeat="dur in durations" value="{{dur}}">{{dur}}</option>
                             </select>
                         </div>
-                        
                         <div class="col-md-2">
                             <label class="form-label">Quantity</label>
-                            <input type="number" class="form-control" 
-                                   ng-model="currentItem.quantity"
-                                   min="0">
+                            <input type="number" class="form-control" ng-model="currentItem.quantity" min="0">
                         </div>
                     </div>
 
-                    <!-- Timing Checkboxes -->
+                    <!-- Timing -->
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Timing:</label>
                             <div class="d-flex gap-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" 
-                                           ng-model="currentItem.morning"
-                                           ng-change="updateFrequency()"
-                                           id="morning">
+                                    <input class="form-check-input" type="checkbox" ng-model="currentItem.morning" 
+                                           ng-change="updateFrequency()" id="morning">
                                     <label class="form-check-label" for="morning">Morning</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" 
-                                           ng-model="currentItem.afternoon"
-                                           ng-change="updateFrequency()"
-                                           id="afternoon">
+                                    <input class="form-check-input" type="checkbox" ng-model="currentItem.afternoon" 
+                                           ng-change="updateFrequency()" id="afternoon">
                                     <label class="form-check-label" for="afternoon">Afternoon</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" 
-                                           ng-model="currentItem.evening"
-                                           ng-change="updateFrequency()"
-                                           id="evening">
+                                    <input class="form-check-input" type="checkbox" ng-model="currentItem.evening" 
+                                           ng-change="updateFrequency()" id="evening">
                                     <label class="form-check-label" for="evening">Evening</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" 
-                                           ng-model="currentItem.night"
-                                           ng-change="updateFrequency()"
-                                           id="night">
+                                    <input class="form-check-input" type="checkbox" ng-model="currentItem.night" 
+                                           ng-change="updateFrequency()" id="night">
                                     <label class="form-check-label" for="night">Night</label>
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="col-md-6">
                             <label class="form-label">Food Timing:</label>
                             <div class="d-flex gap-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" 
-                                           name="foodTiming"
-                                           ng-model="currentItem.beforeFood"
-                                           ng-value="true"
-                                           ng-click="currentItem.afterFood = false"
-                                           id="beforeFood">
+                                    <input class="form-check-input" type="radio" name="foodTiming" 
+                                           ng-model="currentItem.beforeFood" ng-value="true" 
+                                           ng-click="currentItem.afterFood = false" id="beforeFood">
                                     <label class="form-check-label" for="beforeFood">Before Food</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" 
-                                           name="foodTiming"
-                                           ng-model="currentItem.afterFood"
-                                           ng-value="true"
-                                           ng-click="currentItem.beforeFood = false"
-                                           id="afterFood">
+                                    <input class="form-check-input" type="radio" name="foodTiming" 
+                                           ng-model="currentItem.afterFood" ng-value="true" 
+                                           ng-click="currentItem.beforeFood = false" id="afterFood">
                                     <label class="form-check-label" for="afterFood">After Food</label>
                                 </div>
                             </div>
@@ -178,13 +159,12 @@
                     <div class="row mb-3">
                         <div class="col-md-10">
                             <label class="form-label">Special Instructions</label>
-                            <input type="text" class="form-control" 
-                                   ng-model="currentItem.instructions"
-                                   placeholder="Any special instructions for this medicine...">
+                            <input type="text" class="form-control" ng-model="currentItem.instructions" 
+                                   placeholder="Any special instructions...">
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-primary w-100" ng-click="addMedicine()">
-                                <i class="fas fa-plus"></i> Add Medicine
+                                <i class="fas fa-plus"></i> Add
                             </button>
                         </div>
                     </div>
@@ -195,7 +175,7 @@
                     <h5 class="mb-3">Prescribed Medicines ({{prescription.items.length}})</h5>
                     
                     <div ng-if="prescription.items.length === 0" class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> No medicines added yet. Please add medicines to the prescription.
+                        No medicines added yet. Please add medicines to the prescription.
                     </div>
 
                     <div ng-if="prescription.items.length > 0" class="table-responsive">
@@ -203,7 +183,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>#</th>
-                                    <th>Medicine Name</th>
+                                    <th>Medicine</th>
                                     <th>Dosage</th>
                                     <th>Frequency</th>
                                     <th>Duration</th>
@@ -232,8 +212,7 @@
                                     </td>
                                     <td>{{item.instructions || '-'}}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-danger" 
-                                                ng-click="removeMedicine($index)">
+                                        <button class="btn btn-sm btn-danger" ng-click="removeMedicine($index)">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
@@ -247,33 +226,6 @@
     </div>
 </div>
 
-<!-- Styles -->
 <style>
-.card {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.gap-3 {
-    gap: 1rem;
-}
-
-.btn-outline-primary:hover {
-    background-color: #007bff;
-    color: white;
-}
-
-.table-responsive {
-    max-height: 500px;
-    overflow-y: auto;
-}
-
-.badge {
-    font-size: 0.85em;
-    padding: 0.35em 0.65em;
-}
-
-.form-check-input:checked {
-    background-color: #007bff;
-    border-color: #007bff;
-}
+.gap-3 { gap: 1rem; }
 </style>

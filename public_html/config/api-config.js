@@ -166,10 +166,15 @@
 //};
 
 // API Configuration for all Microservices - DATE-BASED SCHEDULING
+// Auto-detect server host: works on localhost AND network IP (mobile, other PCs)
+var API_HOST = window.location.hostname; // e.g. 'localhost' or '192.168.1.11'
+var API_GATEWAY_PORT = '8080';
+var API_BASE = 'http://' + API_HOST + ':' + API_GATEWAY_PORT + '/api';
+
 var API_CONFIG = {
-    // Gateway URL (All requests will go through this)
-    GATEWAY_URL: 'http://localhost:8080/api',
-    
+    // Gateway URL (auto-detected from browser hostname)
+    GATEWAY_URL: API_BASE,
+
     // Individual Service URLs (for reference)
     SERVICES: {
         USER_SERVICE: 'http://localhost:8081',
@@ -180,7 +185,7 @@ var API_CONFIG = {
         OPD_SERVICE: 'http://localhost:8087',
         BILLING_SERVICE: 'http://localhost:8088'
     },
-    
+
     // API Endpoints
     ENDPOINTS: {
         // ============ USER SERVICE (Port 8081) ============
@@ -195,7 +200,7 @@ var API_CONFIG = {
             GET_BY_ROLE: '/users/role/{role}',
             CHANGE_PASSWORD: '/users/{username}/change-password'
         },
-        
+
         // ============ PATIENT SERVICE (Port 8084) ============
         PATIENT: {
             REGISTER: '/patients/register',
@@ -213,7 +218,7 @@ var API_CONFIG = {
             GET_MEDICAL_HISTORY: '/patients/{pinNumber}/medical-history',
             UPDATE_MEDICAL_HISTORY: '/patients/{pinNumber}/medical-history'
         },
-        
+
         // ============ CVR SERVICE (Port 8085) ============
         CVR: {
             CREATE: '/cvr/create',
@@ -238,7 +243,7 @@ var API_CONFIG = {
             RECORD_VITALS: '/cvr/vitals/record',
             GET_VITALS: '/cvr/{cvrNumber}/vitals'
         },
-        
+
         // ============ DOCTOR SERVICE (Port 8086) ============
         DOCTOR: {
             REGISTER: '/doctors/register',
@@ -261,7 +266,7 @@ var API_CONFIG = {
             COUNT: '/doctors/count',
             EXISTS: '/doctors/exists/{doctorId}'
         },
-        
+
         // ============ DOCTOR SCHEDULE - DATE-BASED (UPDATED) ============
         DOCTOR_SCHEDULE: {
             CREATE: '/doctors/{doctorId}/schedules',
@@ -279,7 +284,7 @@ var API_CONFIG = {
             // UPDATED: Check availability by date instead of day
             CHECK_AVAILABILITY: '/doctors/{doctorId}/availability/{scheduleDate}'
         },
-        
+
         // ============ APPOINTMENT SERVICE (Port 8083) ============
         APPOINTMENT: {
             BOOK: '/appointments/book',
@@ -307,37 +312,55 @@ var API_CONFIG = {
             MARK_UNAVAILABLE: '/slots/{slotId}/unavailable',
             RELEASE: '/slots/{slotId}/release'
         },
-        
+
         // ============ OPD SERVICE (Port 8087) ============
         OPD_QUEUE: {
             ADD: '/opd/queue/add',
             GET_BY_DOCTOR_DATE: '/opd/queue/doctor/{doctorId}/date/{date}',
             START_CONSULTATION: '/opd/queue/{queueId}/start-consultation',
             COMPLETE: '/opd/queue/{queueId}/complete',
-            CALL_NEXT: '/opd/queue/doctor/{doctorId}/date/{date}/call-next'
+            CALL_NEXT: '/opd/queue/doctor/{doctorId}/date/{date}/call-next',
         },
         CONSULTATION: {
             CREATE: '/opd/consultations/create',
             GET_BY_ID: '/opd/consultations/{consultationId}',
             GET_BY_PATIENT: '/opd/consultations/patient/{pinNumber}',
-            COMPLETE: '/opd/consultations/{consultationId}/complete'
+            COMPLETE: '/opd/consultations/{consultationId}/complete',
+            // ✅ NEW ENDPOINTS FOR EDIT/UPDATE/DELETE
+            //            UPDATE: '/opd/consultations/{consultationId}/update',
+            //            DELETE: '/opd/consultations/{consultationId}/delete',
+            UPDATE: '/opd/consultations/{consultationId}',
+            DELETE: '/opd/consultations/{consultationId}',
+            GET_BY_DOCTOR_DATE: '/opd/consultations/by-doctor-date?doctorId={doctorId}&date={date}',
+
+            SEARCH: '/opd/consultations/search',  // For LOV search
+            GET_BY_CVR: '/opd/consultations/cvr/{cvrNumber}',
+            GET_ALL: '/opd/consultations/all'  // With pagination
         },
         PRESCRIPTION: {
             CREATE: '/opd/prescriptions/create',
             GET_BY_ID: '/opd/prescriptions/{prescriptionId}',
-            GET_BY_PATIENT: '/opd/prescriptions/patient/{pinNumber}'
+            GET_BY_PATIENT: '/opd/prescriptions/patient/{pinNumber}',
+            GET_BY_CONSULTATION: '/opd/prescriptions/consultation/{consultationId}', // ✅ ADD
+            DELETE: '/opd/prescriptions/{prescriptionId}',  // ✅ ADD
+            UPDATE: '/opd/prescriptions/{prescriptionId}'   // ✅ ADD THIS
+
+
         },
-        
+
         // ============ BILLING SERVICE (Port 8088) ============
         INVOICE: {
             CREATE: '/billing/invoices/create',
             GET_BY_NUMBER: '/billing/invoices/{invoiceNumber}',
             GET_PENDING: '/billing/invoices/pending',
-            GET_BY_PATIENT: '/billing/invoices/patient/{pinNumber}'
+            GET_BY_PATIENT: '/billing/invoices/patient/{pinNumber}',
+            GET_BY_CONSULTATION: '/billing/invoices/consultation/{consultationId}',
+            GET_BY_CVR: '/billing/invoices/by-cvr/{cvrNumber}' // <-- New endpoint
         },
         PAYMENT: {
             PROCESS: '/billing/payments/process/{invoiceNumber}',
-            GET_BY_INVOICE: '/billing/payments/invoice/{invoiceNumber}'
+            GET_BY_INVOICE: '/billing/payments/invoice/{invoiceNumber}',
+             HISTORY: '/billing/payments/history'  
         }
     }
 };

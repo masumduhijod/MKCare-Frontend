@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!-- ============================================
+     OPD LIST VIEW - COMPLETE MANAGEMENT
+     Features: View, Edit, Update, Delete
+     Date range filtering, Search, Beautiful UI
+     ============================================ -->
+
+<div class="container-fluid px-2 px-md-4 mt-2 fade-in">
+    <!-- Header -->
+    <div class="row mb-3 align-items-center">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary-soft text-primary rounded d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
+                    <i class="fas fa-notes-medical fs-5"></i>
+                </div> 
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">OPD Records Management</h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0 fs-xs text-muted">
+                            <li class="breadcrumb-item"><a href="#!/dashboard" class="text-decoration-none">Dashboard</a></li>
+                            <li class="breadcrumb-item active">OPD Records</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            <div>
+                 <button class="btn btn-primary btn-sm shadow-sm fw-bold rounded-pill px-3 me-2" ng-click="loadRecords()">
+                    <i class="fas fa-download me-1"></i> Load Data
+                </button>
+                <button class="btn btn-outline-secondary btn-sm shadow-sm fw-bold rounded-pill px-3 bg-white" ng-click="refreshQueue()">
+                    <i class="fas fa-sync-alt me-1 text-success"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODERN FILTERS SECTION -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
+
+        <div class="card-body p-4 bg-light">
+            <div class="row g-4 align-items-end">
+                <!-- Select Doctor -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold text-muted small text-uppercase">
+                        <i class="fas fa-user-md me-1 text-primary"></i> Select Doctor
+                    </label>
+                    <select class="form-select form-select-lg border-0 shadow-sm"
+                            ng-model="selectedDoctorId"
+                            ng-change="loadRecords()" style="border-radius: 10px;">
+                        <option value="">--- Select Doctor ---</option>
+                        <option ng-repeat="doc in doctorList" ng-value="doc.doctorId">
+                            Dr. {{doc.firstName}} {{doc.lastName}} - {{doc.specialization}}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Date -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold text-muted small text-uppercase">
+                        <i class="fas fa-calendar-alt me-1 text-primary"></i> Date <span class="text-danger">*</span>
+                    </label>
+                    <input type="date" class="form-control form-control-lg border-0 shadow-sm"
+                           ng-model="selectedDate"
+                           ng-change="loadRecords()" style="border-radius: 10px;">
+                </div>
+
+                <!-- Search Type -->
+                <div class="col-md-2">
+                    <label class="form-label fw-bold text-muted small text-uppercase">
+                        <i class="fas fa-filter me-1 text-primary"></i> Search By
+                    </label>
+                    <select class="form-select form-select-lg border-0 shadow-sm" ng-model="filters.searchType" style="border-radius: 10px;">
+                        <option value="ALL">All Records</option>
+                        <option value="PIN">PIN Number</option>
+                        <option value="CVR">CVR Number</option>
+                        <option value="NAME">Patient Name</option>
+                    </select>
+                </div>
+
+                <!-- Search Query -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-muted small text-uppercase">
+                        <i class="fas fa-search me-1 text-primary"></i> Search Query
+                    </label>
+                    <div class="input-group input-group-lg shadow-sm" style="border-radius: 10px; overflow: hidden;">
+                        <input type="text" class="form-control border-0" ng-model="filters.searchQuery" 
+                               placeholder="Enter search term..."
+                               ng-disabled="filters.searchType === 'ALL'">
+                        <button class="btn" style="background: #2a5298; color: white;"
+                                ng-click="search()" ng-if="filters.searchType !== 'ALL'">
+                            Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Statistics cards removed -->
+
+<!-- Loading State -->
+<div ng-if="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-3 text-muted">Loading OPD records...</p>
+</div>
+
+<!-- No Records -->
+<div ng-if="!loading && filteredRecords.length === 0" class="alert alert-info text-center">
+    <i class="fas fa-info-circle fs-1 mb-3"></i>
+    <h5>No OPD records found</h5>
+    <!--<p class="mb-0">Try adjusting your filters or date range</p>-->
+    <p class="mb-0">Select a doctor and date to view OPD records</p>
+</div>
+
+<!-- Records Table -->
+<div ng-if="!loading && filteredRecords.length > 0" class="card border-0 shadow-sm mb-5" style="border-radius: 12px; overflow: hidden;">
+    <div class="card-header bg-white border-bottom p-4">
+        <h5 class="mb-0 fw-bold text-dark d-flex align-items-center">
+            <i class="fas fa-table text-primary me-2"></i> OPD Medical Records 
+            <span class="badge rounded-pill ms-3 bg-primary text-white" style="font-size: 0.85rem;">
+                {{filteredRecords.length}} Total Records
+            </span>
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0">
+                <thead style="background: #f8f9fc; color: #5a5c69; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;">
+                    <tr>
+                        <th class="py-3 ps-4 border-0">#</th>
+                        <th class="py-3 border-0">CVR Number</th>
+                        <th class="py-3 border-0">PIN Number</th>
+                        <th class="py-3 border-0">Patient Name</th>
+                        <th class="py-3 border-0">Visit Type</th>
+                        <th class="py-3 text-center border-0">Vitals</th>
+                        <th class="py-3 text-center border-0">Consultation</th>
+                        <th class="py-3 text-center border-0">Prescription</th>
+                        <th class="py-3 border-0">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    <tr ng-repeat="record in getPagedRecords() track by $index" class="opd-table-row">
+                        <td class="ps-4 text-muted fw-bold">{{($index + 1) + (pagination.currentPage - 1) * pagination.itemsPerPage}}</td>
+                        
+                        <td><span class="badge bg-light text-dark border shadow-sm px-3 py-2 rounded-pill"><i class="fas fa-hashtag text-primary me-1"></i>{{record.cvrNumber}}</span></td>
+                        
+                        <td class="fw-bold text-secondary">{{record.pinNumber}}</td>
+                        
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width:40px;height:40px; font-weight:bold; font-size: 1.2rem;">
+                                    {{record.patientName.charAt(0) | uppercase}}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{record.patientName}}</div>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td><span class="badge bg-info bg-opacity-10 text-info border border-info px-2 py-1 rounded-pill">{{record.visitType}}</span></td>
+
+                        <!-- Vitals -->
+                        <td class="text-center">
+                            <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+                                <button class="btn btn-light btn-sm px-3 text-primary border-0 hover-btn" ng-click="viewVitals(record)" title="View"><i class="fa fa-eye"></i></button>
+                                <button class="btn btn-light btn-sm px-3 text-warning border-0 hover-btn" ng-click="goToVitals(record)" title="Edit"><i class="fa fa-edit"></i></button>
+                                <button class="btn btn-light btn-sm px-3 text-danger border-0 hover-btn" ng-click="deleteVitals(record)" title="Delete"><i class="fa fa-trash"></i></button>
+                            </div>
+                        </td>
+                        
+                        <!--Consultation-->
+                        <td class="text-center">
+                            <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+                                <button class="btn btn-light btn-sm px-3 text-primary border-0 hover-btn" ng-click="viewConsultation(record)" title="View"><i class="fa fa-eye"></i></button>
+                                <button class="btn btn-light btn-sm px-3 text-warning border-0 hover-btn" ng-click="editConsultation(record)" title="Edit"><i class="fa fa-edit"></i></button>
+                                <button class="btn btn-light btn-sm px-3 text-danger border-0 hover-btn" ng-click="deleteConsultation(record)" title="Delete"><i class="fa fa-trash"></i></button>
+                            </div>
+                        </td>
+                        
+                        <!--Prescription-->
+                        <td class="text-center">
+                            <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+                                <button class="btn btn-light btn-sm px-3 text-primary border-0 hover-btn" ng-click="viewPrescription(record)" title="View"><i class="fa fa-eye"></i></button>
+                                <button class="btn btn-light btn-sm px-3 text-warning border-0 hover-btn" ng-click="editPrescription(record)" title="Edit"><i class="fa fa-edit"></i></button>
+                                <button class="btn btn-light btn-sm px-3 text-danger border-0 hover-btn" ng-click="deletePrescription(record)" title="Delete"><i class="fa fa-trash"></i></button>
+                            </div>
+                        </td>
+
+                        <!-- Status -->
+                        <td>
+                            <span class="badge px-3 py-2 rounded-pill shadow-sm" ng-class="getStatusClass(record.status)">
+                                <i class="fas fa-circle ms-1 me-2" style="font-size: 0.5rem; vertical-align: middle;"></i>{{record.status}}
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer" ng-if="pagination.totalPages > 1">
+        <nav>
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+                <li class="page-item" ng-class="{disabled: pagination.currentPage === 1}">
+                    <a class="page-link" href="javascript:void(0)" ng-click="previousPage()">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+
+                <li class="page-item" 
+                    ng-class="{active: pagination.currentPage === page}" 
+                    ng-repeat="page in []| range:1:pagination.totalPages+1">
+                    <a class="page-link" href="javascript:void(0)" ng-click="goToPage(page)">
+                        {{page}}
+                    </a>
+                </li>
+
+                <li class="page-item" ng-class="{disabled: pagination.currentPage === pagination.totalPages}">
+                    <a class="page-link" href="javascript:void(0)" ng-click="nextPage()">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="text-center mt-2">
+            <small class="text-muted">
+                Page {{pagination.currentPage}} of {{pagination.totalPages}} 
+                ({{filteredRecords.length}} total records)
+            </small>
+        </div>
+    </div>
+</div>
+
+
+<!-- ✅ VITALS MODAL -->
+<div ng-if="showVitalsModal" class="modal-overlay" style="z-index: 1050; display: block; background: rgba(0,0,0,0.5);" ng-click="closeVitalsModal()">
+    <div class="modal-dialog modal-dialog-centered" ng-click="$event.stopPropagation()" style="max-width: 800px; width: 100%; margin: 1.75rem auto;">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-heartbeat me-2 text-primary"></i>
+                    {{isVitalsEditMode ? 'Edit' : 'Patient'}} Vitals
+                </h5>
+                <small class="text-muted ms-auto me-3 mt-1 fw-bold">CVR: {{selectedVitals.cvrNumber}}</small>
+                <button type="button" class="btn-close" ng-click="closeVitalsModal()"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-thermometer-half text-primary"></i> Temperature (°F)</label>
+                        <input type="number" class="form-control border-0 shadow-sm" style="border-radius: 8px;"
+                               ng-model="selectedVitals.temperatureF" ng-readonly="!isVitalsEditMode" min="90" max="110" step="0.1">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-stethoscope text-primary"></i> Blood Pressure</label>
+                        <input type="text" class="form-control border-0 shadow-sm" style="border-radius: 8px;"
+                               ng-model="selectedVitals.bloodPressure" ng-readonly="!isVitalsEditMode" placeholder="120/80">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-heart text-primary"></i> Pulse Rate (bpm)</label>
+                        <input type="number" class="form-control border-0 shadow-sm" style="border-radius: 8px;"
+                               ng-model="selectedVitals.pulseRate" ng-readonly="!isVitalsEditMode" min="40" max="200">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-lungs text-primary"></i> SpO2 (%)</label>
+                        <input type="number" class="form-control border-0 shadow-sm" style="border-radius: 8px;"
+                               ng-model="selectedVitals.spo2Percentage" ng-readonly="!isVitalsEditMode" min="50" max="100">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-wind text-primary"></i> Resp. Rate</label>
+                        <input type="number" class="form-control border-0 shadow-sm" style="border-radius: 8px;"
+                               ng-model="selectedVitals.respiratoryRate" ng-readonly="!isVitalsEditMode" min="8" max="40">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-weight text-primary"></i> Weight (kg)</label>
+                        <input type="number" class="form-control border-0 shadow-sm" style="border-radius: 8px;"
+                               ng-model="selectedVitals.weightKg" ng-readonly="!isVitalsEditMode" step="0.1">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-ruler-vertical text-primary"></i> Height (cm)</label>
+                        <input type="number" class="form-control border-0 shadow-sm" style="border-radius: 8px;"
+                               ng-model="selectedVitals.heightCm" ng-readonly="!isVitalsEditMode">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-white border-top p-3 justify-content-end rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary px-4 fw-bold shadow-sm rounded-pill" ng-click="closeVitalsModal()">Cancel</button>
+                <button type="button" class="btn btn-success px-4 fw-bold shadow-sm rounded-pill" ng-if="isVitalsEditMode" ng-click="updateVitals()">
+                    <i class="fas fa-save me-1"></i> Update Vitals
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ✅ CONSULTATION MODAL -->
+<div ng-if="showConsultationModal" class="modal-overlay" style="z-index: 1050; display: block; background: rgba(0,0,0,0.5);" ng-click="closeConsultationModal()">
+    <div class="modal-dialog modal-dialog-centered" ng-click="$event.stopPropagation()" style="max-width: 900px; width: 100%; margin: 1.75rem auto;">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <!-- HEADER -->
+            <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-stethoscope me-2 text-primary"></i> Consultation Details
+                </h5>
+                <small class="text-muted ms-auto me-3 mt-1 fw-bold">CVR: {{selectedConsultation.cvrNumber || '-'}}</small>
+                <button type="button" class="btn-close" ng-click="closeConsultationModal()"></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body p-4 bg-light">
+                <!-- Top row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-exclamation-circle text-primary"></i> Chief Complaint</label>
+                        <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="3"
+                                  ng-disabled="!isConsultationEditMode" ng-model="selectedConsultation.chiefComplaint"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-diagnoses text-primary"></i> Diagnosis</label>
+                        <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="3"
+                                  ng-disabled="!isConsultationEditMode" ng-model="selectedConsultation.diagnosis"></textarea>
+                    </div>
+                </div>
+
+                <!-- SOAP -->
+                <h6 class="fw-bold text-dark mb-3"><i class="fas fa-file-medical text-primary me-2"></i> SOAP Notes</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Subjective</label>
+                        <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="3"
+                                  ng-disabled="!isConsultationEditMode" ng-model="selectedConsultation.subjective"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Objective</label>
+                        <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="3"
+                                  ng-disabled="!isConsultationEditMode" ng-model="selectedConsultation.objective"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Assessment</label>
+                        <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="3"
+                                  ng-disabled="!isConsultationEditMode" ng-model="selectedConsultation.assessment"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Plan</label>
+                        <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="3"
+                                  ng-disabled="!isConsultationEditMode" ng-model="selectedConsultation.plan"></textarea>
+                    </div>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-clipboard-list text-primary me-1"></i> Treatment Plan</label>
+                        <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="3"
+                                  ng-disabled="!isConsultationEditMode" ng-model="selectedConsultation.treatmentPlan"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="modal-footer bg-white border-top p-3 justify-content-end rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary px-4 fw-bold shadow-sm rounded-pill" ng-click="closeConsultationModal()">Cancel</button>
+                <button type="button" class="btn btn-success px-4 fw-bold shadow-sm rounded-pill" ng-if="isConsultationEditMode" ng-click="updateConsultation()">
+                    <i class="fas fa-save me-1"></i> Save Consultation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ✅ PRESCRIPTION MODAL -->
+<div ng-if="showPrescriptionModal" class="modal-overlay" style="z-index: 1050; display: block; background: rgba(0,0,0,0.5);" ng-click="closePrescriptionModal()">
+    <div class="modal-dialog modal-dialog-centered" ng-click="$event.stopPropagation()" style="max-width: 900px; width: 100%; margin: 1.75rem auto;">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <!-- HEADER -->
+            <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-prescription-bottle-alt me-2 text-primary"></i> Prescription Details
+                </h5>
+                <small class="text-muted ms-auto me-3 mt-1 fw-bold">ID: {{selectedPrescription.prescriptionId}}</small>
+                <button type="button" class="btn-close" ng-click="closePrescriptionModal()"></button>
+            </div>
+            <!-- BODY -->
+            <div class="modal-body p-4 bg-light">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-calendar-alt text-primary"></i> Dates</label>
+                        <div class="card border-0 shadow-sm" style="border-radius: 8px;">
+                            <div class="card-body py-2 px-3">
+                                <div class="fs-sm mb-1 text-muted">Issued: <span class="text-dark fw-bold">{{selectedPrescription.prescriptionDate | date:'dd-MM-yyyy'}}</span></div>
+                                <div class="fs-sm text-muted">Expiry: <span class="text-dark fw-bold">{{selectedPrescription.expiryDate | date:'dd-MM-yyyy'}}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-sticky-note text-primary"></i> General Instructions</label>
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 8px;">
+                            <div class="card-body py-2 px-3">
+                                <p class="mb-0 text-dark fs-sm">{{selectedPrescription.instructions || '-'}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold text-muted small text-uppercase mb-2"><i class="fas fa-pills text-primary"></i> Medications Prescribed</label>
+                        <div class="table-responsive bg-white shadow-sm border-0 rounded" style="border-radius: 8px !important;">
+                            <table class="table table-hover table-sm align-middle mb-0 fs-sm modern-table">
+                                <thead style="background:#f8f9fa;">
+                                    <tr>
+                                        <th class="border-0 ps-3">Medicine</th>
+                                        <th class="border-0">Dosage</th>
+                                        <th class="border-0">Frequency</th>
+                                        <th class="border-0">Duration</th>
+                                        <th class="border-0 pe-3">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="item in selectedPrescription.items">
+                                        <td class="fw-bold text-dark ps-3"><i class="fas fa-capsules text-primary me-2 opacity-75"></i> {{item.medicineName}}</td>
+                                        <td><span class="badge bg-light text-dark border">{{item.dosage}}</span></td>
+                                        <td>{{item.frequency}}</td>
+                                        <td><span class="badge bg-primary-soft text-primary border border-primary border-opacity-25">{{item.duration}}</span></td>
+                                        <td class="text-muted pe-3">{{item.instructions || '-'}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- FOOTER -->
+            <div class="modal-footer bg-white border-top p-3 justify-content-end rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary px-4 fw-bold shadow-sm rounded-pill" ng-click="closePrescriptionModal()">Cancel</button>
+                <button type="button" class="btn btn-info px-4 fw-bold shadow-sm rounded-pill text-white" ng-click="printPrescription()">
+                    <i class="fas fa-print me-1"></i> Print
+                </button>
+                <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm rounded-pill" ng-if="isPrescriptionEditMode" ng-click="updatePrescription()">
+                    <i class="fas fa-save me-1"></i> Save Prescription
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ PATIENT LOV MODAL -->
+<div ng-if="showLOVModal" class="modal-overlay" style="z-index: 1050; display: block; background: rgba(0,0,0,0.5);" ng-click="closeLOVModal()">
+    <div class="modal-dialog modal-dialog-centered" ng-click="$event.stopPropagation()" style="max-width: 850px; width: 100%; margin: 1.75rem auto;">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-users text-primary me-2"></i> Select Patient
+                </h5>
+                <small class="text-muted ms-auto me-3 mt-1 fw-bold">Click select on the desired patient row</small>
+                <button type="button" class="btn-close" ng-click="closeLOVModal()"></button>
+            </div>
+            <div class="modal-body p-0 bg-white">
+                <div class="table-responsive m-0">
+                    <table class="table table-hover mb-0 modern-table">
+                        <thead style="background:#f8f9fa;">
+                            <tr>
+                                <th class="ps-4 border-0">PIN</th>
+                                <th class="border-0">Patient Name</th>
+                                <th class="border-0">Age/Gender</th>
+                                <th class="border-0">Contact</th>
+                                <th class="pe-4 text-end border-0">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="patient in lovResults">
+                                <td class="ps-4 fw-bold text-muted">{{patient.pinNumber}}</td>
+                                <td class="fw-bold text-dark">{{patient.firstName}} {{patient.lastName}}</td>
+                                <td>{{patient.age}}y / {{patient.gender}}</td>
+                                <td><i class="fas fa-phone-alt fs-7 text-muted me-1 opacity-50"></i>{{patient.contactNumber || 'N/A'}}</td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3 shadow-sm" ng-click="selectPatientFromLOV(patient)">
+                                        <i class="fas fa-check me-1"></i> Select
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top p-3 justify-content-end rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary px-4 fw-bold shadow-sm rounded-pill" ng-click="closeLOVModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- ✅ STANDARD CONFIRM DIALOG -->
+<div ng-if="confirmDialog.show" class="modal-overlay" style="z-index: 9999; display: block; background: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px; margin: 1.75rem auto;" ng-click="$event.stopPropagation()">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                <h6 class="modal-title fw-bold text-dark mb-0">
+                    <i ng-class="confirmDialog.icon" class="me-2 text-primary" style="font-size: 1.1rem;"></i> 
+                    {{confirmDialog.title}}
+                </h6>
+                <button type="button" class="btn-close btn-sm" ng-click="confirmDialog.cancel()" ng-if="confirmDialog.cancelText"></button>
+            </div>
+            <div class="modal-body p-4 bg-white text-center">
+                <p class="mb-2 text-dark" style="font-size: 0.95rem;">{{confirmDialog.message}}</p>
+                <small class="text-muted d-block" ng-if="confirmDialog.subMessage">{{confirmDialog.subMessage}}</small>
+            </div>
+            <div class="modal-footer bg-light border-top p-3 justify-content-center rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill fw-bold" ng-click="confirmDialog.cancel()" ng-if="confirmDialog.cancelText">
+                    <i class="fas fa-times me-1"></i> {{confirmDialog.cancelText}}
+                </button>
+                <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold text-white shadow-sm"
+                        ng-click="confirmDialog.confirm()">
+                    <i class="fas fa-check me-1"></i> {{confirmDialog.okText}}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+
+/* =========================
+   GLOBAL LAYOUT
+========================= */
+body {
+    background: #eef2f8;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* =========================
+   TOP HEADER
+========================= */
+/* =========================
+   TOP HEADER - Cleaned
+========================= */
+.bg-primary {
+    /* Standard Hospital color instead of dark blue */
+    background: #4e73df !important; 
+}
+
+/* =========================
+   MAIN CARD HEADER
+========================= */
+.bg-gradient-primary {
+    background: linear-gradient(90deg, #4e73df, #6f42c1);
+    border-radius: 16px 16px 0 0;
+}
+
+/* =========================
+   CARDS
+========================= */
+.card {
+    border-radius: 18px;
+    border: none;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+    transition: 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+}
+
+/* =========================
+   STAT CARDS
+========================= */
+.card.text-white {
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.card.text-white h2 {
+    font-weight: 600;
+}
+
+.card .fs-1 {
+    opacity: 0.15;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.btn {
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 8px 16px;
+    transition: 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #4e73df, #6f42c1);
+    border: none;
+}
+
+.btn-success {
+    background: linear-gradient(45deg, #1cc88a, #17a673);
+    border: none;
+}
+
+.btn-info {
+    background: linear-gradient(45deg, #36b9cc, #2c9faf);
+    border: none;
+}
+
+.btn-warning {
+    background: linear-gradient(45deg, #f6c23e, #dda20a);
+    border: none;
+}
+
+.btn-danger {
+    background: linear-gradient(45deg, #e74a3b, #c0392b);
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* =========================
+   FORM INPUTS
+========================= */
+.form-control,
+.form-select {
+    border-radius: 12px;
+    padding: 10px 14px;
+    border: 1px solid #dcdfe6;
+    transition: 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #6f42c1;
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+}
+
+/* =========================
+   TABLE DESIGN
+========================= */
+.table {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: #f8f9fc;
+    font-weight: 600;
+    color: #4e73df;
+}
+
+.table-hover tbody tr {
+    transition: 0.25s ease;
+}
+
+.table-hover tbody tr:hover {
+    background: #f1f4ff;
+    transform: scale(1.01);
+}
+
+/* =========================
+   BADGES
+========================= */
+.badge {
+    border-radius: 50px;
+    padding: 6px 12px;
+    font-weight: 500;
+}
+
+/* =========================
+   MODAL OVERLAY
+========================= */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 35, 0.6);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+/* =========================
+   MODAL BOX
+========================= */
+.modal-dialog {
+    width: 100%;
+    max-width: 900px;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+    animation: slideUp 0.35s ease;
+}
+
+.modal-content {
+    border-radius: 20px;
+    border: none;
+}
+
+.modal-header {
+    padding: 18px 24px;
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-footer {
+    padding: 18px 25px;
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+@keyframes slideUp {
+    from {
+        transform: translateY(40px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* =========================
+   PAGINATION
+========================= */
+.pagination .page-link {
+    border-radius: 10px;
+    margin: 0 4px;
+    border: none;
+    color: #4e73df;
+}
+
+.pagination .page-item.active .page-link {
+    background: #6f42c1;
+    color: white;
+}
+/* ✅ BEAUTIFUL CONFIRM DIALOG */
+.confirm-dialog {
+    background: white;
+    border-radius: 24px;
+    padding: 40px 35px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+    animation: slideUp 0.3s ease;
+}
+
+.confirm-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 2rem;
+}
+
+.confirm-danger  { background: #fff0f0; color: #e74a3b; }
+.confirm-warning { background: #fff8e1; color: #f6c23e; }
+.confirm-info    { background: #e8f4fd; color: #36b9cc; }
+.confirm-success { background: #e8f9f0; color: #1cc88a; }
+
+.confirm-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2d3436;
+    margin-bottom: 12px;
+}
+
+.confirm-message {
+    color: #636e72;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    line-height: 1.6;
+}
+
+.confirm-sub {
+    color: #b2bec3;
+    font-size: 0.85rem;
+    margin-bottom: 0;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+    justify-content: center;
+}
+
+.btn-confirm-cancel {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 14px;
+    border: 2px solid #dfe6e9;
+    background: white;
+    color: #636e72;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.btn-confirm-cancel:hover {
+    background: #f8f9fa;
+    border-color: #b2bec3;
+}
+
+.btn-confirm-ok {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 14px;
+    border: none;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.btn-confirm-danger  { background: linear-gradient(45deg, #e74a3b, #c0392b); }
+.btn-confirm-warning { background: linear-gradient(45deg, #f6c23e, #dda20a); }
+.btn-confirm-info    { background: linear-gradient(45deg, #36b9cc, #2c9faf); }
+.btn-confirm-success { background: linear-gradient(45deg, #1cc88a, #17a673); }
+
+.btn-confirm-ok:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* MODAL BOX */
+.med-modal{
+    width:100%;
+    max-width:1000px;
+    background:white;
+    border-radius:18px;
+    box-shadow:0 25px 60px rgba(0,0,0,0.35);
+    overflow:hidden;
+    animation:slideUp .3s ease;
+}
+
+/* HEADER */
+.med-header{
+    background:linear-gradient(90deg,#5f2c82,#49a09d);
+    color:white;
+    padding:20px 24px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+/* BODY */
+.med-body{
+    padding:22px;
+    background:#f8f9fc;
+}
+
+/* SECTION TITLE */
+.med-section-title{
+    font-weight:600;
+    font-size:15px;
+    margin:18px 0 12px 4px;
+    color:#5a6270;
+}
+
+/* CARD */
+.med-card{
+    background: transparent;
+    border-radius: 0px;
+    padding: 0px;
+    box-shadow: none;
+    height: 100%;
+}
+
+/* TITLE STRIP */
+.med-card-title{
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    color: #495057 !important;
+    background: transparent !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+}
+
+.med-card-title i {
+    color: #4e73df;
+    font-size: 1rem;
+}
+
+/* COLORS (Standard UI) */
+.purple, .blue, .teal, .orange, .pink, .green, .dark { background: transparent !important; }
+
+/* FOOTER */
+.med-footer{
+    padding:16px 24px;
+    background:white;
+    border-top:1px solid #eee;
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+}.med-card textarea{
+    background:#ffffff !important;
+    border:1px solid #dfe3ea !important;
+    border-radius:10px;
+    padding:10px;
+    transition:.2s;
+}
+
+.med-card textarea:focus{
+    border-color:#5b7cff !important;
+    box-shadow:0 0 0 3px rgba(91,124,255,0.15);
+}
+
+/* NEW: Table Hover Effects */
+.hover-btn { transition: 0.2s; }
+.hover-btn:hover { background: #e2e8f0 !important; transform: translateY(-1px); }
+.opd-table-row { transition: all 0.2s ease; }
+.opd-table-row:hover { background-color: #f1f5f9 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transform: translateY(-1px) scale(1.002); }
+
+</style>
+<!-- ✅ ANGULAR FILTER FOR RANGE -->
+<script>
+            app.filter('range', function () {
+                return function (input, min, max) {
+                    min = parseInt(min);
+                    max = parseInt(max);
+                    for (var i = min; i < max; i++) {
+                        input.push(i);
+                    }
+                    return input;
+                };
+            });
+</script>

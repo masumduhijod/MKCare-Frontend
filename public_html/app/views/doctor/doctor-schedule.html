@@ -977,127 +977,126 @@ select.ng-valid.ng-touched {
     </div>
 
     <!-- Create/Edit Schedule Form -->
-    <div ng-if="!loading" class="card mb-4" ng-class="{'border-warning': editMode}">
-        <div class="card-header text-white" ng-class="{'bg-warning': editMode, 'bg-primary': !editMode}">
+    <div ng-if="!loading" class="card mb-5 border-0 shadow-lg schedule-card" ng-class="{'edit-mode': editMode}">
+        <div class="card-header text-white p-3" ng-class="{'bg-gradient-warning': editMode, 'bg-gradient-primary': !editMode}" style="border-radius: 12px 12px 0 0;">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas" ng-class="{'fa-edit': editMode, 'fa-plus': !editMode}"></i> 
-                    {{editMode ? 'Edit Schedule' : 'Create New Schedule'}}
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas" ng-class="{'fa-edit': editMode, 'fa-calendar-plus': !editMode}"></i> 
+                    {{editMode ? 'Edit Schedule Details' : 'Create New Schedule'}}
                 </h5>
-                <button ng-if="editMode" class="btn btn-sm btn-light" ng-click="cancelEdit()">
-                    <i class="fas fa-times"></i> Cancel Edit
+                <button ng-if="editMode" class="btn btn-sm btn-light rounded-pill fw-bold shadow-sm px-3" ng-click="cancelEdit()">
+                    <i class="fas fa-times me-1"></i> Cancel Edit
                 </button>
             </div>
         </div>
-        <div class="card-body">
-            <form ng-submit="editMode ? updateSchedule() : createSchedule()">
-                <div class="row">
-                    <!-- *** MAIN CHANGE: DATE INPUT INSTEAD OF DAY OF WEEK *** -->
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label fw-bold">
-                            Schedule Date <span class="text-danger">*</span>
+        <div class="card-body p-4 bg-light" style="border-radius: 0 0 12px 12px;">
+            <form ng-submit="editMode ? updateSchedule() : createSchedule()" class="needs-validation">
+                <div class="row g-3 mb-3">
+                    <!-- Schedule Date -->
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label fw-bold" style="font-size: 0.8rem;">
+                            <i class="fas fa-calendar-alt text-primary"></i> Schedule Date <span class="text-danger">*</span>
                         </label>
-                        <input type="date" 
-                               class="form-control" 
-                               ng-model="newSchedule.scheduleDate" 
-                               ng-disabled="editMode"
-                               min="{{minDate}}"
-                               required>
-                        <small class="text-muted" ng-if="editMode">
-                            <i class="fas fa-lock"></i> Date cannot be changed while editing
-                        </small>
-                        <small class="text-muted" ng-if="!editMode && newSchedule.scheduleDate">
-                            <i class="fas fa-info-circle"></i> {{getDayName(newSchedule.scheduleDate)}}
-                        </small>
+                        <input type="date" class="form-control form-control-sm shadow-sm" ng-model="newSchedule.scheduleDate" ng-disabled="editMode" min="{{minDate}}" required>
+                        <small class="text-muted d-block mt-1" ng-if="editMode" style="font-size: 0.75rem;"><i class="fas fa-lock"></i> Locked</small>
+                        <small class="text-primary fw-bold d-block mt-1" ng-if="!editMode && newSchedule.scheduleDate" style="font-size: 0.75rem;">{{getDayName(newSchedule.scheduleDate)}}</small>
                     </div>
 
                     <!-- Start Time -->
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label fw-bold">
-                            Start Time <span class="text-danger">*</span>
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label fw-bold" style="font-size: 0.8rem;">
+                            <i class="fas fa-clock text-success"></i> Start Time <span class="text-danger">*</span>
                         </label>
-                        <input type="time" class="form-control" 
-                               ng-model="newSchedule.startTime" 
-                               required>
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="time" class="form-control border-end-0" ng-model="newSchedule.startTime" id="startTimeInput" required>
+                            <span class="input-group-text bg-white border-start-0" style="cursor: pointer;" onclick="document.getElementById('startTimeInput').focus(); try { document.getElementById('startTimeInput').showPicker(); } catch(e){}">
+                                <i class="fas fa-clock text-primary"></i>
+                            </span>
+                        </div>
                     </div>
 
                     <!-- End Time -->
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label fw-bold">
-                            End Time <span class="text-danger">*</span>
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label fw-bold" style="font-size: 0.8rem;">
+                            <i class="fas fa-clock text-danger"></i> End Time <span class="text-danger">*</span>
                         </label>
-                        <input type="time" class="form-control" 
-                               ng-model="newSchedule.endTime" 
-                               required>
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="time" class="form-control border-end-0" ng-model="newSchedule.endTime" id="endTimeInput" required>
+                            <span class="input-group-text bg-white border-start-0" style="cursor: pointer;" onclick="document.getElementById('endTimeInput').focus(); try { document.getElementById('endTimeInput').showPicker(); } catch(e){}">
+                                <i class="fas fa-clock text-primary"></i>
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Slot Duration -->
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label fw-bold">
-                            Slot Duration (min)
+                    <div class="col-md-2 col-lg-2">
+                        <label class="form-label fw-bold" style="font-size: 0.8rem;">
+                            <i class="fas fa-hourglass-half text-info"></i> Slot Duration
                         </label>
-                        <select class="form-select" ng-model="newSchedule.slotDurationMinutes">
-                            <option value="10">10 minutes</option>
-                            <option value="15">15 minutes</option>
-                            <option value="20">20 minutes</option>
-                            <option value="30">30 minutes</option>
-                            <option value="45">45 minutes</option>
-                            <option value="60">60 minutes</option>
+                        <select class="form-select form-select-sm shadow-sm" ng-model="newSchedule.slotDurationMinutes">
+                            <option value="10">10 mins</option>
+                            <option value="15">15 mins</option>
+                            <option value="20">20 mins</option>
+                            <option value="30">30 mins</option>
+                            <option value="45">45 mins</option>
+                            <option value="60">60 mins</option>
                         </select>
                     </div>
 
                     <!-- Max Patients -->
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label fw-bold">
-                            Max Patients/Slot
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label fw-bold" style="font-size: 0.8rem;">
+                            <i class="fas fa-users text-primary"></i> Patients/Slot
                         </label>
-                        <input type="number" class="form-control" 
-                               ng-model="newSchedule.maxPatientsPerSlot" 
-                               min="1" max="10" required>
+                        <input type="number" class="form-control form-control-sm shadow-sm" ng-model="newSchedule.maxPatientsPerSlot" min="1" max="10" required>
                     </div>
                 </div>
 
-                <div class="row">
+                <div class="row g-3 align-items-end">
                     <!-- Break Start Time -->
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">
-                            Break Start Time <small class="text-muted">(Optional)</small>
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label fw-bold" style="font-size: 0.8rem;">
+                            <i class="fas fa-coffee text-warning"></i> Break Start
                         </label>
-                        <input type="time" class="form-control" 
-                               ng-model="newSchedule.breakStartTime">
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="time" class="form-control border-end-0" ng-model="newSchedule.breakStartTime" id="breakStartInput">
+                            <span class="input-group-text bg-white border-start-0" style="cursor: pointer;" onclick="document.getElementById('breakStartInput').focus(); try { document.getElementById('breakStartInput').showPicker(); } catch(e){}">
+                                <i class="fas fa-clock text-warning"></i>
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Break End Time -->
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">
-                            Break End Time <small class="text-muted">(Optional)</small>
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label fw-bold" style="font-size: 0.8rem;">
+                            <i class="fas fa-coffee text-warning"></i> Break End
                         </label>
-                        <input type="time" class="form-control" 
-                               ng-model="newSchedule.breakEndTime">
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="time" class="form-control border-end-0" ng-model="newSchedule.breakEndTime" id="breakEndInput">
+                            <span class="input-group-text bg-white border-start-0" style="cursor: pointer;" onclick="document.getElementById('breakEndInput').focus(); try { document.getElementById('breakEndInput').showPicker(); } catch(e){}">
+                                <i class="fas fa-clock text-warning"></i>
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Active Status (only in edit mode) -->
-                    <div class="col-md-3 mb-3" ng-if="editMode">
-                        <label class="form-label fw-bold">Status</label>
-                        <div class="form-check form-switch mt-2">
-                            <input class="form-check-input" type="checkbox" 
-                                   id="scheduleActive" ng-model="newSchedule.isActive">
-                            <label class="form-check-label" for="scheduleActive">
+                    <div class="col-md-2" ng-if="editMode">
+                        <div class="form-check form-switch mb-1">
+                            <input class="form-check-input shadow-none cursor-pointer" type="checkbox" id="scheduleActive" ng-model="newSchedule.isActive">
+                            <label class="form-check-label fw-bold ms-2" for="scheduleActive" ng-class="{'text-success': newSchedule.isActive, 'text-secondary': !newSchedule.isActive}">
                                 {{newSchedule.isActive ? 'Active' : 'Inactive'}}
                             </label>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="col-md-3 mb-3 d-flex align-items-end">
-                        <button type="submit" class="btn btn-lg me-2" 
-                                ng-class="{'btn-warning': editMode, 'btn-primary': !editMode}">
-                            <i class="fas" ng-class="{'fa-save': editMode, 'fa-plus': !editMode}"></i> 
-                            {{editMode ? 'Update' : 'Create'}}
+                    <div class="col-md-auto ms-auto d-flex gap-2">
+                        <button type="button" class="btn btn-light shadow-sm border px-3 rounded-pill fw-bold" ng-click="editMode ? cancelEdit() : resetForm()">
+                            <i class="fas fa-undo-alt text-secondary"></i> {{editMode ? 'Cancel' : 'Reset'}}
                         </button>
-                        <button type="button" class="btn btn-secondary btn-lg" 
-                                ng-click="editMode ? cancelEdit() : resetForm()">
-                            <i class="fas fa-redo"></i> {{editMode ? 'Cancel' : 'Reset'}}
+                        <button type="submit" class="btn shadow-sm px-4 rounded-pill fw-bold text-white" ng-class="{'bg-gradient-warning border-0': editMode, 'bg-gradient-primary border-0': !editMode}">
+                            <i class="fas" ng-class="{'fa-save': editMode, 'fa-check-circle': !editMode}"></i> 
+                            {{editMode ? 'Save' : 'Create Schedule'}}
                         </button>
                     </div>
                 </div>
@@ -1105,36 +1104,47 @@ select.ng-valid.ng-touched {
         </div>
     </div>
 
-    <!-- Existing Schedules -->
-    <div ng-if="!loading" class="card">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-list"></i> Existing Schedules 
-                <span class="badge bg-light text-dark ms-2">{{schedules.length}}</span>
+    <!-- Existing Schedules Table -->
+    <div ng-if="!loading" class="card shadow-sm border-0 schedule-card mt-4 mb-5">
+        <div class="card-header bg-white p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap" style="border-radius: 12px 12px 0 0;">
+            <h5 class="mb-0 fw-bold text-dark">
+                <i class="fas fa-list text-info me-2"></i> Scheduled Dates
+                <span class="badge bg-primary rounded-pill ms-2">{{(schedules | filter:searchSchedule).length}}</span>
             </h5>
+            
+            <!-- Date Search Filter -->
+            <div class="input-group mt-3 mt-md-0" style="max-width: 320px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-radius: 8px;">
+                <span class="input-group-text bg-white border-end-0 text-muted" style="border-radius: 8px 0 0 8px;">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 ps-0 shadow-none"
+                       ng-model="searchSchedule" 
+                       placeholder="Filter by Date, Day, Time..." 
+                       style="border-radius: 0 8px 8px 0; background-color: transparent;">
+            </div>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             <!-- No Schedules -->
-            <div ng-if="schedules.length === 0" class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No schedules found. Please create a schedule to enable appointment slot booking.
+            <div ng-if="(schedules | filter:searchSchedule).length === 0" class="alert alert-info m-4 border-0 shadow-sm">
+                <i class="fas fa-info-circle me-2"></i> No matching schedules found.
             </div>
 
             <!-- Schedules Table -->
-            <div ng-if="schedules.length > 0" class="table-responsive">
-                <table class="table table-hover align-middle">
+            <div ng-if="(schedules | filter:searchSchedule).length > 0" class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th width="15%">Date</th>
+                            <th class="ps-4" width="15%">Date</th>
                             <th width="10%">Day</th>
                             <th width="15%">Schedule Time</th>
                             <th width="15%">Break Time</th>
                             <th width="12%">Slot Info</th>
                             <th width="8%">Status</th>
-                            <th width="25%" class="text-center">Actions</th>
+                            <th width="25%" class="text-center pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="schedule in schedules | orderBy:'scheduleDate'" 
+                        <tr ng-repeat="schedule in schedules | filter:searchSchedule | orderBy:'scheduleDate'" 
                             ng-class="{'table-warning': editingSchedule && editingSchedule.scheduleId === schedule.scheduleId}">
                             <!-- *** SHOW DATE INSTEAD OF DAY OF WEEK *** -->
                             <td>
@@ -1216,75 +1226,39 @@ select.ng-valid.ng-touched {
             </div>
 
             <!-- Summary Stats -->
-            <div ng-if="schedules.length > 0" class="row mt-4">
+            <div ng-if="(schedules | filter:searchSchedule).length > 0" class="row p-4 border-top m-0 bg-light" style="border-radius: 0 0 12px 12px;">
                 <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h3 class="text-primary">{{schedules.length}}</h3>
-                            <small class="text-muted">Total Schedules</small>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center py-3">
+                            <h4 class="text-primary fw-bold mb-1">{{(schedules | filter:searchSchedule).length}}</h4>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size:0.75rem;">Total Schedules</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h3 class="text-success">{{(schedules | filter:{isActive:true}).length}}</h3>
-                            <small class="text-muted">Active Schedules</small>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center py-3">
+                            <h4 class="text-success fw-bold mb-1">{{(schedules | filter:searchSchedule | filter:{isActive:true}).length}}</h4>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size:0.75rem;">Active Schedules</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h3 class="text-secondary">{{(schedules | filter:{isActive:false}).length}}</h3>
-                            <small class="text-muted">Inactive Schedules</small>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center py-3">
+                            <h4 class="text-secondary fw-bold mb-1">{{(schedules | filter:searchSchedule | filter:{isActive:false}).length}}</h4>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size:0.75rem;">Inactive Schedules</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h3 class="text-warning">{{(schedules | filter:{breakStartTime:'!'}).length}}</h3>
-                            <small class="text-muted">Without Break</small>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center py-3">
+                            <h4 class="text-warning fw-bold mb-1">{{(schedules | filter:searchSchedule | filter:{breakStartTime:'!'}).length}}</h4>
+                            <small class="text-muted fw-bold text-uppercase" style="font-size:0.75rem;">Without Break</small>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Instructions -->
-    <div class="card mt-4 border-info">
-        <div class="card-header bg-info text-white">
-            <h6 class="mb-0"><i class="fas fa-info-circle"></i> Important Information & Tips</h6>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="text-primary"><i class="fas fa-check-circle"></i> Schedule Guidelines:</h6>
-                    <ul class="small mb-3">
-                        <li>Create schedules for <strong>specific dates</strong> when the doctor is available</li>
-                        <li>Each schedule is unique to a particular date</li>
-                        <li>Slot duration should be between 10-60 minutes</li>
-                        <li>Break time is optional but recommended for lunch/rest periods</li>
-                        <li>Inactive schedules won't generate appointment slots</li>
-                    </ul>
-                </div>
-                <div class="col-md-6">
-                    <h6 class="text-success"><i class="fas fa-lightbulb"></i> Quick Actions:</h6>
-                    <ul class="small mb-0">
-                        <li><strong>Edit:</strong> Modify timings and settings for a date</li>
-                        <li><strong>Duplicate:</strong> Copy schedule to create for another date</li>
-                        <li><strong>Toggle:</strong> Temporarily enable/disable schedule without deleting</li>
-                        <li><strong>Delete:</strong> Permanently remove schedule</li>
-                        <li><strong>Bulk Create:</strong> Quickly create schedules for next 7 days</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="alert alert-warning mt-3 mb-0">
-                <i class="fas fa-exclamation-triangle"></i> 
-                <strong>Note:</strong> Slots are generated based on these date-specific schedules. 
-                When booking appointments, only dates with active schedules will show available slots.
             </div>
         </div>
     </div>
@@ -1350,5 +1324,41 @@ select.ng-invalid.ng-touched {
 input.ng-valid.ng-touched,
 select.ng-valid.ng-touched {
     border-color: #28a745;
+}
+
+/* Enhanced Form Styles */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
+}
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #f6c23e 0%, #d49c0b 100%) !important;
+}
+
+.schedule-card {
+    border-radius: 12px;
+}
+.schedule-card:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+}
+.schedule-card.edit-mode {
+    border: 2px solid #f6c23e !important;
+}
+
+.custom-input {
+    border: 1px solid #e3e6f0;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease-in-out;
+    background-color: #f8f9fc;
+    font-size: 0.95rem;
+}
+.custom-input:focus {
+    background-color: #fff;
+    border-color: #bac8f3;
+    box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+}
+
+.btn.rounded-pill:hover {
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
 }
 </style>

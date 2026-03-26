@@ -8,15 +8,15 @@
 
 app.controller('VitalsRecordingController', 
     ['$scope', '$rootScope', '$location', '$routeParams', 
-     'CVRService', 'AuthService', 'AppointmentService',
-    function($scope, $rootScope, $location, $routeParams, CVRService, AuthService, AppointmentService) {
+     'CVRService', 'AuthService', 'AppointmentService', 'PatientService',
+    function($scope, $rootScope, $location, $routeParams, CVRService, AuthService, AppointmentService, PatientService) {
     
     var currentUser = AuthService.getCurrentUser();
     var cvrNumber = $routeParams.cvrNumber;
     
     console.log('========== VITALS RECORDING ==========');
     console.log('CVR Number:', cvrNumber);
-    
+    $scope.isEditMode = false;
     // Initialize vitals object
     $scope.vitals = {
         cvrNumber: cvrNumber,
@@ -57,6 +57,25 @@ app.controller('VitalsRecordingController',
                     $scope.cvr = response.data.data;
                     console.log('✅ CVR Loaded:', $scope.cvr);
                     
+                    // Fetch patient name if missing or if it has the backend placeholder "Patient Name"
+                    if ((!$scope.cvr.patientName || $scope.cvr.patientName === 'Patient Name' || $scope.cvr.patientName === 'Unknown') && $scope.cvr.pinNumber) {
+                        PatientService.getByPin($scope.cvr.pinNumber).then(
+                            function(pRes) {
+                                if (pRes.data && pRes.data.success && pRes.data.data) {
+                                    let pData = pRes.data.data;
+                                    // Some APIs return array, others object
+                                    let patient = Array.isArray(pData) ? pData[0] : pData;
+                                    if (patient) {
+                                        $scope.cvr.patientName = patient.fullName || (patient.firstName + ' ' + patient.lastName);
+                                        $scope.$applyAsync();
+                                    }
+                                }
+                            }
+                        ).catch(function(err){
+                            console.error('Error fetching patient details:', err);
+                        });
+                    }
+                    
                     // Check if vitals already recorded
                     $scope.checkExistingVitals();
                 } else {
@@ -84,43 +103,72 @@ app.controller('VitalsRecordingController',
     /**
      * ✅ CHECK IF VITALS ALREADY RECORDED
      */
-    $scope.checkExistingVitals = function() {
-        CVRService.getVitals(cvrNumber).then(
-            function(response) {
-                if (response.data.success && response.data.data && response.data.data.length > 0) {
-                    var existingVitals = response.data.data[0];
-                    
-                    var loadExisting = confirm(
-                        '⚠️ Vitals already recorded for this CVR!\n\n' +
-                        'Do you want to view/update existing vitals?\n\n' +
-                        'Click OK to load existing vitals\n' +
-                        'Click Cancel to enter new vitals'
-                    );
-                    
-                    if (loadExisting) {
-                        $scope.vitals = {
-                            cvrNumber: cvrNumber,
-                            temperatureF: existingVitals.temperatureF,
-                            bloodPressure: existingVitals.bloodPressure,
-                            pulseRate: existingVitals.pulseRate,
-                            respiratoryRate: existingVitals.respiratoryRate,
-                            spo2Percentage: existingVitals.spo2Percentage,
-                            weightKg: existingVitals.weightKg,
-                            heightCm: existingVitals.heightCm,
-                            recordedBy: currentUser ? currentUser.username : ''
-                        };
-                        
-                        $scope.calculateBMI();
-                    }
-                }
-            },
-            function(error) {
-                console.log('No existing vitals found - ready for new entry');
+//    $scope.checkExistingVitals = function() {
+//        CVRService.getVitals(cvrNumber).then(
+//            function(response) {
+//                if (response.data.success && response.data.data && response.data.data.length > 0) {
+//                    var existingVitals = response.data.data[0];
+//                    
+//                    var loadExisting = confirm(
+//                        '⚠️ Vitals already recorded for this CVR!\n\n' +
+//                        'Do you want to view/update existing vitals?\n\n' +
+//                        'Click OK to load existing vitals\n' +
+//                        'Click Cancel to enter new vitals'
+//                    );
+//                    
+//                    if (loadExisting) {
+//                        $scope.vitals = {
+//                            cvrNumber: cvrNumber,
+//                            temperatureF: existingVitals.temperatureF,
+//                            bloodPressure: existingVitals.bloodPressure,
+//                            pulseRate: existingVitals.pulseRate,
+//                            respiratoryRate: existingVitals.respiratoryRate,
+//                            spo2Percentage: existingVitals.spo2Percentage,
+//                            weightKg: existingVitals.weightKg,
+//                            heightCm: existingVitals.heightCm,
+//                            recordedBy: currentUser ? currentUser.username : ''
+//                        };
+//                        
+//                        $scope.calculateBMI();
+//                    }
+//                }
+//            },
+//            function(error) {
+//                console.log('No existing vitals found - ready for new entry');
+//            }
+//        );
+//    };
+//    
+// ✅ REPLACE checkExistingVitals - auto fills without confirm()
+$scope.checkExistingVitals = function() {
+    CVRService.getVitals(cvrNumber).then(
+        function(response) {
+            if (response.data.success && 
+                response.data.data && 
+                response.data.data.length > 0) {
+                
+                var existing = response.data.data[0];
+                
+                $scope.isEditMode = true;  // ← EXISTING vitals = edit mode
+                
+                $scope.vitals.temperatureF    = existing.temperatureF;
+                $scope.vitals.bloodPressure   = existing.bloodPressure;
+                $scope.vitals.pulseRate       = existing.pulseRate;
+                $scope.vitals.respiratoryRate = existing.respiratoryRate;
+                $scope.vitals.spo2Percentage  = existing.spo2Percentage;
+                $scope.vitals.weightKg        = existing.weightKg;
+                $scope.vitals.heightCm        = existing.heightCm;
+                
+                $scope.calculateBMI();
+                $rootScope.showAlert('info', '📋 Existing vitals loaded. Update and save.');
             }
-        );
-    };
-    
-    /**
+            // else isEditMode stays false = new entry
+        },
+        function(error) {
+            console.log('No existing vitals - fresh entry');
+        }
+    );
+};    /**
      * ✅ CALCULATE BMI
      */
     $scope.calculateBMI = function() {
@@ -241,38 +289,73 @@ app.controller('VitalsRecordingController',
      * ✅ NEW: SHOW VITALS SUCCESS WITH OPTIONS
      */
     $scope.showVitalsSuccessOptions = function() {
-        var successMsg = '✅ Vitals Recorded Successfully!\n\n' +
-            'CVR: ' + cvrNumber + '\n' +
-            '🌡️ Temperature: ' + $scope.vitals.temperatureF + '°F\n' +
-            '💓 BP: ' + $scope.vitals.bloodPressure + '\n' +
-            '💗 Pulse: ' + $scope.vitals.pulseRate + ' bpm\n' +
-            '🫁 SpO2: ' + $scope.vitals.spo2Percentage + '%';
-        
-        if ($scope.bmi) {
-            successMsg += '\n⚖️ BMI: ' + $scope.bmi + ' (' + $scope.bmiCategory + ')';
-        }
-        
-        $rootScope.showAlert('success', successMsg);
-        
-        // ✅ SHOW OPTIONS MODAL
+//    $rootScope.showAlert('success', '✅ Vitals saved successfully!');
+    
+    if ($scope.isEditMode) {
+        // ✅ EDIT MODE - just go back to OPD list, no consultation prompt
         setTimeout(function() {
-            var nextAction = confirm(
-                '✅ Vitals recorded successfully!\n\n' +
-                'What would you like to do next?\n\n' +
-                'Click OK to START CONSULTATION\n' +
-                'Click Cancel to RETURN TO QUEUE'
-            );
-            
-            if (nextAction && $scope.cvr && $scope.cvr.appointmentId) {
-                // Start consultation
-                $scope.startConsultationFromVitals();
-            } else {
-                // Return to queue
-                $location.path('/opd/queue');
-                $scope.$apply();
-            }
+            $location.path('/opd/list');
+            $scope.$apply();
         }, 1000);
-    };
+        
+    } else {
+        // ✅ NEW MODE - ask about consultation
+        setTimeout(function() {
+            $rootScope.showGlobalConfirm({
+                title: 'Vitals Recorded',
+                message: 'Vitals recorded successfully.',
+                subMessage: 'Would you like to start a consultation?',
+                type: 'success',
+                icon: 'fas fa-check-circle',
+                okText: 'Start Consultation',
+                cancelText: 'Return to Queue',
+                onConfirm: function() {
+                    if ($scope.cvr && $scope.cvr.appointmentId) {
+                        $scope.startConsultationFromVitals();
+                    } else {
+                        $location.path('/opd/queue');
+                    }
+                },
+                onCancel: function() {
+                    $location.path('/opd/queue');
+                }
+            });
+        }, 300);
+    }
+};
+//    $scope.showVitalsSuccessOptions = function() {
+//        var successMsg = '✅ Vitals Recorded Successfully!\n\n' +
+//            'CVR: ' + cvrNumber + '\n' +
+//            '🌡️ Temperature: ' + $scope.vitals.temperatureF + '°F\n' +
+//            '💓 BP: ' + $scope.vitals.bloodPressure + '\n' +
+//            '💗 Pulse: ' + $scope.vitals.pulseRate + ' bpm\n' +
+//            '🫁 SpO2: ' + $scope.vitals.spo2Percentage + '%';
+//        
+//        if ($scope.bmi) {
+//            successMsg += '\n⚖️ BMI: ' + $scope.bmi + ' (' + $scope.bmiCategory + ')';
+//        }
+//        
+//        $rootScope.showAlert('success', successMsg);
+//        
+//        // ✅ SHOW OPTIONS MODAL
+//        setTimeout(function() {
+//            var nextAction = confirm(
+//                '✅ Vitals recorded successfully!\n\n' +
+//                'What would you like to do next?\n\n' +
+//                'Click OK to START CONSULTATION\n' +
+//                'Click Cancel to RETURN TO QUEUE'
+//            );
+//            
+//            if (nextAction && $scope.cvr && $scope.cvr.appointmentId) {
+//                // Start consultation
+//                $scope.startConsultationFromVitals();
+//            } else {
+//                // Return to queue
+//                $location.path('/opd/queue');
+//                $scope.$apply();
+//            }
+//        }, 1000);
+//    };
     
     /**
      * ✅ NEW: START CONSULTATION FROM VITALS PAGE
@@ -316,11 +399,13 @@ app.controller('VitalsRecordingController',
     /**
      * ✅ CANCEL AND RETURN TO QUEUE
      */
-    $scope.cancel = function() {
-        if (confirm('Are you sure you want to cancel?\n\nVitals will not be saved.')) {
-            $location.path('/opd/queue');
-        }
-    };
+   $scope.cancel = function() {
+    if ($scope.isEditMode) {
+        $location.path('/opd/list');   // ← came from OPD list
+    } else {
+        $location.path('/opd/queue'); // ← came from queue
+    }
+};
     
     // Initialize
     $scope.loadCVR();

@@ -1,0 +1,154 @@
+<!-- ============================================================
+     Report 16: Doctor Consultation Report
+     ============================================================ -->
+
+<div class="report-page-wrapper" ng-controller="ReportDoctorConsultationController">
+
+    <div class="card report-filter-card no-print">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-stethoscope me-2"></i>Doctor Consultation Report</h5>
+            <a href="#!/reports" class="btn btn-outline-light btn-sm btn-back"><i
+                    class="fas fa-arrow-left me-1"></i>Back</a>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small">Doctor <span class="text-danger">*</span></label>
+                    <doctor-lov model="filter.doctorId"></doctor-lov>
+                    <small class="text-muted">Click the <strong>Doctor</strong> button to search and select</small>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small">From Date</label>
+                    <input type="date" class="form-control form-control-sm" ng-model="filter.fromDate">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small">To Date</label>
+                    <input type="date" class="form-control form-control-sm" ng-model="filter.toDate">
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button class="btn btn-primary btn-sm px-3" ng-click="generateReport()" ng-disabled="loading">
+                        <i class="fas fa-chart-bar me-1"></i>
+                        <span ng-if="!loading">Generate Report</span>
+                        <span ng-if="loading"><span
+                                class="spinner-border spinner-border-sm me-1"></span>Loading...</span>
+                    </button>
+                    <button class="btn btn-success btn-sm btn-print px-3" ng-click="printReport()"
+                        ng-if="consultations.length > 0">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                </div>
+            </div>
+            <div class="alert alert-danger mt-3 py-2 mb-0" ng-if="errorMsg">
+                <i class="fas fa-exclamation-triangle me-2"></i>{{errorMsg}}
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center py-5" ng-if="loading">
+        <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+        <p class="mt-3 text-muted fw-semibold">Loading consultations...</p>
+    </div>
+
+    <div class="report-empty-state" ng-if="!reportData && !loading">
+        <i class="fas fa-user-md text-muted"></i>
+        <p>Select a doctor and date range, then click <strong>Generate Report</strong></p>
+    </div>
+
+    <div class="report-screen-view" ng-if="reportData && !loading">
+
+        <clinic-print-header report-title="Doctor Consultation Report"></clinic-print-header>
+
+        <!-- Doctor Info -->
+        <div class="card border-0 mb-4"
+            style="background:linear-gradient(135deg,#f0fdf9,#ccfbf1);border-left:4px solid #0f766e !important"
+            ng-if="docData.doctor || docData.doctorId">
+            <div class="card-body py-3">
+                <div class="row">
+                    <div class="col-md-3"><strong>Doctor:</strong> {{docData.doctor && (docData.doctor.firstName + ' ' +
+                        docData.doctor.lastName) || filter.doctorId}}</div>
+                    <div class="col-md-3"><strong>Specialization:</strong> {{docData.doctor &&
+                        docData.doctor.specialization || '—'}}</div>
+                    <div class="col-md-3"><strong>Period:</strong> {{filter.fromDate}} to {{filter.toDate}}</div>
+                    <div class="col-md-3"><strong>Total Consultations:</strong> <span
+                            style="color:#0f766e;font-weight:700">{{consultations.length}}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4 no-print" ng-if="consultations.length > 0">
+            <div class="col-6 col-md-3">
+                <div class="stat-card text-white" style="background:linear-gradient(135deg,#0f766e,#14b8a6)">
+                    <div class="stat-number">{{consultations.length}}</div>
+                    <div class="stat-label">Total Consultations</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card text-white" style="background:linear-gradient(135deg,#1a3a6b,#2563eb)">
+                    <div class="stat-number">{{docData.totalRevenue ? '₹'+(docData.totalRevenue|number:0) : '—'}}</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card bg-success text-white">
+                    <div class="stat-number">{{(consultations | filter:{status:'COMPLETED'}).length}}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card bg-warning text-dark">
+                    <div class="stat-number">{{(consultations | filter:{status:'PENDING'}).length}}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-table-responsive" ng-if="consultations.length > 0">
+            <table class="table table-bordered table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>CVR Number</th>
+                        <th>Patient PIN</th>
+                        <th>Patient Name</th>
+                        <th>Consultation Date</th>
+                        <th>Diagnosis</th>
+                        <th>Fee</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="c in consultations">
+                        <td>{{$index + 1}}</td>
+                        <td><strong style="color:#0f766e">{{c.cvrNumber || '—'}}</strong></td>
+                        <td>{{c.pinNumber || '—'}}</td>
+                        <td>{{c.patientName || '—'}}</td>
+                        <td>{{c.consultationDate | date:'dd-MM-yyyy'}}</td>
+                        <td>{{c.diagnosis || c.chiefComplaint || '—'}}</td>
+                        <td class="text-end">{{c.consultationFee ? '₹'+(c.consultationFee|number:0) : '—'}}</td>
+                        <td>
+                            <span class="badge"
+                                ng-class="c.status==='COMPLETED'?'bg-success':c.status==='IN_CONSULTATION'?'bg-primary':c.status==='PENDING'?'bg-warning text-dark':'bg-secondary'">
+                                {{c.status}}
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot ng-if="consultations.length > 1 && docData.totalRevenue">
+                    <tr>
+                        <td colspan="6" class="text-end fw-bold">Total</td>
+                        <td class="text-end fw-bold text-success">₹{{docData.totalRevenue | number:0}}</td>
+                        <td>{{consultations.length}} records</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="report-empty-state" ng-if="consultations.length === 0 && reportData">
+            <i class="fas fa-stethoscope text-muted"></i>
+            <p>No consultation records found</p>
+        </div>
+    </div>
+</div>

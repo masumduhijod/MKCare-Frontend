@@ -1,0 +1,374 @@
+<!-- ============================================
+     PAYMENT PROCESSING VIEW
+     File: app/views/billing/payment-processing.html
+     Process payments for invoices
+     ============================================ -->
+
+<div class="container-fluid mt-4" ng-if="invoice">
+    <div class="row">
+        <!-- Invoice Summary Panel -->
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Invoice Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Invoice Number:</strong><br>{{invoice.invoiceNumber}}</p>
+                    <p><strong>Date:</strong><br>{{invoice.invoiceDate | date:'dd-MM-yyyy'}}</p>
+                    <p><strong>Patient:</strong><br>{{invoice.patientName}}</p>
+                    <p><strong>PIN:</strong> {{invoice.pinNumber}}</p>
+                    <p><strong>Type:</strong> <span class="badge bg-primary">{{invoice.invoiceType}}</span></p>
+                    
+                    <hr>
+                    
+                    <div class="mb-2">
+                        <strong>Total Amount:</strong>
+                        <span class="float-end">₹{{invoice.totalAmount.toFixed(2)}}</span>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <strong>Paid Amount:</strong>
+                        <span class="float-end text-success">₹{{invoice.paidAmount.toFixed(2)}}</span>
+                    </div>
+                    
+                    <div class="mb-2" style="border-top: 2px solid #000; padding-top: 10px;">
+                        <strong>Outstanding:</strong>
+                        <strong class="float-end text-danger" style="font-size: 1.2em;">
+                            ₹{{invoice.outstandingAmount.toFixed(2)}}
+                        </strong>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <strong>Status:</strong> 
+                        <span ng-class="getStatusBadgeClass(invoice.paymentStatus)">
+                            {{invoice.paymentStatus}}
+                        </span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <button class="btn btn-outline-primary btn-sm w-100 mb-2" 
+                            ng-click="viewInvoice()">
+                        <i class="fas fa-eye"></i> View Full Invoice
+                    </button>
+                    
+                    <button class="btn btn-outline-secondary btn-sm w-100" 
+                            ng-click="backToList()">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </button>
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            <div class="card" ng-if="paymentHistory.length > 0">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="fas fa-history"></i> Payment History</h6>
+                </div>
+                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                    <div ng-repeat="pmt in paymentHistory" class="mb-3 p-2 border-bottom">
+                        <p class="mb-1"><strong>₹{{pmt.amount.toFixed(2)}}</strong></p>
+                        <p class="mb-1 small">
+                            {{pmt.paymentDate | date:'dd-MM-yyyy HH:mm'}}<br>
+                            Mode: {{pmt.paymentMode}}<br>
+                            <span ng-if="pmt.transactionId !== 'CASH'">
+                                TXN: {{pmt.transactionId}}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-money-bill-wave"></i> Process Payment</h4>
+                </div>
+                
+                <div class="card-body">
+                    <div ng-if="invoice.paymentStatus === 'PAID'" class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> 
+                        <strong>Invoice Fully Paid!</strong> This invoice has been completely settled.
+                    </div>
+
+                    <form ng-if="invoice.paymentStatus !== 'PAID'">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control form-control-lg" 
+                                           ng-model="payment.amount"
+                                           min="0.01"
+                                           max="{{invoice.outstandingAmount}}"
+                                           step="0.01"
+                                           placeholder="0.00">
+                                </div>
+                                <small class="text-muted">
+                                    Outstanding: ₹{{invoice.outstandingAmount.toFixed(2)}}
+                                </small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" ng-model="payment.paymentMode">
+                                    <option ng-repeat="mode in paymentModes" value="{{mode}}">
+                                        {{mode}}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4" ng-if="payment.paymentMode !== 'CASH'">
+                            <div class="col-md-12">
+                                <label class="form-label">Transaction ID / Reference Number <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" 
+                                       ng-model="payment.transactionId"
+                                       placeholder="Enter transaction ID or reference number">
+                                <small class="text-muted">
+                                    Required for {{payment.paymentMode}} payments
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Date</label>
+                                <input type="datetime-local" class="form-control" 
+                                       ng-model="payment.paymentDate">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Received By</label>
+                                <input type="text" class="form-control" 
+                                       ng-model="payment.receivedBy"
+                                       readonly>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Payment Summary Box -->
+                        <div class="alert alert-light border">
+                            <h5 class="mb-3"><i class="fas fa-calculator"></i> Payment Summary</h5>
+                            
+                            <div class="row">
+                                <div class="col-6">
+                                    <p><strong>Invoice Total:</strong></p>
+                                    <p><strong>Already Paid:</strong></p>
+                                    <p><strong>Outstanding:</strong></p>
+                                    <p style="font-size: 1.2em;"><strong>This Payment:</strong></p>
+                                    <p style="font-size: 1.2em;"><strong>Remaining Balance:</strong></p>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <p>₹{{invoice.totalAmount.toFixed(2)}}</p>
+                                    <p class="text-success">₹{{invoice.paidAmount.toFixed(2)}}</p>
+                                    <p class="text-danger">₹{{invoice.outstandingAmount.toFixed(2)}}</p>
+                                    <p class="text-primary" style="font-size: 1.2em;">
+                                        <strong>₹{{payment.amount.toFixed(2)}}</strong>
+                                    </p>
+                                    <p style="font-size: 1.2em;">
+                                        <strong ng-class="(invoice.outstandingAmount - payment.amount) === 0 ? 'text-success' : 'text-warning'">
+                                            ₹{{(invoice.outstandingAmount - payment.amount).toFixed(2)}}
+                                        </strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end mt-4">
+                            <button type="button" class="btn btn-outline-secondary btn-lg" 
+                                    ng-click="backToList()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            
+                            <button type="button" class="btn btn-success btn-lg" 
+                                    ng-click="processPayment()"
+                                    ng-disabled="loading || payment.amount <= 0">
+                                <i class="fas fa-check"></i> Process Payment
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Already Paid Message -->
+                    <div ng-if="invoice.paymentStatus === 'PAID'" class="text-center mt-4">
+                        <button class="btn btn-primary" ng-click="viewInvoice()">
+                            <i class="fas fa-file-invoice"></i> View Invoice
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div ng-if="loading" class="loading-overlay">
+    <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Processing...</span>
+    </div>
+</div>
+
+<!-- Styles -->
+<style>
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Custom Modal Styles */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.custom-modal {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 400px;
+    max-width: 90%;
+    overflow: hidden;
+    animation: slideIn 0.3s ease-out;
+}
+
+.custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #eee;
+    background: #f8f9fa;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.custom-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.custom-modal-close:hover {
+    color: #333;
+}
+
+.custom-modal-body {
+    padding: 1.5rem;
+    text-align: center;
+    color: #555;
+    font-size: 1rem;
+}
+
+.custom-modal-body .info-box {
+    background: #f8fff9;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    text-align: left;
+}
+
+.custom-modal-body .info-box strong {
+    color: #155724;
+}
+
+.custom-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    background: #f8f9fa;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>
+
+<!-- Modal: Process Payment Confirmation -->
+<div class="custom-modal-overlay" ng-show="showConfirmProcessModal" ng-cloak>
+    <div class="custom-modal">
+        <div class="custom-modal-header bg-success text-white">
+            <h5 class="custom-modal-title text-white"><i class="fas fa-money-bill-wave pe-2"></i>Process Payment?</h5>
+            <button class="custom-modal-close text-white" ng-click="showConfirmProcessModal = false">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+            <div class="info-box border-success">
+                <p class="mb-1 text-dark">Invoice: <strong>{{invoice.invoiceNumber}}</strong></p>
+                <p class="mb-1 text-dark">Amount: <strong>₹{{payment.amount.toFixed(2)}}</strong></p>
+                <p class="mb-1 text-dark">Mode: <strong>{{payment.paymentMode}}</strong></p>
+                <p class="mb-0 text-dark" ng-if="payment.paymentMode !== 'CASH'">TXN ID: <strong>{{payment.transactionId}}</strong></p>
+            </div>
+        </div>
+        <div class="custom-modal-footer">
+            <button class="btn btn-outline-secondary" ng-click="showConfirmProcessModal = false">Cancel</button>
+            <button class="btn btn-success" ng-click="confirmProcessPayment()">Confirm Payment</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Payment Successful Print Prompt -->
+<div class="custom-modal-overlay" ng-show="showConfirmReceiptModal" ng-cloak>
+    <div class="custom-modal">
+        <div class="custom-modal-header bg-success text-white">
+            <h5 class="custom-modal-title text-white"><i class="fas fa-check-circle pe-2"></i>Payment Successful!</h5>
+            <button class="custom-modal-close text-white" ng-click="proceedToReceipt(false)">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+            <i class="fas fa-print fa-3x text-success mb-3"></i>
+            <p class="mt-2 font-weight-bold fs-5 text-dark">Do you want to print the receipt?</p>
+        </div>
+        <div class="custom-modal-footer">
+            <button class="btn btn-outline-secondary" ng-click="proceedToReceipt(false)">No, Later</button>
+            <button class="btn btn-success" ng-click="proceedToReceipt(true)">Print Receipt</button>
+        </div>
+    </div>
+</div>

@@ -9,6 +9,11 @@
  * Handles login, register, validation
  */
 
+/**
+ * Authentication Service - Multi-Tenant Support
+ * Handles login, register, validation with tenant context
+ */
+
 app.factory('AuthService', ['$http', '$q', function($http, $q) {
     
     var service = {};
@@ -16,33 +21,57 @@ app.factory('AuthService', ['$http', '$q', function($http, $q) {
     
     /**
      * Login - POST /api/auth/login
-     * Request: { username, password }
-     * Response: { token, tokenType, userId, username, email, role, fullName, expiresAt }
+     * Request: { clinicId, username, password }
+     * Response: { token, userId, username, email, role, fullName, expiresAt, 
+     *             tenantId, clinicName, clinicLogo, clinicAddress, clinicPhone }
      */
     service.login = function(credentials) {
         var deferred = $q.defer();
         
+        console.log('AuthService.login called with:', credentials);
+        
         $http.post(baseUrl + API_CONFIG.ENDPOINTS.AUTH.LOGIN, credentials)
             .then(function(response) {
+                console.log('Login response:', response.data);
+                
                 if (response.data.success) {
-                    // Store token and user info
                     var data = response.data.data;
+                    
+                    // ⭐ Store token
                     localStorage.setItem('authToken', data.token);
+                    
+                    // ⭐ Store tenant ID (for X-Tenant-ID header)
+                    localStorage.setItem('tenantId', data.tenantId);
+                    
+                    // ⭐ Store clinic info
+                    localStorage.setItem('clinicName', data.clinicName);
+                    localStorage.setItem('clinicLogo', data.clinicLogo);
+                    localStorage.setItem('clinicAddress', data.clinicAddress);
+                    localStorage.setItem('clinicPhone', data.clinicPhone);
+                    
+                    // ⭐ Store user info
                     localStorage.setItem('currentUser', JSON.stringify({
                         userId: data.userId,
                         username: data.username,
                         email: data.email,
                         role: data.role,
                         fullName: data.fullName,
-                        expiresAt: data.expiresAt
+                        expiresAt: data.expiresAt,
+                        tenantId: data.tenantId,
+                        clinicName: data.clinicName
                     }));
+                    
+                    console.log('✅ Login successful - Tenant:', data.tenantId, 'Clinic:', data.clinicName);
+                    
                     deferred.resolve(response.data);
                 } else {
                     deferred.reject(response.data.message);
                 }
             })
             .catch(function(error) {
-                deferred.reject(error.data ? error.data.message : 'Login failed');
+                console.error('Login error:', error);
+                var errorMsg = error.data && error.data.message ? error.data.message : 'Login failed';
+                deferred.reject(errorMsg);
             });
         
         return deferred.promise;
@@ -50,8 +79,6 @@ app.factory('AuthService', ['$http', '$q', function($http, $q) {
     
     /**
      * Register - POST /api/auth/register
-     * Request: { username, password, email, role, firstName, lastName, contactNumber, createdBy }
-     * Response: { userId, username, email, role, status, firstName, lastName, fullName, contactNumber, lastLogin, createdAt }
      */
     service.register = function(userData) {
         var deferred = $q.defer();
@@ -72,9 +99,7 @@ app.factory('AuthService', ['$http', '$q', function($http, $q) {
     };
     
     /**
-     * Validate Token - POST /api/auth/validate
-     * Headers: Authorization: Bearer <token>
-     * Response: { success, message, data: true/false }
+     * Validate Token
      */
     service.validateToken = function() {
         var deferred = $q.defer();
@@ -103,11 +128,16 @@ app.factory('AuthService', ['$http', '$q', function($http, $q) {
     };
     
     /**
-     * Logout - Clear local storage
+     * Logout - Clear all storage
      */
     service.logout = function() {
         localStorage.removeItem('authToken');
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('tenantId');
+        localStorage.removeItem('clinicName');
+        localStorage.removeItem('clinicLogo');
+        localStorage.removeItem('clinicAddress');
+        localStorage.removeItem('clinicPhone');
     };
     
     /**
@@ -116,6 +146,26 @@ app.factory('AuthService', ['$http', '$q', function($http, $q) {
     service.getCurrentUser = function() {
         var user = localStorage.getItem('currentUser');
         return user ? JSON.parse(user) : null;
+    };
+    
+    /**
+     * Get Tenant ID
+     */
+    service.getTenantId = function() {
+        return localStorage.getItem('tenantId');
+    };
+    
+    /**
+     * Get Clinic Info
+     */
+    service.getClinicInfo = function() {
+        return {
+            tenantId: localStorage.getItem('tenantId'),
+            clinicName: localStorage.getItem('clinicName'),
+            clinicLogo: localStorage.getItem('clinicLogo'),
+            clinicAddress: localStorage.getItem('clinicAddress'),
+            clinicPhone: localStorage.getItem('clinicPhone')
+        };
     };
     
     /**

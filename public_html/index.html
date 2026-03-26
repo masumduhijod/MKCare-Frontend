@@ -1,236 +1,11 @@
 <!DOCTYPE html>
-<!--<html ng-app="hospitalApp">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital Management System</title>
-    
-     Bootstrap CSS 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-     Font Awesome 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-     Custom CSS 
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/dashboard.css">
-    <link rel="stylesheet" href="assets/css/forms.css">
-</head>
-<body>
-    
-     Navigation Bar (shown when logged in) 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" ng-if="isLoggedIn">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#!/dashboard">
-                <i class="fas fa-hospital"></i> Hospital Management System
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <span class="nav-link text-white">
-                            <i class="fas fa-user"></i> {{currentUser.fullName}}
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#!/logout" ng-click="logout()">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-     Sidebar & Main Content 
-    <div class="container-fluid">
-        <div class="row">
-             Sidebar (shown when logged in) 
-            <nav class="col-md-2 d-md-block bg-light sidebar" ng-if="isLoggedIn">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#!/dashboard">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
-                            </a>
-                        </li>
-                        
-                         Patient Management 
-                        <li class="nav-item" ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
-                            <a class="nav-link" data-bs-toggle="collapse" href="#patientMenu">
-                                <i class="fas fa-user-injured"></i> Patients
-                            </a>
-                            <div class="collapse" id="patientMenu">
-                                <ul class="nav flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/patient/register">Register Patient</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/patient/list">Patient List</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                         CVR Management 
-                        <li class="nav-item" ng-if="hasRole(['RECEPTIONIST', 'NURSE', 'ADMIN'])">
-                            <a class="nav-link" href="#!/cvr/create">
-                                <i class="fas fa-file-medical"></i> Create Visit (CVR)
-                            </a>
-                        </li>
-
-                         Doctor Management 
-                        <li class="nav-item" ng-if="hasRole(['ADMIN'])">
-                            <a class="nav-link" data-bs-toggle="collapse" href="#doctorMenu">
-                                <i class="fas fa-user-md"></i> Doctors
-                            </a>
-                            <div class="collapse" id="doctorMenu">
-                                <ul class="nav flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/doctor/register">Register Doctor</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/doctor/list">Doctor List</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                         Appointment Management 
-                        <li class="nav-item" ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
-                            <a class="nav-link" data-bs-toggle="collapse" href="#appointmentMenu">
-                                <i class="fas fa-calendar-check"></i> Appointments
-                            </a>
-                            <div class="collapse" id="appointmentMenu">
-                                <ul class="nav flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/appointment/book">Book Appointment</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/appointment/list">Appointment List</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                         OPD Queue 
-                        <li class="nav-item" ng-if="hasRole(['DOCTOR', 'RECEPTIONIST', 'ADMIN'])">
-                            <a class="nav-link" href="#!/opd/queue">
-                                <i class="fas fa-users"></i> OPD Queue
-                            </a>
-                        </li>
-
-                         Consultation 
-                        <li class="nav-item" ng-if="hasRole(['DOCTOR'])">
-                            <a class="nav-link" href="#!/consultation/room">
-                                <i class="fas fa-stethoscope"></i> Consultation Room
-                            </a>
-                        </li>
-
-                         Billing 
-                        <li class="nav-item" ng-if="hasRole(['BILLING', 'ADMIN'])">
-                            <a class="nav-link" data-bs-toggle="collapse" href="#billingMenu">
-                                <i class="fas fa-file-invoice-dollar"></i> Billing
-                            </a>
-                            <div class="collapse" id="billingMenu">
-                                <ul class="nav flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/billing/invoice/create">Create Invoice</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/billing/payment">Process Payment</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-
-             Main Content Area 
-            <main class="col-md-10 ms-sm-auto px-md-4" ng-class="{'col-md-12': !isLoggedIn}">
-                 Loading Spinner 
-                <div ng-if="loading" class="text-center mt-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-
-                 Alert Messages 
-                <div ng-if="alert.show" class="alert alert-{{alert.type}} alert-dismissible fade show mt-3" role="alert">
-                    {{alert.message}}
-                    <button type="button" class="btn-close" ng-click="alert.show = false"></button>
-                </div>
-
-                 View Container 
-                <div ng-view></div>
-            </main>
-        </div>
-    </div>
-
-     jQuery 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-     Bootstrap JS 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-     AngularJS 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular-route.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular-route.min.js"></script>
-
-
-
-     App Configuration 
-    <script src="config/api-config.js"></script>
-    
-     Main App Module 
-    <script src="app/app.js"></script>
-    <script src="app/app.config.js"></script>
-    <script src="app/app.routes.js"></script>
-    
-     Services 
-    <script src="app/services/auth.service.js"></script>
-    <script src="app/services/patient.service.js"></script>
-    <script src="app/services/cvr.service.js"></script>
-    <script src="app/services/doctor.service.js"></script>
-    <script src="app/services/appointment.service.js"></script>
-    <script src="app/services/opd.service.js"></script>
-    <script src="app/services/billing.service.js"></script>
-    <script src="app/services/user.service.js"></script>
-    
-     Controllers 
-    <script src="app/controllers/login.controller.js"></script>
-    <script src="app/controllers/dashboard.controller.js"></script>
-    <script src="app/controllers/patient-registration.controller.js"></script>
-    <script src="app/controllers/patient-list.controller.js"></script>
-    <script src="app/controllers/cvr-create.controller.js"></script>
-    <script src="app/controllers/vitals-recording.controller.js"></script>
-    <script src="app/controllers/doctor-registration.controller.js"></script>
-    <script src="app/controllers/doctor-list.controller.js"></script>
-    <script src="app/controllers/doctor-schedule.controller.js"></script>
-    <script src="app/controllers/appointment-booking.controller.js"></script>
-    <script src="app/controllers/appointment-list.controller.js"></script>
-    <script src="app/controllers/queue-management.controller.js"></script>
-    <script src="app/controllers/consultation-room.controller.js"></script>
-    <script src="app/controllers/prescription-create.controller.js"></script>
-    <script src="app/controllers/invoice-create.controller.js"></script>
-    <script src="app/controllers/payment-processing.controller.js"></script>
-    
-     Filters 
-    <script src="app/filters/date-format.filter.js"></script>
-    <script src="app/filters/time-format.filter.js"></script>
-    
-     Custom Scripts 
-    <script src="assets/js/custom.js"></script>
-</body>
-</html>-->
-
-
 <html ng-app="hospitalApp">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hospital Management System</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -239,164 +14,293 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
     <link rel="stylesheet" href="assets/css/forms.css">
+    <link rel="stylesheet" href="assets/css/report.css">
 </head>
+
 <body ng-controller="RootController">
-    
-    <!-- Navigation Bar (shown when logged in) -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" ng-if="isLoggedIn">
+
+    <!-- TOP BAR - Hospital Name & User Info -->
+    <nav class="navbar navbar-expand-lg top-bar" ng-if="isLoggedIn"
+        style="background:#fff; border-bottom:1px solid #eef1f6; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#!/dashboard">
-                <i class="fas fa-hospital"></i> Hospital Management System
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#!/dashboard"
+                style="color:#1e293b; font-weight:700;">
+                <img ng-if="clinicLogo" ng-src="{{clinicLogo}}" alt="Logo"
+                    style="height:32px; width:auto; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+                <span ng-if="!clinicLogo"
+                    style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.9rem;">
+                    <i class="fas fa-hospital"></i>
+                </span>
+                <span id="clinicNameDisplay" style="font-size:0.95rem;">{{clinicName || 'Hospital Management
+                    System'}}</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <span class="nav-link text-white">
-                            <i class="fas fa-user"></i> {{currentUser.fullName}} 
-                            <span class="badge bg-light text-dark">{{currentUser.role}}</span>
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#!/logout">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+
+            <div class="ms-auto">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            style="color:#475569; font-weight:600; font-size:0.85rem;">
+                            <i class="fas fa-user-circle" style="color:#6366f1;"></i> {{currentUser.fullName}}
+                            <span class="badge ms-1"
+                                style="background:#eef2ff; color:#6366f1; font-size:0.65rem;">{{currentUser.role}}</span>
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="#!/profile">
+                                    <i class="fas fa-user"></i> Profile
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#!/logout">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Sidebar & Main Content -->
+    <!-- MODULE NAVIGATION BAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white module-navbar" ng-if="isLoggedIn">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#moduleNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="moduleNav">
+                <ul class="navbar-nav w-100">
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="#!/dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+
+                    <!-- Admin - User Management -->
+                    <li class="nav-item dropdown" ng-if="hasRole(['ADMIN'])">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-users-cog"></i> User Management
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#!/user/register">
+                                    <i class="fas fa-user-plus"></i> Register User
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#!/user/list">
+                                    <i class="fas fa-list"></i> User List
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Patient Management -->
+                    <li class="nav-item dropdown" ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-injured"></i> Patients
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#!/patient/register">
+                                    <i class="fas fa-user-plus"></i> Register Patient
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#!/patient/list">
+                                    <i class="fas fa-list"></i> Patient List
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Doctor Management -->
+                    <li class="nav-item dropdown" ng-if="hasRole(['ADMIN'])">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-md"></i> Doctors
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#!/doctor/register">
+                                    <i class="fas fa-user-plus"></i> Register Doctor
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#!/doctor/list">
+                                    <i class="fas fa-list"></i> Doctor List
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Appointment Management -->
+                    <li class="nav-item dropdown" ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-calendar-check"></i> Appointments
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#!/appointment/book">
+                                    <i class="fas fa-calendar-plus"></i> Book Appointment
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#!/appointment/list">
+                                    <i class="fas fa-list"></i> Appointment List
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- OPD Management -->
+                    <li class="nav-item dropdown" ng-if="hasRole(['DOCTOR', 'RECEPTIONIST', 'ADMIN'])">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-clinic-medical"></i> OPD Management
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#!/opd/queue">
+                                    <i class="fas fa-users"></i> OPD Queue
+                                </a>
+                            </li>
+                            <li ng-if="hasRole(['DOCTOR', 'ADMIN'])">
+                                <a class="dropdown-item" href="#!/opd/list">
+                                    <i class="fas fa-list-alt"></i> OPD Records
+                                </a>
+                            </li>
+                            <li ng-if="hasRole(['DOCTOR', 'ADMIN'])">
+                                <a class="dropdown-item" href="#!/consultation/room">
+                                    <i class="fas fa-stethoscope"></i> Consultation Room
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Billing -->
+                    <li class="nav-item dropdown" ng-if="hasRole(['BILLING', 'DOCTOR', 'RECEPTIONIST', 'ADMIN'])">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-file-invoice-dollar"></i> Billing
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#!/billing/invoice/list">
+                                    <i class="fas fa-list"></i> Invoice List
+                                </a>
+                            </li>
+                                        <!--                                        <li class="nav-item">
+                                                                                    <a class="nav-link" href="#!/billing/payment">Invoice Payment</a>
+                                                                                </li>-->
+                                        <!-- Payment History added -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#!/billing/payment-history">Invoice History
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Reports Module -->
+                    <li class="nav-item dropdown" ng-if="hasRole(['ADMIN','DOCTOR','RECEPTIONIST','BILLING','NURSE'])">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-chart-bar"></i> Reports
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#!/reports">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Reports Dashboard
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li class="dropdown-header text-muted small">PATIENT</li>
+                            <li ng-if="hasRole(['ADMIN','RECEPTIONIST'])"><a class="dropdown-item"
+                                    href="#!/reports/patient-registration">
+                                    <i class="fas fa-user-injured me-2"></i>Patient Registration
+                                </a></li>
+                            <li ng-if="hasRole(['ADMIN','DOCTOR'])"><a class="dropdown-item"
+                                    href="#!/reports/patient-demographics">
+                                    <i class="fas fa-chart-pie me-2"></i>Demographics
+                                </a></li>
+                            <li><a class="dropdown-item" href="#!/reports/patient-visit-history">
+                                    <i class="fas fa-history me-2"></i>Visit History
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li class="dropdown-header text-muted small">OPD</li>
+                            <li><a class="dropdown-item" href="#!/reports/opd-daily">
+                                    <i class="fas fa-calendar-day me-2"></i>OPD Daily
+                                </a></li>
+                            <li ng-if="hasRole(['ADMIN','DOCTOR'])"><a class="dropdown-item"
+                                    href="#!/reports/opd-department">
+                                    <i class="fas fa-hospital me-2"></i>Department-wise
+                                </a></li>
+                            <li><a class="dropdown-item" href="#!/reports/cvr-summary">
+                                    <i class="fas fa-file-medical me-2"></i>CVR Summary
+                                </a></li>
+                            <li ng-if="hasRole(['ADMIN','DOCTOR'])"><a class="dropdown-item"
+                                    href="#!/reports/prescriptions">
+                                    <i class="fas fa-pills me-2"></i>Prescriptions
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li class="dropdown-header text-muted small">APPOINTMENTS</li>
+                            <li><a class="dropdown-item" href="#!/reports/appointment-schedule">
+                                    <i class="fas fa-calendar-check me-2"></i>Schedule
+                                </a></li>
+                            <li ng-if="hasRole(['ADMIN'])"><a class="dropdown-item"
+                                    href="#!/reports/appointment-status">
+                                    <i class="fas fa-tasks me-2"></i>Status Summary
+                                </a></li>
+                            <li><a class="dropdown-item" href="#!/reports/doctor-availability">
+                                    <i class="fas fa-user-clock me-2"></i>Doctor Availability
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li class="dropdown-header text-muted small">BILLING</li>
+                            <li ng-if="hasRole(['ADMIN','BILLING','RECEPTIONIST'])"><a class="dropdown-item"
+                                    href="#!/reports/invoice-summary">
+                                    <i class="fas fa-file-invoice me-2"></i>Invoice Summary
+                                </a></li>
+                            <li ng-if="hasRole(['ADMIN','BILLING'])"><a class="dropdown-item"
+                                    href="#!/reports/payment-collection">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Payment Collection
+                                </a></li>
+                            <li ng-if="hasRole(['ADMIN','BILLING'])"><a class="dropdown-item"
+                                    href="#!/reports/outstanding-dues">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Outstanding Dues
+                                </a></li>
+                            <li ng-if="hasRole(['ADMIN'])"><a class="dropdown-item" href="#!/reports/revenue-analysis">
+                                    <i class="fas fa-chart-line me-2"></i>Revenue Analysis
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li class="dropdown-header text-muted small">DOCTORS</li>
+                            <li ng-if="hasRole(['ADMIN','DOCTOR'])"><a class="dropdown-item"
+                                    href="#!/reports/doctor-consultation">
+                                    <i class="fas fa-stethoscope me-2"></i>Consultations
+                                </a></li>
+                            <li ng-if="hasRole(['ADMIN','DOCTOR'])"><a class="dropdown-item"
+                                    href="#!/reports/doctor-schedule">
+                                    <i class="fas fa-calendar-alt me-2"></i>Doctor Schedule
+                                </a></li>
+                        </ul>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar (shown when logged in) -->
-            <nav class="col-md-2 d-md-block bg-light sidebar" ng-if="isLoggedIn">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#!/dashboard">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
-                            </a>
-                        </li>
-                        
-                        <!-- Admin - User Management -->
-                        <li class="nav-item" ng-if="hasRole(['ADMIN'])">
-                            <a class="nav-link" data-bs-toggle="collapse" href="#userMenu">
-                                <i class="fas fa-users-cog"></i> User Management
-                            </a>
-                            <div class="collapse" id="userMenu">
-                                <ul class="nav flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/user/register">
-                                            <i class="fas fa-user-plus"></i> Register User
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/user/list">
-                                            <i class="fas fa-list"></i> User List
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        
-                        <!-- Patient Management -->
-                        <li class="nav-item" ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
-                            <a class="nav-link" data-bs-toggle="collapse" href="#patientMenu">
-                                <i class="fas fa-user-injured"></i> Patients
-                            </a>
-                            <div class="collapse" id="patientMenu">
-                                <ul class="nav flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/patient/register">Register Patient</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/patient/list">Patient List</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                        <!-- CVR Management -->
-                        <li class="nav-item" ng-if="hasRole(['RECEPTIONIST', 'NURSE', 'ADMIN'])">
-                            <a class="nav-link" href="#!/cvr/create">
-                                <i class="fas fa-file-medical"></i> Create Visit (CVR)
-                            </a>
-                        </li>
-
-                        <!-- Doctor Management -->
-                        <li class="nav-item" ng-if="hasRole(['ADMIN'])">
-                            <a class="nav-link" data-bs-toggle="collapse" href="#doctorMenu">
-                                <i class="fas fa-user-md"></i> Doctors
-                            </a>
-                            <div class="collapse" id="doctorMenu">
-                                <ul class="nav flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/doctor/register">Register Doctor</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/doctor/list">Doctor List</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                        <!-- Appointment Management -->
-                        <li class="nav-item" ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
-                            <a class="nav-link" data-bs-toggle="collapse" href="#appointmentMenu">
-                                <i class="fas fa-calendar-check"></i> Appointments
-                            </a>
-                            <div class="collapse" id="appointmentMenu">
-                                <ul class="nav flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/appointment/book">Book Appointment</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/appointment/list">Appointment List</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                        <!-- OPD Queue -->
-                        <li class="nav-item" ng-if="hasRole(['DOCTOR', 'RECEPTIONIST', 'ADMIN'])">
-                            <a class="nav-link" href="#!/opd/queue">
-                                <i class="fas fa-users"></i> OPD Queue
-                            </a>
-                        </li>
-
-                        <!-- Consultation -->
-                        <li class="nav-item" ng-if="hasRole(['DOCTOR'])">
-                            <a class="nav-link" href="#!/consultation/room">
-                                <i class="fas fa-stethoscope"></i> Consultation Room
-                            </a>
-                        </li>
-
-                        <!-- Billing -->
-                        <li class="nav-item" ng-if="hasRole(['BILLING', 'ADMIN'])">
-                            <a class="nav-link" data-bs-toggle="collapse" href="#billingMenu">
-                                <i class="fas fa-file-invoice-dollar"></i> Billing
-                            </a>
-                            <div class="collapse" id="billingMenu">
-                                <ul class="nav flex-column ms-3">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/billing/invoice/create">Create Invoice</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#!/billing/payment">Process Payment</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-
-            <!-- Main Content Area -->
-            <main class="col-md-10 ms-sm-auto px-md-4" ng-class="{'col-md-12': !isLoggedIn}">
+            <main class="col-12 main-content">
                 <!-- Loading Spinner -->
                 <div ng-if="loading" class="text-center mt-5">
                     <div class="spinner-border text-primary" role="status">
@@ -405,7 +309,8 @@
                 </div>
 
                 <!-- Alert Messages -->
-                <div ng-if="alert.show" class="alert alert-{{alert.type}} alert-dismissible fade show mt-3" role="alert">
+                <div ng-if="alert.show" class="alert alert-{{alert.type}} alert-dismissible fade show mt-3"
+                    role="alert">
                     {{alert.message}}
                     <button type="button" class="btn-close" ng-click="alert.show = false"></button>
                 </div>
@@ -421,21 +326,18 @@
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <!-- AngularJS -->
-<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular-route.min.js"></script>-->
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular-route.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular-route.min.js"></script>
-    
+
     <!-- App Configuration -->
     <script src="config/api-config.js"></script>
-    
+
     <!-- Main App Module -->
-    <script src="app/app.js"></script>
+    <script src="app/app.js?v=2"></script>
     <script src="app/app.config.js"></script>
     <script src="app/app.routes.js"></script>
-    
+
     <!-- Services -->
     <script src="app/services/auth.service.js"></script>
     <script src="app/services/patient.service.js"></script>
@@ -445,7 +347,7 @@
     <script src="app/services/opd.service.js"></script>
     <script src="app/services/billing.service.js"></script>
     <script src="app/services/user.service.js"></script>
-    
+
     <!-- Controllers -->
     <script src="app/controllers/login.controller.js"></script>
     <script src="app/controllers/dashboard.controller.js"></script>
@@ -454,25 +356,73 @@
     <script src="app/controllers/patient-list.controller.js"></script>
     <script src="app/controllers/patient-details.controller.js"></script>
     <script src="app/controllers/cvr-create.controller.js"></script>
-    <script src="app/controllers/vitals-recording.controller.js"></script>
+    <script src="app/controllers/vitals-recording.controller.js?v=2"></script>
     <script src="app/controllers/doctor-registration.controller.js"></script>
     <script src="app/controllers/doctor-list.controller.js"></script>
     <script src="app/controllers/doctor-schedule.controller.js"></script>
     <script src="app/controllers/appointment-booking.controller.js"></script>
     <script src="app/controllers/appointment-list.controller.js"></script>
+    <script src="app/controllers/user-list.controller.js"></script>
+
+    <script src="app/controllers/queue-management.controller.js"></script>
+    <script src="app/controllers/consultation-room.controller.js?v=2"></script>
+    <script src="app/controllers/prescription-create.controller.js?v=2"></script>
+    <script src="app/controllers/consultation-management.controller.js"></script>
+    <script src="app/controllers/opd-list.controller.js?v=2"></script>
+
+    <script src="app/controllers/invoice-details.controller.js"></script>
+    <script src="app/controllers/invoice-list.controller.js"></script>
     <script src="app/controllers/invoice-create.controller.js"></script>
     <script src="app/controllers/payment-processing.controller.js"></script>
-    <script src="app/controllers/user-list.controller.js"></script>
-    
-    <script src="app/controllers/queue-management.controller.js"></script>
-    <script src="app/controllers/consultation-room.controller.js"></script>
-    <script src="app/controllers/prescription-create.controller.js"></script>
-    
+        <script src="app/controllers/payment-history.controller.js"></script>
+
+
     <!-- Filters -->
     <script src="app/filters/date-format.filter.js"></script>
     <script src="app/filters/time-format.filter.js"></script>
-    
+
+    <!-- Report Module -->
+    <script src="app/services/report.service.js"></script>
+    <script src="app/controllers/report-shared.js"></script>
+    <script src="app/controllers/reports-dashboard.controller.js"></script>
+    <script src="app/controllers/report-patient.controller.js"></script>
+    <script src="app/controllers/report-opd.controller.js"></script>
+    <script src="app/controllers/report-billing-doctor.controller.js"></script>
+
+    <!-- Super Admin Module -->
+    <script src="app/services/superadmin.service.js"></script>
+    <script src="app/controllers/superadmin.controller.js"></script>
+
+    <!-- ✅ GLOBAL MODERN DIALOG MODAL (Replaces window.confirm and window.alert) -->
+    <div ng-if="confirmDialog.show" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10400; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered m-0" style="max-width: 400px; width: 100%; padding: 1rem;" ng-click="$event.stopPropagation()">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                    <h6 class="modal-title fw-bold text-dark mb-0">
+                        <i ng-class="confirmDialog.icon" class="me-2 text-primary" style="font-size: 1.1rem;"></i> 
+                        {{confirmDialog.title}}
+                    </h6>
+                    <button type="button" class="btn-close btn-sm" ng-click="confirmDialog.cancel()" ng-if="confirmDialog.cancelText"></button>
+                </div>
+                <div class="modal-body p-4 bg-white text-center">
+                    <p class="mb-2 text-dark" style="font-size: 0.95rem;">{{confirmDialog.message}}</p>
+                    <small class="text-muted d-block" ng-if="confirmDialog.subMessage">{{confirmDialog.subMessage}}</small>
+                </div>
+                <div class="modal-footer bg-light border-top p-3 justify-content-center rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill fw-bold" ng-click="confirmDialog.cancel()" ng-if="confirmDialog.cancelText">
+                        <i class="fas fa-times me-1"></i> {{confirmDialog.cancelText}}
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold text-white shadow-sm"
+                            ng-click="confirmDialog.confirm()">
+                        <i class="fas fa-check me-1"></i> {{confirmDialog.okText}}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom Scripts -->
     <script src="assets/js/custom.js"></script>
 </body>
+
 </html>

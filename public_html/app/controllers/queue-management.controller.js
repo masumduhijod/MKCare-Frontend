@@ -2363,7 +2363,7 @@ app.controller('QueueManagementController',
         $scope.stats.total = $scope.queue.length;
         $scope.stats.waiting = $scope.queue.filter(q => q.status === 'SCHEDULED').length;
         $scope.stats.checkedIn = $scope.queue.filter(q => q.status === 'CHECKED_IN').length;
-        $scope.stats.inProgress = $scope.queue.filter(q => q.status === 'IN_CONSULTATION').length;
+        $scope.stats.inProgress = $scope.queue.filter(q => q.status === 'IN_CONSULTATION' || q.status === 'CONSULTING').length;
         $scope.stats.completed = $scope.queue.filter(q => q.status === 'COMPLETED').length;
         
         console.log('📊 Queue Stats:', $scope.stats);
@@ -2642,7 +2642,7 @@ app.controller('QueueManagementController',
         console.log('Status:', entry.status);
         
         // ✅ Allow both CHECKED_IN and IN_CONSULTATION status
-        if (entry.status !== 'CHECKED_IN' && entry.status !== 'IN_CONSULTATION') {
+        if (entry.status !== 'CHECKED_IN' && entry.status !== 'IN_CONSULTATION' && entry.status !== 'CONSULTING') {
             $rootScope.showAlert('warning', 'Patient must be checked in first');
             return;
         }
@@ -2692,20 +2692,50 @@ app.controller('QueueManagementController',
     };
     
     /**
-     * ✅ HELPER: Navigate to consultation room
+     * ✅ HELPER: Navigate to consultation room OR prescription room based on progress
      */
     function navigateToConsultationRoom(entry) {
-        console.log('✅ Redirecting to consultation room...');
-        console.log('Parameters:', {
-            appointmentId: entry.appointmentId,
-            pinNumber: entry.pinNumber,
-            cvrNumber: entry.cvrNumber
-        });
+        console.log('✅ Checking if consultation already exists...');
         
-        $location.path('/consultation/room').search({
-            appointmentId: entry.appointmentId,
-            pinNumber: entry.pinNumber,
-            cvrNumber: entry.cvrNumber
+        $scope.loading = true;
+        // Check if consultation exists
+        var apiUrl = API_CONFIG.GATEWAY_URL + API_CONFIG.ENDPOINTS.CONSULTATION.GET_BY_CVR.replace('{cvrNumber}', entry.cvrNumber);
+        
+        $.ajax({
+            url: apiUrl,
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            },
+            success: function(response) {
+                $scope.$apply(function() {
+                    $scope.loading = false;
+                    if (response && response.success && response.data) {
+                        // Consultation already done! Go to prescription.
+                        console.log('✅ Consultation already exists. Navigating to prescription room...', response.data.consultationId);
+                        $location.path('/prescription/create/' + response.data.consultationId).search({edit: 'true'});
+                    } else {
+                        // No consultation yet. Go to consultation room.
+                        console.log('✅ No consultation yet. Redirecting to consultation room...');
+                        $location.path('/consultation/room').search({
+                            appointmentId: entry.appointmentId,
+                            pinNumber: entry.pinNumber,
+                            cvrNumber: entry.cvrNumber
+                        });
+                    }
+                });
+            },
+            error: function() {
+                $scope.$apply(function() {
+                    $scope.loading = false;
+                    console.log('✅ Redirecting to consultation room...');
+                    $location.path('/consultation/room').search({
+                        appointmentId: entry.appointmentId,
+                        pinNumber: entry.pinNumber,
+                        cvrNumber: entry.cvrNumber
+                    });
+                });
+            }
         });
     }
     
@@ -2875,4 +2905,26 @@ app.controller('QueueManagementController',
     
     // Initialize
     $scope.init();
+    
+    /**
+ * Resume consultation after logout / crash / power fail
+ */
+
+$scope.resumeConsultation = function(entry) {
+
+    console.log('♻️ Resuming consultation...');
+    console.log('Entry:', entry);
+
+    if (!entry.cvrNumber) {
+        $rootScope.showAlert('danger', 
+            'CVR missing. Cannot resume consultation.');
+        return;
+    }
+
+    // DO NOT change status again
+    // Just reopen consultation room
+
+    navigateToConsultationRoom(entry);
+};
+
 }]);

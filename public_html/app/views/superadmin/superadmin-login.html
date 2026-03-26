@@ -1,0 +1,400 @@
+<!-- Super Admin Login Page -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<div class="sa-login-root">
+    <!-- Animated Background -->
+    <div class="sa-bg">
+        <div class="sa-bg-blob sa-bg-blob--1"></div>
+        <div class="sa-bg-blob sa-bg-blob--2"></div>
+        <div class="sa-bg-blob sa-bg-blob--3"></div>
+    </div>
+
+    <div class="sa-login-container">
+        <div class="sa-login-card">
+            <div class="sa-card-accent"></div>
+
+            <!-- Header -->
+            <div class="sa-header">
+                <div class="sa-icon-wrap">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2 class="sa-title">Super Admin Portal</h2>
+                <p class="sa-subtitle">Hospital Management System — Master Control</p>
+            </div>
+
+            <!-- Error Alert -->
+            <div ng-if="error" class="sa-error-alert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{error}}</span>
+                <button type="button" class="sa-error-close" ng-click="clearError()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form ng-submit="login()" class="sa-form" autocomplete="off">
+                <div class="sa-field">
+                    <label class="sa-label"><i class="fas fa-user-shield sa-label-icon"></i> Username</label>
+                    <input type="text" class="sa-input" ng-model="credentials.username"
+                        placeholder="Enter super admin username" required autocomplete="username">
+                </div>
+
+                <div class="sa-field">
+                    <label class="sa-label"><i class="fas fa-lock sa-label-icon"></i> Password</label>
+                    <div class="sa-input-wrap">
+                        <input type="{{showPassword ? 'text' : 'password'}}" class="sa-input sa-input--pw"
+                            ng-model="credentials.password" placeholder="Enter password" required>
+                        <button type="button" class="sa-eye-btn" ng-click="showPassword = !showPassword" tabindex="-1">
+                            <i class="fas" ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="sa-btn-login"
+                    ng-disabled="loading || !credentials.username || !credentials.password">
+                    <span ng-if="!loading"><i class="fas fa-sign-in-alt"></i> Sign In</span>
+                    <span ng-if="loading"><span class="sa-spinner"></span> Authenticating...</span>
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="sa-footer">
+                <a ng-click="goToClinicLogin()" class="sa-clinic-link">
+                    <i class="fas fa-hospital"></i> Go to Clinic Login
+                </a>
+                <div class="sa-footer-info">
+                    <i class="fas fa-shield-alt"></i> Master Admin Access Only
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sa-login-root {
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sa-bg {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, #1a0a2e 0%, #16213e 40%, #0f3460 70%, #533483 100%);
+        z-index: 0;
+    }
+
+    .sa-bg-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.2;
+        animation: saBlobFloat 14s ease-in-out infinite;
+    }
+
+    .sa-bg-blob--1 {
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, #e94560, #c23616);
+        top: -180px;
+        left: -120px;
+    }
+
+    .sa-bg-blob--2 {
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, #533483, #2c2c54);
+        bottom: -120px;
+        right: -100px;
+        animation-delay: 5s;
+    }
+
+    .sa-bg-blob--3 {
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, #e94560, #ff6b6b);
+        top: 50%;
+        left: 60%;
+        animation-delay: 9s;
+    }
+
+    @keyframes saBlobFloat {
+
+        0%,
+        100% {
+            transform: translateY(0) scale(1)
+        }
+
+        50% {
+            transform: translateY(-35px) scale(1.04)
+        }
+    }
+
+    .sa-login-container {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 440px;
+        padding: 24px;
+    }
+
+    .sa-login-card {
+        background: rgba(255, 255, 255, 0.97);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.45);
+        animation: saCardIn 0.5s cubic-bezier(.22, .68, 0, 1.15) both;
+    }
+
+    @keyframes saCardIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.96)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1)
+        }
+    }
+
+    .sa-card-accent {
+        height: 5px;
+        background: linear-gradient(90deg, #e94560 0%, #533483 50%, #c23616 100%);
+    }
+
+    .sa-header {
+        text-align: center;
+        padding: 36px 36px 20px;
+    }
+
+    .sa-icon-wrap {
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, #e94560, #c23616);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.9rem;
+        color: #fff;
+        margin: 0 auto 20px;
+        box-shadow: 0 12px 32px rgba(233, 69, 96, 0.35);
+        transition: transform 0.3s;
+    }
+
+    .sa-icon-wrap:hover {
+        transform: rotateY(10deg) scale(1.05);
+    }
+
+    .sa-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #1a0a2e;
+        margin-bottom: 6px;
+    }
+
+    .sa-subtitle {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 400;
+    }
+
+    .sa-error-alert {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff3f3;
+        border: 1px solid #f5c2c7;
+        border-left: 4px solid #dc3545;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin: 0 32px 16px;
+        font-size: 0.85rem;
+        color: #842029;
+        animation: saShake 0.4s ease;
+    }
+
+    @keyframes saShake {
+
+        0%,
+        100% {
+            transform: translateX(0)
+        }
+
+        20%,
+        60% {
+            transform: translateX(-5px)
+        }
+
+        40%,
+        80% {
+            transform: translateX(5px)
+        }
+    }
+
+    .sa-error-alert i {
+        color: #dc3545;
+    }
+
+    .sa-error-alert span {
+        flex: 1;
+    }
+
+    .sa-error-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #842029;
+        padding: 2px 4px;
+    }
+
+    .sa-form {
+        padding: 0 32px 24px;
+    }
+
+    .sa-field {
+        margin-bottom: 18px;
+    }
+
+    .sa-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #344054;
+        margin-bottom: 8px;
+    }
+
+    .sa-label-icon {
+        color: #e94560;
+        font-size: 0.78rem;
+    }
+
+    .sa-input-wrap {
+        position: relative;
+    }
+
+    .sa-input {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 0.88rem;
+        font-family: 'Inter', sans-serif;
+        color: #1a2332;
+        background: #f7fafd;
+        border: 1.5px solid #d0dae6;
+        border-radius: 12px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .sa-input--pw {
+        padding-right: 44px;
+    }
+
+    .sa-input:focus {
+        border-color: #e94560;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.12);
+    }
+
+    .sa-eye-btn {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #6c757d;
+        font-size: 0.88rem;
+    }
+
+    .sa-eye-btn:hover {
+        color: #e94560;
+    }
+
+    .sa-btn-login {
+        width: 100%;
+        padding: 14px;
+        margin-top: 8px;
+        background: linear-gradient(135deg, #e94560 0%, #c23616 100%);
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 8px 24px rgba(233, 69, 96, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .sa-btn-login:hover:not(:disabled) {
+        background: linear-gradient(135deg, #c23616 0%, #e94560 100%);
+        box-shadow: 0 12px 32px rgba(233, 69, 96, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .sa-btn-login:disabled {
+        background: linear-gradient(135deg, #f5a6b5, #e6a4b4);
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .sa-spinner {
+        width: 18px;
+        height: 18px;
+        border: 2.5px solid rgba(255, 255, 255, 0.35);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: saSpin 0.7s linear infinite;
+        display: inline-block;
+    }
+
+    @keyframes saSpin {
+        to {
+            transform: rotate(360deg)
+        }
+    }
+
+    .sa-footer {
+        text-align: center;
+        padding: 16px 32px 28px;
+        border-top: 1px solid #f0f4f8;
+    }
+
+    .sa-clinic-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #533483;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: color 0.2s;
+        text-decoration: none;
+    }
+
+    .sa-clinic-link:hover {
+        color: #e94560;
+    }
+
+    .sa-footer-info {
+        margin-top: 10px;
+        font-size: 0.72rem;
+        color: #9aa5b1;
+    }
+
+    .sa-footer-info i {
+        color: #e94560;
+    }
+</style>

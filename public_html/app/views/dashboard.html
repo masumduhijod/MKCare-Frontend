@@ -1,572 +1,1156 @@
-<!--<!DOCTYPE html>
+<!-- ============================================================
+     Dashboard — Balanced Light-Colorful Design
+     - More color contrast than before
+     - No chart, replaced with better widgets
+     - All tables (Appointments, Transactions, CVRs) kept
+     ============================================================ -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
+<div class="ds">
 
-<html>
-    <head>
-        <title>TODO supply a title</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body>
-        <div>TODO write content</div>
-    </body>
-</html>
-
- Dashboard Page 
-<div class="container-fluid mt-4">
-     Welcome Header 
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="fw-bold">
-                <i class="fas fa-tachometer-alt text-primary"></i> 
-                Welcome, {{currentUser.fullName}}
-            </h2>
-            <p class="text-muted">Role: <span class="badge bg-primary">{{userRole}}</span></p>
-        </div>
-    </div>
-
-     Loading Spinner 
-    <div ng-if="loading" class="text-center my-5">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="text-muted mt-3">Loading dashboard...</p>
-    </div>
-
-     Statistics Cards 
-    <div ng-if="!loading" class="row mb-4">
-         Total Patients 
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card primary">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3>{{stats.totalPatients}}</h3>
-                        <p class="mb-0">Total Patients</p>
+    <!-- ── Premium Glassmorphism Banner ── -->
+    <div class="ds-banner-premium">
+        <div class="ds-banner-glow"></div>
+        <div class="ds-banner-content">
+            <div class="ds-banner-left">
+                <div class="ds-banner-avatar">
+                    <img ng-if="clinicLogo" ng-src="{{clinicLogo}}" alt="Logo">
+                    <i ng-if="!clinicLogo" class="fas fa-hospital text-primary"></i>
+                </div>
+                <div class="ds-banner-text">
+                    <h1 class="ds-banner-greeting">
+                        {{greeting}}, <span class="ds-highlight">{{currentUser.fullName || 'User'}}</span> <span class="ds-wave">👋</span>
+                    </h1>
+                    <p class="ds-banner-sub">{{energyMessage}}</p>
+                    <div class="ds-banner-meta">
+                        <span class="ds-pill ds-pill--role" ng-if="userRole"><i class="fas fa-id-badge"></i> {{userRole}}</span>
+                        <span class="ds-pill ds-pill--clinic" ng-if="clinicName"><i class="fas fa-clinic-medical"></i> {{clinicName}}</span>
+                        <span class="ds-pill ds-pill--date"><i class="far fa-calendar-alt"></i> {{currentDate}}</span>
                     </div>
-                    <i class="fas fa-user-injured fa-3x opacity-50"></i>
                 </div>
             </div>
-        </div>
-
-         Total Doctors 
-        <div class="col-md-3 col-sm-6 mb-3" ng-if="hasRole(['ADMIN', 'RECEPTIONIST'])">
-            <div class="stat-card success">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3>{{stats.totalDoctors}}</h3>
-                        <p class="mb-0">Total Doctors</p>
-                    </div>
-                    <i class="fas fa-user-md fa-3x opacity-50"></i>
-                </div>
-            </div>
-        </div>
-
-         Today's Appointments 
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card warning">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3>{{stats.todayAppointments}}</h3>
-                        <p class="mb-0">Today's Appointments</p>
-                    </div>
-                    <i class="fas fa-calendar-check fa-3x opacity-50"></i>
-                </div>
-            </div>
-        </div>
-
-         Today's CVRs 
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card info">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3>{{stats.todayCVRs}}</h3>
-                        <p class="mb-0">Today's Visits</p>
-                    </div>
-                    <i class="fas fa-file-medical fa-3x opacity-50"></i>
-                </div>
+            <div class="ds-banner-right">
+                <button class="ds-refresh-btn" ng-click="refreshStats()">
+                    <i class="fas fa-rotate-right"></i>
+                    <span>Refresh</span>
+                </button>
             </div>
         </div>
     </div>
 
-     Quick Actions Section 
-    <div class="row mb-4">
-        <div class="col-12">
-            <h4 class="fw-bold mb-3">
-                <i class="fas fa-bolt text-warning"></i> Quick Actions
-            </h4>
-        </div>
-
-         Receptionist Quick Actions 
-        <div ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="quick-action-card" ng-click="registerPatient()">
-                    <i class="fas fa-user-plus"></i>
-                    <h5>Register Patient</h5>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="quick-action-card" ng-click="bookAppointment()">
-                    <i class="fas fa-calendar-plus"></i>
-                    <h5>Book Appointment</h5>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="quick-action-card" ng-click="createCVR()">
-                    <i class="fas fa-file-medical-alt"></i>
-                    <h5>Create Visit (CVR)</h5>
-                </div>
-            </div>
-        </div>
-
-         Doctor Quick Actions 
-        <div ng-if="hasRole(['DOCTOR'])">
-            <div class="col-md-4 col-sm-6 mb-3">
-                <div class="quick-action-card" ng-click="viewQueue()">
-                    <i class="fas fa-users"></i>
-                    <h5>My Queue</h5>
-                    <p class="text-muted mb-0">{{stats.pendingConsultations}} waiting</p>
-                </div>
-            </div>
-            <div class="col-md-4 col-sm-6 mb-3">
-                <div class="quick-action-card">
-                    <i class="fas fa-stethoscope"></i>
-                    <h5>Consultation Room</h5>
-                </div>
-            </div>
-        </div>
+    <!-- Loader -->
+    <div ng-if="loading" class="ds-loader">
+        <div class="ds-loader-spin"></div>
+        <p>Loading dashboard...</p>
     </div>
 
-     Today's Appointments Table 
-    <div class="row" ng-if="todayAppointments && todayAppointments.length > 0">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-calendar-day text-primary"></i> Today's Appointments
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr ng-repeat="appt in todayAppointments">
-                                    {{ appt | json }}
-                                </tr>
-                                <tr>
-                                    <th>Token</th>
-                                    <th>Patient Name</th>
-                                    <th>Doctor Name</th>
-                                    <th>Time</th>
-                                    <th>Status</th>
-                                    <th>Type</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-  <tr ng-repeat="appt in todayAppointments | limitTo:10">
-    <td>
-      <span class="badge bg-primary">{{ appt.pinNumber }}</span>
-    </td>
-    <td>{{ appt.patientName }}</td>
-    <td>{{ appt.doctorName }}</td>
-    <td>{{ appt.appointmentTime }}</td>
-    <td>
-      <span class="badge"
-            ng-class="{
-              'bg-success': appt.status === 'Booked',
-              'bg-primary': appt.status === 'Checked-In',
-              'bg-warning': appt.status === 'In Consultation',
-              'bg-secondary': appt.status === 'Completed'
-            }">
-        {{ appt.status }}
-      </span>
-    </td>
-    <td>{{ appt.appointmentType }}</td>
-  </tr>
-</tbody>
+    <div ng-if="!loading">
 
-                        </table>
+        <!-- ═══ KPI CARDS ═══ -->
+        <div class="ds-kpis">
+            <div class="ds-kpi ds-kpi--patients">
+                <div class="ds-kpi-top">
+                    <div class="ds-kpi-ic"><i class="fas fa-user-injured"></i></div>
+                    <div class="ds-kpi-num">{{stats.totalPatients | number}}</div>
+                </div>
+                <div class="ds-kpi-label">Total Patients</div>
+                <div class="ds-kpi-bar">
+                    <div class="ds-kpi-fill" style="width:75%"></div>
+                </div>
+            </div>
+
+            <div class="ds-kpi ds-kpi--doctors" ng-if="hasRole(['ADMIN','RECEPTIONIST'])">
+                <div class="ds-kpi-top">
+                    <div class="ds-kpi-ic"><i class="fas fa-user-md"></i></div>
+                    <div class="ds-kpi-num">{{stats.totalDoctors | number}}</div>
+                </div>
+                <div class="ds-kpi-label">Active Doctors</div>
+                <div class="ds-kpi-bar">
+                    <div class="ds-kpi-fill" style="width:60%"></div>
+                </div>
+            </div>
+
+            <div class="ds-kpi ds-kpi--appts">
+                <div class="ds-kpi-top">
+                    <div class="ds-kpi-ic"><i class="fas fa-calendar-check"></i></div>
+                    <div class="ds-kpi-num">{{stats.todayAppointments}}</div>
+                </div>
+                <div class="ds-kpi-label">Today's Appointments</div>
+                <div class="ds-kpi-bar">
+                    <div class="ds-kpi-fill" style="width:50%"></div>
+                </div>
+            </div>
+
+            <div class="ds-kpi ds-kpi--visits">
+                <div class="ds-kpi-top">
+                    <div class="ds-kpi-ic"><i class="fas fa-file-medical"></i></div>
+                    <div class="ds-kpi-num">{{stats.todayVisits || todayCVRs.length}}</div>
+                </div>
+                <div class="ds-kpi-label">Today's Visits</div>
+                <div class="ds-kpi-bar">
+                    <div class="ds-kpi-fill" style="width:45%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ MIDDLE: Revenue + Quick Actions + Activity ═══ -->
+        <div class="ds-row3" ng-if="hasRole(['ADMIN','DOCTOR'])">
+
+            <!-- Revenue Cards -->
+            <div class="ds-panel">
+                <div class="ds-panel-head">
+                    <h3><i class="fas fa-indian-rupee-sign"></i> Revenue Overview</h3>
+                    <div class="ds-tabs">
+                        <button ng-class="revenueTab==='daily'?'ds-tab--on':''"
+                            ng-click="setRevenueTab('daily')">Today</button>
+                        <button ng-class="revenueTab==='monthly'?'ds-tab--on':''"
+                            ng-click="setRevenueTab('monthly')">Month</button>
+                        <button ng-class="revenueTab==='yearly'?'ds-tab--on':''"
+                            ng-click="setRevenueTab('yearly')">Year</button>
+                    </div>
+                </div>
+                <div ng-if="revenueError" class="ds-warn"><i class="fas fa-exclamation-triangle"></i> {{revenueError}}
+                </div>
+                <div class="ds-rev-list">
+                    <div class="ds-rev-item">
+                        <div class="ds-rev-circle ds-rev-circle--green">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <div class="ds-rev-info">
+                            <div class="ds-rev-name">Today's Collection</div>
+                            <div class="ds-rev-cnt">{{revenue.daily.count}} payments</div>
+                        </div>
+                        <div class="ds-rev-amt">
+                            <span ng-if="!revenueLoading">₹{{revenue.daily.amount | number:0}}</span>
+                            <span ng-if="revenueLoading" class="ds-mini-spin"></span>
+                        </div>
+                    </div>
+                    <div class="ds-rev-item">
+                        <div class="ds-rev-circle ds-rev-circle--blue">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="ds-rev-info">
+                            <div class="ds-rev-name">Monthly Collection</div>
+                            <div class="ds-rev-cnt">{{revenue.monthly.count}} payments</div>
+                        </div>
+                        <div class="ds-rev-amt">
+                            <span ng-if="!revenueLoading">₹{{revenue.monthly.amount | number:0}}</span>
+                            <span ng-if="revenueLoading" class="ds-mini-spin"></span>
+                        </div>
+                    </div>
+                    <div class="ds-rev-item">
+                        <div class="ds-rev-circle ds-rev-circle--purple">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="ds-rev-info">
+                            <div class="ds-rev-name">Yearly Collection</div>
+                            <div class="ds-rev-cnt">{{revenue.yearly.count}} payments</div>
+                        </div>
+                        <div class="ds-rev-amt">
+                            <span ng-if="!revenueLoading">₹{{revenue.yearly.amount | number:0}}</span>
+                            <span ng-if="revenueLoading" class="ds-mini-spin"></span>
+                        </div>
+                    </div>
+                    <div class="ds-rev-item">
+                        <div class="ds-rev-circle ds-rev-circle--orange">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="ds-rev-info">
+                            <div class="ds-rev-name">Avg / Day</div>
+                            <div class="ds-rev-cnt">Daily average</div>
+                        </div>
+                        <div class="ds-rev-amt">
+                            <span ng-if="!revenueLoading">₹{{(revenue.monthly.amount / (currentDayOfMonth || 1)) |
+                                number:0}}</span>
+                            <span ng-if="revenueLoading" class="ds-mini-spin"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="ds-panel">
+                <div class="ds-panel-head">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                </div>
+                <div class="ds-qa-grid">
+                    <a class="ds-qa" ng-click="registerPatient()" ng-if="hasRole(['ADMIN','RECEPTIONIST'])">
+                        <div class="ds-qa-ic ds-qa-ic--indigo"><i class="fas fa-user-plus"></i></div>
+                        <div class="ds-qa-title">New Patient</div>
+                    </a>
+                    <a class="ds-qa" ng-click="bookAppointment()" ng-if="hasRole(['ADMIN','RECEPTIONIST'])">
+                        <div class="ds-qa-ic ds-qa-ic--green"><i class="fas fa-calendar-plus"></i></div>
+                        <div class="ds-qa-title">Appointment</div>
+                    </a>
+                    <a class="ds-qa" ng-click="viewQueue()">
+                        <div class="ds-qa-ic ds-qa-ic--violet"><i class="fas fa-users"></i></div>
+                        <div class="ds-qa-title">OPD Queue</div>
+                    </a>
+                    <a class="ds-qa" ng-click="createCVR()" ng-if="hasRole(['ADMIN','RECEPTIONIST'])">
+                        <div class="ds-qa-ic ds-qa-ic--rose"><i class="fas fa-file-medical-alt"></i></div>
+                        <div class="ds-qa-title">New CVR</div>
+                    </a>
+                    <a href="#!/reports" class="ds-qa" style="text-decoration:none">
+                        <div class="ds-qa-ic ds-qa-ic--amber"><i class="fas fa-chart-pie"></i></div>
+                        <div class="ds-qa-title">Reports</div>
+                    </a>
+                    <a href="#!/invoices" class="ds-qa" style="text-decoration:none"
+                        ng-if="hasRole(['ADMIN','RECEPTIONIST'])">
+                        <div class="ds-qa-ic ds-qa-ic--teal"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div class="ds-qa-title">Invoices</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Activity Summary -->
+            <div class="ds-panel">
+                <div class="ds-panel-head">
+                    <h3><i class="fas fa-clock-rotate-left"></i> Today's Summary</h3>
+                </div>
+                <div class="ds-summary">
+                    <div class="ds-sum-row">
+                        <div class="ds-sum-dot" style="background:#4f46e5"></div>
+                        <span>Appointments</span>
+                        <strong>{{stats.todayAppointments}}</strong>
+                    </div>
+                    <div class="ds-sum-row">
+                        <div class="ds-sum-dot" style="background:#10b981"></div>
+                        <span>Patients Visited</span>
+                        <strong>{{stats.todayVisits || todayCVRs.length}}</strong>
+                    </div>
+                    <div class="ds-sum-row">
+                        <div class="ds-sum-dot" style="background:#f59e0b"></div>
+                        <span>Pending Consults</span>
+                        <strong>{{stats.pendingConsultations || 0}}</strong>
+                    </div>
+                    <div class="ds-sum-row">
+                        <div class="ds-sum-dot" style="background:#ec4899"></div>
+                        <span>Payments Made</span>
+                        <strong>{{revenue.daily.count}}</strong>
+                    </div>
+                    <div class="ds-sum-row">
+                        <div class="ds-sum-dot" style="background:#06b6d4"></div>
+                        <span>Revenue Today</span>
+                        <strong style="color:#059669">₹{{revenue.daily.amount | number:0}}</strong>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-     Today's CVRs Table 
-    <div class="row mt-4" ng-if="todayCVRs && todayCVRs.length > 0">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-file-medical text-success"></i> Today's Visits (CVRs)
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>CVR Number</th>
-                                    <th>Patient Name</th>
-                                    <th>Visit Type</th>
-                                    <th>Chief Complaint</th>
-                                    <th>Doctor</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr ng-repeat="cvr in todayCVRs | limitTo:10">
-                                    <td><strong>{{cvr.cvrNumber}}</strong></td>
-                                    <td>{{cvr.patientName}}</td>
-                                    <td>{{cvr.visitType}}</td>
-                                    <td>{{cvr.chiefComplaint}}</td>
-                                    <td>{{cvr.doctorName}}</td>
-                                    <td>
-                                        <span class="badge" 
-                                              ng-class="{
-                                                  'bg-warning': cvr.status === 'Pending',
-                                                  'bg-primary': cvr.status === 'Checked-In',
-                                                  'bg-success': cvr.status === 'Completed'
-                                              }">
-                                            {{cvr.status}}
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <!-- Quick Actions for non-admin  -->
+        <div class="ds-panel" ng-if="!hasRole(['ADMIN','DOCTOR'])" style="margin-bottom:18px">
+            <div class="ds-panel-head">
+                <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
             </div>
-        </div>
-    </div>
-</div>-->
-
-
-<!-- Dashboard Page - FIXED -->
-<div class="container-fluid mt-4">
-    <!-- Welcome Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="fw-bold">
-                <i class="fas fa-tachometer-alt text-primary"></i> 
-                Welcome, {{currentUser.fullName}}
-            </h2>
-            <p class="text-muted">Role: <span class="badge bg-primary">{{userRole}}</span></p>
-        </div>
-    </div>
-
-    <!-- Loading Spinner -->
-    <div ng-if="loading" class="text-center my-5">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="text-muted mt-3">Loading dashboard...</p>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div ng-if="!loading" class="row mb-4">
-        <!-- Total Patients -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card primary">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3>{{stats.totalPatients}}</h3>
-                        <p class="mb-0">Total Patients</p>
-                    </div>
-                    <i class="fas fa-user-injured fa-3x opacity-50"></i>
-                </div>
+            <div class="ds-qa-grid">
+                <a class="ds-qa" ng-click="registerPatient()">
+                    <div class="ds-qa-ic ds-qa-ic--indigo"><i class="fas fa-user-plus"></i></div>
+                    <div class="ds-qa-title">New Patient</div>
+                </a>
+                <a class="ds-qa" ng-click="bookAppointment()">
+                    <div class="ds-qa-ic ds-qa-ic--green"><i class="fas fa-calendar-plus"></i></div>
+                    <div class="ds-qa-title">Appointment</div>
+                </a>
+                <a class="ds-qa" ng-click="viewQueue()">
+                    <div class="ds-qa-ic ds-qa-ic--violet"><i class="fas fa-users"></i></div>
+                    <div class="ds-qa-title">OPD Queue</div>
+                </a>
             </div>
         </div>
 
-        <!-- Total Doctors -->
-        <div class="col-md-3 col-sm-6 mb-3" ng-if="hasRole(['ADMIN', 'RECEPTIONIST'])">
-            <div class="stat-card success">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3>{{stats.totalDoctors}}</h3>
-                        <p class="mb-0">Total Doctors</p>
-                    </div>
-                    <i class="fas fa-user-md fa-3x opacity-50"></i>
-                </div>
+        <!-- ═══ TODAY'S APPOINTMENTS TABLE ═══ -->
+        <div class="ds-panel" ng-if="todayAppointments.length > 0" style="margin-bottom:18px">
+            <div class="ds-panel-head ds-panel-head--indigo">
+                <h3><i class="fas fa-calendar-day"></i> Today's Appointments</h3>
+                <span class="ds-count-badge">{{todayAppointments.length}}</span>
+            </div>
+            <div class="ds-tbl-wrap">
+                <table class="ds-tbl">
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Patient</th>
+                            <th>PIN</th>
+                            <th>Doctor</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Type</th>
+                            <th>CVR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="a in todayAppointments | limitTo:20">
+                            <td><span class="ds-token">{{a.tokenNumber}}</span></td>
+                            <td class="fw-600">{{a.patientName}}</td>
+                            <td><span class="ds-pin">{{a.pinNumber}}</span></td>
+                            <td>{{a.doctorName}}</td>
+                            <td><i class="far fa-clock" style="color:#94a3b8;margin-right:4px"></i>{{a.appointmentTime}}
+                            </td>
+                            <td><span class="badge" ng-class="getStatusClass(a.status)">{{a.status}}</span></td>
+                            <td>{{a.appointmentType}}</td>
+                            <td>
+                                <span ng-if="a.cvrNumber" class="badge bg-success">{{a.cvrNumber}}</span>
+                                <span ng-if="!a.cvrNumber" style="color:#cbd5e1">—</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Today's Appointments -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card warning">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3>{{stats.todayAppointments}}</h3>
-                        <p class="mb-0">Today's Appointments</p>
-                    </div>
-                    <i class="fas fa-calendar-check fa-3x opacity-50"></i>
+        <!-- ═══ TODAY'S TRANSACTIONS TABLE ═══ -->
+        <div class="ds-panel" ng-if="hasRole(['ADMIN','DOCTOR']) && revenue.transactions.length > 0"
+            style="margin-bottom:18px">
+            <div class="ds-panel-head ds-panel-head--green">
+                <h3><i class="fas fa-receipt"></i> Today's Transactions</h3>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span class="ds-count-badge">{{revenue.transactions.length}}</span>
+                    <a href="#!/reports/payment-collection" class="ds-link-btn">View All <i
+                            class="fas fa-arrow-right"></i></a>
                 </div>
+            </div>
+            <div class="ds-tbl-wrap">
+                <table class="ds-tbl">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Payment ID</th>
+                            <th>Patient</th>
+                            <th>PIN</th>
+                            <th>Invoice</th>
+                            <th>Amount</th>
+                            <th>Mode</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="t in revenue.transactions | limitTo:25">
+                            <td>{{$index+1}}</td>
+                            <td class="ds-text-primary fw-600">{{t.paymentId}}</td>
+                            <td>{{t.patientName}}</td>
+                            <td><span class="ds-pin">{{t.pinNumber}}</span></td>
+                            <td>{{t.invoiceNo}}</td>
+                            <td class="ds-text-green fw-700">₹{{t.amount | number:2}}</td>
+                            <td><span class="ds-mode">{{t.mode}}</span></td>
+                            <td>{{t.date | date:'HH:mm'}}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Today's CVRs -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="stat-card info">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3>{{stats.todayCVRs}}</h3>
-                        <p class="mb-0">Today's Visits</p>
-                    </div>
-                    <i class="fas fa-file-medical fa-3x opacity-50"></i>
-                </div>
+        <!-- ═══ TODAY'S CVRs TABLE ═══ -->
+        <div class="ds-panel" ng-if="todayCVRs.length > 0" style="margin-bottom:18px">
+            <div class="ds-panel-head ds-panel-head--violet">
+                <h3><i class="fas fa-notes-medical"></i> Today's Visits (CVRs)</h3>
+                <span class="ds-count-badge">{{todayCVRs.length}}</span>
             </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h4 class="fw-bold mb-3">
-                <i class="fas fa-bolt text-warning"></i> Quick Actions
-            </h4>
-        </div>
-
-        <!-- Receptionist Quick Actions -->
-        <div ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])" class="row">
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="quick-action-card" ng-click="registerPatient()">
-                    <i class="fas fa-user-plus"></i>
-                    <h5>Register Patient</h5>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="quick-action-card" ng-click="bookAppointment()">
-                    <i class="fas fa-calendar-plus"></i>
-                    <h5>Book Appointment</h5>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6 mb-3">
-                <div class="quick-action-card" ng-click="createCVR()">
-                    <i class="fas fa-file-medical-alt"></i>
-                    <h5>Create Visit (CVR)</h5>
-                </div>
+            <div class="ds-tbl-wrap">
+                <table class="ds-tbl">
+                    <thead>
+                        <tr>
+                            <th>CVR#</th>
+                            <th>Patient</th>
+                            <th>PIN</th>
+                            <th>Type</th>
+                            <th>Complaint</th>
+                            <th>Doctor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="c in todayCVRs | limitTo:20">
+                            <td class="ds-text-primary fw-600">{{c.cvrNumber}}</td>
+                            <td>{{c.patientName}}</td>
+                            <td><span class="ds-pin">{{c.pinNumber}}</span></td>
+                            <td>{{c.visitType}}</td>
+                            <td>{{c.chiefComplaint}}</td>
+                            <td>{{c.doctorName}}</td>
+                            <td><span class="badge" ng-class="{
+                                'bg-warning text-dark': c.status==='PENDING',
+                                'bg-primary': c.status==='IN_PROGRESS',
+                                'bg-success': c.status==='COMPLETED'
+                            }">{{c.status}}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Doctor Quick Actions -->
-        <div ng-if="hasRole(['DOCTOR'])" class="row">
-            <div class="col-md-4 col-sm-6 mb-3">
-                <div class="quick-action-card" ng-click="viewQueue()">
-                    <i class="fas fa-users"></i>
-                    <h5>My Queue</h5>
-                    <p class="text-muted mb-0">{{stats.pendingConsultations}} waiting</p>
-                </div>
-            </div>
-            <div class="col-md-4 col-sm-6 mb-3">
-                <div class="quick-action-card">
-                    <i class="fas fa-stethoscope"></i>
-                    <h5>Consultation Room</h5>
-                </div>
-            </div>
+        <!-- Empty -->
+        <div ng-if="todayAppointments.length===0 && todayCVRs.length===0 && !hasRole(['ADMIN','DOCTOR'])"
+            class="ds-empty">
+            <i class="fas fa-calendar-xmark"></i>
+            <h4>No activity yet today</h4>
+            <p>Start by registering a patient or booking an appointment</p>
         </div>
-    </div>
 
-    <!-- ✅ FIXED: Today's Appointments Table -->
-    <div class="row" ng-if="todayAppointments && todayAppointments.length > 0">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-calendar-day"></i> Today's Appointments
-                        </h5>
-                        <span class="badge bg-light text-dark">
-                            {{todayAppointments.length}} appointments
-                        </span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Token</th>
-                                    <th>Patient Name</th>
-                                    <th>PIN</th>
-                                    <th>Doctor Name</th>
-                                    <th>Time</th>
-                                    <th>Status</th>
-                                    <th>Type</th>
-                                    <th>CVR</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr ng-repeat="appt in todayAppointments | limitTo:20">
-                                    <td>
-                                        <span class="badge bg-dark fs-6">{{appt.tokenNumber}}</span>
-                                    </td>
-                                    <td>
-                                        <strong>{{appt.patientName}}</strong>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">{{appt.pinNumber}}</span>
-                                    </td>
-                                    <td>
-                                        {{appt.doctorName}}
-                                    </td>
-                                    <td>
-                                        <i class="fas fa-clock text-muted"></i> 
-                                        {{appt.appointmentTime}}
-                                    </td>
-                                    <td>
-                                        <span class="badge" ng-class="getStatusClass(appt.status)">
-                                            {{appt.status}}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {{appt.appointmentType}}
-                                    </td>
-                                    <td>
-                                        <span ng-if="appt.cvrNumber" class="badge bg-success">
-                                            {{appt.cvrNumber}}
-                                        </span>
-                                        <span ng-if="!appt.cvrNumber" class="text-muted small">
-                                            Not created
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Today's CVRs Table -->
-    <div class="row mt-4" ng-if="todayCVRs && todayCVRs.length > 0">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-file-medical"></i> Today's Visits (CVRs)
-                        </h5>
-                        <span class="badge bg-light text-dark">
-                            {{todayCVRs.length}} visits
-                        </span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>CVR Number</th>
-                                    <th>Patient Name</th>
-                                    <th>PIN</th>
-                                    <th>Visit Type</th>
-                                    <th>Chief Complaint</th>
-                                    <th>Doctor</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr ng-repeat="cvr in todayCVRs | limitTo:20">
-                                    <td>
-                                        <strong class="text-primary">{{cvr.cvrNumber}}</strong>
-                                    </td>
-                                    <td>{{cvr.patientName}}</td>
-                                    <td>
-                                        <span class="badge bg-info">{{cvr.pinNumber}}</span>
-                                    </td>
-                                    <td>{{cvr.visitType}}</td>
-                                    <td>{{cvr.chiefComplaint}}</td>
-                                    <td>{{cvr.doctorName}}</td>
-                                    <td>
-                                        <span class="badge" 
-                                              ng-class="{
-                                                  'bg-warning': cvr.status === 'PENDING',
-                                                  'bg-primary': cvr.status === 'IN_PROGRESS',
-                                                  'bg-success': cvr.status === 'COMPLETED'
-                                              }">
-                                            {{cvr.status}}
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- No Data Messages -->
-    <div ng-if="!loading && todayAppointments.length === 0 && todayCVRs.length === 0" class="row mt-4">
-        <div class="col-12">
-            <div class="alert alert-info text-center">
-                <i class="fas fa-info-circle fa-2x mb-3"></i>
-                <h5>No appointments or visits for today</h5>
-                <p class="mb-0">Start by booking an appointment or registering a patient.</p>
-            </div>
-        </div>
     </div>
 </div>
 
+
+
+<!-- ═══ STYLES ═══ -->
 <style>
-.stat-card {
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+    .ds {
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        padding: 20px 24px;
+        background: transparent;
+        min-height: 100vh;
+    }
 
-.stat-card.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.stat-card.success { background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); }
-.stat-card.warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-.stat-card.info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    /* ── Premium Glassmorphism Banner ── */
+    .ds-banner-premium {
+        position: relative;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 24px 30px;
+        margin-bottom: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 2px 5px rgba(255, 255, 255, 0.8);
+        overflow: hidden;
+    }
+    
+    .ds-banner-glow {
+        position: absolute;
+        top: -60px; left: -60px;
+        width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(255,255,255,0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    
+    .ds-banner-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .ds-banner-left {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
 
-.quick-action-card {
-    padding: 2rem;
-    text-align: center;
-    border: 2px dashed #dee2e6;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s;
-    background: white;
-}
+    .ds-banner-avatar {
+        width: 68px; height: 68px;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        overflow: hidden;
+    }
 
-.quick-action-card:hover {
-    border-color: #0d6efd;
-    background: #f8f9fa;
-    transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
+    .ds-banner-avatar img {
+        width: 100%; height: 100%; object-fit: cover;
+    }
+    
+    .ds-banner-greeting {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0 0 4px 0;
+        letter-spacing: -0.01em;
+    }
+    
+    .ds-highlight {
+        background: linear-gradient(135deg, #4f46e5, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .ds-wave {
+        display: inline-block;
+        animation: wave 2.5s infinite;
+        transform-origin: 70% 70%;
+    }
+    
+    @keyframes wave {
+        0% { transform: rotate(0.0deg) }
+        10% { transform: rotate(14.0deg) }
+        20% { transform: rotate(-8.0deg) }
+        30% { transform: rotate(14.0deg) }
+        40% { transform: rotate(-4.0deg) }
+        50% { transform: rotate(10.0deg) }
+        60% { transform: rotate(0.0deg) }
+        100% { transform: rotate(0.0deg) }
+    }
 
-.quick-action-card i {
-    font-size: 3rem;
-    color: #0d6efd;
-    margin-bottom: 1rem;
-}
+    .ds-banner-sub {
+        font-size: 0.9rem;
+        color: #475569;
+        margin: 0 0 12px 0;
+        font-weight: 500;
+    }
+    
+    .ds-banner-meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .ds-pill {
+        padding: 5px 12px;
+        border-radius: 100px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.6);
+        color: #334155;
+    }
+    
+    .ds-pill--role i { color: #4338ca; }
+    .ds-pill--clinic i { color: #047857; }
+    .ds-pill--date i { color: #64748b; }
 
-.quick-action-card h5 {
-    margin: 0;
-    color: #333;
-}
+    .ds-refresh-btn {
+        background: #fff;
+        color: #1e293b;
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 12px;
+        padding: 10px 18px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+    .ds-refresh-btn:hover { background: #f8fafc; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06); }
 
-.card {
-    border: none;
-    border-radius: 0.5rem;
-}
+    /* ── Loader ── */
+    .ds-loader {
+        text-align: center;
+        padding: 60px;
+        color: #94a3b8;
+    }
 
-.shadow-sm {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-}
+    .ds-loader-spin {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 14px;
+        border: 3px solid #e2e8f0;
+        border-top-color: #6366f1;
+        border-radius: 50%;
+        animation: dsSp .7s linear infinite;
+    }
 
-.table-hover tbody tr:hover {
-    background-color: #f8f9fa;
-    cursor: pointer;
-}
+    @keyframes dsSp {
+        to {
+            transform: rotate(360deg)
+        }
+    }
 
-.opacity-50 {
-    opacity: 0.5;
-}
+    /* ── KPI Cards ── */
+    .ds-kpis {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .ds-kpi {
+        background: #fff;
+        border-radius: 16px;
+        padding: 18px;
+        border: 1px solid #e5e7ee;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .ds-kpi:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .ds-kpi-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .ds-kpi-ic {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .ds-kpi--patients .ds-kpi-ic {
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+
+    .ds-kpi--doctors .ds-kpi-ic {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .ds-kpi--appts .ds-kpi-ic {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .ds-kpi--visits .ds-kpi-ic {
+        background: #fdf2f8;
+        color: #db2777;
+    }
+
+    .ds-kpi-num {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .ds-kpi-label {
+        font-size: 0.73rem;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .ds-kpi-bar {
+        height: 4px;
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+
+    .ds-kpi-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+
+    .ds-kpi--patients .ds-kpi-fill {
+        background: linear-gradient(90deg, #4f46e5, #818cf8);
+    }
+
+    .ds-kpi--doctors .ds-kpi-fill {
+        background: linear-gradient(90deg, #059669, #34d399);
+    }
+
+    .ds-kpi--appts .ds-kpi-fill {
+        background: linear-gradient(90deg, #ea580c, #fb923c);
+    }
+
+    .ds-kpi--visits .ds-kpi-fill {
+        background: linear-gradient(90deg, #db2777, #f472b6);
+    }
+
+    /* ── Panel ── */
+    .ds-panel {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e5e7ee;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+    }
+
+    .ds-panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .ds-panel-head h3 {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+    }
+
+    .ds-panel-head h3 i {
+        font-size: 0.8rem;
+    }
+
+    /* Colored panel headers */
+    .ds-panel-head--indigo {
+        background: linear-gradient(135deg, #4338ca, #6366f1);
+    }
+
+    .ds-panel-head--indigo h3 {
+        color: #fff;
+    }
+
+    .ds-panel-head--indigo h3 i {
+        color: #c7d2fe;
+    }
+
+    .ds-panel-head--green {
+        background: linear-gradient(135deg, #047857, #10b981);
+    }
+
+    .ds-panel-head--green h3 {
+        color: #fff;
+    }
+
+    .ds-panel-head--green h3 i {
+        color: #a7f3d0;
+    }
+
+    .ds-panel-head--violet {
+        background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+    }
+
+    .ds-panel-head--violet h3 {
+        color: #fff;
+    }
+
+    .ds-panel-head--violet h3 i {
+        color: #ddd6fe;
+    }
+
+    /* Icons in normal panel head */
+    .ds-panel-head h3 i {
+        color: #6366f1;
+    }
+
+    /* Tabs */
+    .ds-tabs {
+        display: flex;
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 2px;
+    }
+
+    .ds-tabs button {
+        padding: 5px 14px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+    .ds-tab--on {
+        background: #fff !important;
+        color: #4f46e5 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    /* ── 3-Column Middle ── */
+    .ds-row3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 0.8fr;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    /* Revenue list */
+    .ds-rev-list {
+        padding: 8px 12px;
+    }
+
+    .ds-rev-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 8px;
+        border-bottom: 1px solid #f8fafc;
+        transition: background 0.15s;
+    }
+
+    .ds-rev-item:last-child {
+        border-bottom: none;
+    }
+
+    .ds-rev-item:hover {
+        background: #fafaff;
+    }
+
+    .ds-rev-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .ds-rev-circle--green {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .ds-rev-circle--blue {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .ds-rev-circle--purple {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+
+    .ds-rev-circle--orange {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .ds-rev-info {
+        flex: 1;
+    }
+
+    .ds-rev-name {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .ds-rev-cnt {
+        font-size: 0.68rem;
+        color: #94a3b8;
+    }
+
+    .ds-rev-amt {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    /* Quick Actions Grid */
+    .ds-qa-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .ds-qa {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 14px 8px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+    }
+
+    .ds-qa:hover {
+        background: #f8faff;
+        border-color: #e0e7ff;
+    }
+
+    .ds-qa-ic {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .ds-qa-ic--indigo {
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+
+    .ds-qa-ic--green {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .ds-qa-ic--violet {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+
+    .ds-qa-ic--rose {
+        background: #fdf2f8;
+        color: #db2777;
+    }
+
+    .ds-qa-ic--amber {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .ds-qa-ic--teal {
+        background: #ecfeff;
+        color: #0891b2;
+    }
+
+    .ds-qa-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #475569;
+        text-align: center;
+    }
+
+    /* Summary */
+    .ds-summary {
+        padding: 8px 14px;
+    }
+
+    .ds-sum-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 0;
+        border-bottom: 1px solid #f8fafc;
+        font-size: 0.8rem;
+        color: #475569;
+    }
+
+    .ds-sum-row:last-child {
+        border-bottom: none;
+    }
+
+    .ds-sum-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .ds-sum-row span {
+        flex: 1;
+    }
+
+    .ds-sum-row strong {
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    /* ── Tables ── */
+    .ds-tbl-wrap {
+        overflow-x: auto;
+        max-height: 340px;
+        overflow-y: auto;
+    }
+
+    .ds-tbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .ds-tbl thead {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .ds-tbl th {
+        padding: 10px 14px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: #f8fafc;
+        border-bottom: 1px solid #eef1f6;
+        text-align: left;
+    }
+
+    .ds-tbl td {
+        padding: 9px 14px;
+        font-size: 0.8rem;
+        color: #334155;
+        border-bottom: 1px solid #f8fafc;
+    }
+
+    .ds-tbl tbody tr:hover {
+        background: #fafaff;
+    }
+
+    .ds-token {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef2ff;
+        color: #4f46e5;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .ds-pin {
+        background: #ecfdf5;
+        color: #059669;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .ds-mode {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .ds-text-primary {
+        color: #4f46e5;
+    }
+
+    .ds-text-green {
+        color: #059669;
+    }
+
+    .ds-count-badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 2px 10px;
+        border-radius: 100px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .ds-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-decoration: none;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    .ds-link-btn:hover {
+        opacity: 1;
+    }
+
+    .ds-warn {
+        background: #fffbeb;
+        border-bottom: 1px solid #fde68a;
+        padding: 10px 18px;
+        font-size: 0.78rem;
+        color: #92400e;
+    }
+
+    .ds-warn i {
+        margin-right: 6px;
+    }
+
+    .ds-mini-spin {
+        width: 14px;
+        height: 14px;
+        display: inline-block;
+        border: 2px solid #e2e8f0;
+        border-top-color: #6366f1;
+        border-radius: 50%;
+        animation: dsSp .6s linear infinite;
+    }
+
+    /* Empty */
+    .ds-empty {
+        text-align: center;
+        padding: 50px;
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e5e7ee;
+    }
+
+    .ds-empty i {
+        font-size: 2.2rem;
+        color: #cbd5e1;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .ds-empty h4 {
+        font-size: 1rem;
+        color: #475569;
+        margin-bottom: 4px;
+    }
+
+    .ds-empty p {
+        font-size: 0.82rem;
+        color: #94a3b8;
+    }
+
+    /* Helpers */
+    .fw-600 {
+        font-weight: 600;
+    }
+
+    .fw-700 {
+        font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+        .ds-kpis {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .ds-row3 {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .ds {
+            padding: 12px;
+        }
+
+        .ds-banner {
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+            border-radius: 14px;
+        }
+
+        .ds-banner-left {
+            flex-direction: column;
+        }
+
+        .ds-kpis {
+            grid-template-columns: 1fr;
+        }
+
+        .ds-row3 {
+            grid-template-columns: 1fr;
+        }
+
+        .ds-qa-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
 </style>

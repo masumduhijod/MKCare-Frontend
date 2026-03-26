@@ -1,102 +1,52 @@
-<!--
-
- ============ APPOINTMENT LIST VIEW ============ 
-<script type="text/ng-template" id="appointment-list.html">
-<div class="container-fluid mt-4">
-    <h2 class="fw-bold mb-4">
-        <i class="fas fa-calendar-alt text-primary"></i> Appointment List
-    </h2>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Token</th>
-                            <th>Appt ID</th>
-                            <th>Patient</th>
-                            <th>Doctor</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr ng-repeat="appt in appointments">
-                            <td><span class="badge bg-primary">{{appt.tokenNumber}}</span></td>
-                            <td>{{appt.appointmentId}}</td>
-                            <td>{{appt.patientName}}</td>
-                            <td>{{appt.doctorName}}</td>
-                            <td>{{appt.appointmentDate}}</td>
-                            <td>{{appt.appointmentTime.hour}}:{{appt.appointmentTime.minute}}</td>
-                            <td>
-                                <span class="badge" ng-class="{
-                                    'bg-success': appt.status === 'Booked',
-                                    'bg-primary': appt.status === 'Checked-In',
-                                    'bg-secondary': appt.status === 'Completed'
-                                }">{{appt.status}}</span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-success" ng-if="appt.status === 'Booked'" 
-                                        ng-click="checkinAppointment(appt.appointmentId)">
-                                    <i class="fas fa-check"></i> Check-in
-                                </button>
-                                <button class="btn btn-sm btn-danger" ng-if="appt.status === 'Booked'" 
-                                        ng-click="cancelAppointment(appt.appointmentId)">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>-->
-
-
 <!-- ============================================
-     APPOINTMENT LIST VIEW - COMPLETE & FIXED
+     APPOINTMENT LIST VIEW - MODERNIZED
      ============================================ -->
 
-<div class="container-fluid mt-4">
+<div class="appointment-container container-fluid mt-4 fade-in">
     <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="fw-bold">
-                        <i class="fas fa-calendar-alt text-primary"></i> Appointment List
-                    </h2>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Appointments</li>
-                        </ol>
-                    </nav>
-                </div>
-                <div>
-                    <button class="btn btn-primary" ng-click="loadAppointments()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                    <a href="#!/appointment/book" class="btn btn-success ms-2">
-                        <i class="fas fa-plus"></i> Book New
-                    </a>
-                </div>
+    <div class="row mb-4 align-items-center">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold modern-title">
+                    <div class="icon-wrapper bg-primary-soft text-primary">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div> 
+                    Appointment List
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb modern-breadcrumb">
+                        <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Appointments</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-light shadow-sm text-primary fw-bold px-4 modern-btn-outline" ng-click="loadAppointments()">
+                    <i class="fas fa-sync-alt me-2"></i> Refresh
+                </button>
+                <a href="#!/appointment/book" class="btn btn-primary shadow-primary fw-bold px-4 modern-btn">
+                    <i class="fas fa-plus me-2"></i> Book New
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row">
+    <!-- Filters Glass Card -->
+    <div class="glass-card shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h6 class="text-uppercase fw-bold text-muted mb-3 ls-1 fs-xs"><i class="fas fa-filter me-1"></i> Filter Appointments</h6>
+            <div class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label">Filter by Status</label>
-                    <select class="form-select" ng-model="filterStatus" ng-change="filterAppointments()">
-                        <option value="">All Status</option>
+                    <div class="modern-search-box w-100 p-0 border-0 shadow-none bg-light">
+                        <i class="fas fa-search search-icon ms-2"></i>
+                        <input type="text" class="form-control modern-input bg-light border-0 ps-5" 
+                               ng-model="searchQuery" 
+                               placeholder="Search patient name or PIN...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select modern-input bg-light border-0 px-4" ng-model="filterStatus" ng-change="filterAppointments()">
+                        <option value="">All Statuses</option>
                         <option value="SCHEDULED">Scheduled</option>
                         <option value="CHECKED_IN">Checked In</option>
                         <option value="IN_CONSULTATION">In Consultation</option>
@@ -105,21 +55,15 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Search</label>
-                    <input type="text" class="form-control" 
-                           ng-model="searchQuery" 
-                           placeholder="Patient name or PIN...">
+                    <div class="position-relative">
+                        <input type="date" class="form-control modern-input bg-light border-0 px-4" 
+                               ng-model="filterDate"
+                               ng-change="loadAppointmentsByDate()">
+                    </div>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Date</label>
-                    <input type="date" class="form-control" 
-                           ng-model="filterDate"
-                           ng-change="loadAppointmentsByDate()">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-outline-secondary w-100" ng-click="clearFilters()">
-                        <i class="fas fa-times"></i> Clear Filters
+                    <button class="btn btn-outline-secondary w-100 h-100 rounded-12 fw-bold" ng-click="clearFilters()">
+                        <i class="fas fa-times me-2"></i> Clear Filters
                     </button>
                 </div>
             </div>
@@ -127,164 +71,455 @@
     </div>
 
     <!-- Loading State -->
-    <div ng-if="loading" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+    <div ng-if="loading" class="text-center py-5 glass-card shadow-sm mb-4">
+        <div class="modern-spinner my-4">
+            <div class="double-bounce1"></div>
+            <div class="double-bounce2"></div>
         </div>
-        <p class="mt-3">Loading appointments...</p>
+        <h5 class="fw-bold text-primary">Loading appointments...</h5>
+        <p class="text-muted">Fetching the latest schedules</p>
     </div>
 
-    <!-- Appointments Table -->
-    <div class="card" ng-if="!loading">
-        <div class="card-header bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-list"></i> 
-                    Appointments ({{filteredAppointments.length}})
-                </h5>
-                <span class="badge bg-light text-dark">
-                    Total: {{appointments.length}}
-                </span>
-            </div>
+    <!-- Appointments Table Card -->
+    <div class="glass-card shadow-lg mb-4 list-card-wrapper" ng-if="!loading">
+        <div class="glass-header d-flex justify-content-between align-items-center pb-3 mb-0">
+            <h5 class="mb-0 fw-bold text-dark">
+                <i class="fas fa-list-ul text-primary me-2"></i> 
+                Records Found <span class="badge bg-primary-soft text-primary ms-2 rounded-pill shadow-sm">{{filteredAppointments.length}}</span>
+            </h5>
+            <span class="text-muted small fw-bold">Total Directory: {{appointments.length}}</span>
         </div>
-        <div class="card-body">
+        
+        <!-- Table Area -->
+        <div class="card-body p-0">
             <!-- No Data -->
-            <div ng-if="filteredAppointments.length === 0" class="alert alert-info text-center">
-                <i class="fas fa-info-circle fa-2x mb-3"></i>
-                <h5>No appointments found</h5>
-                <p class="mb-0">Try adjusting your filters or book a new appointment.</p>
+            <div ng-if="filteredAppointments.length === 0" class="text-center py-5">
+                <div class="empty-icon text-muted opacity-50 mb-3"><i class="fas fa-calendar-times fa-4x"></i></div>
+                <h5 class="fw-bold text-dark">No appointments found</h5>
+                <p class="text-muted mb-4">Try adjusting your filters or search terms.</p>
+                <button class="btn btn-outline-primary px-4 rounded-pill fw-bold" ng-click="clearFilters()">Clear All Filters</button>
             </div>
 
             <!-- Table -->
-            <div ng-if="filteredAppointments.length > 0" class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
+            <div ng-if="filteredAppointments.length > 0" class="table-responsive modern-table-wrapper custom-scrollbar p-2">
+                <table class="table modern-table align-middle border-0 mb-0">
+                    <thead>
                         <tr>
-                            <th>Token</th>
-                            <th>Appt ID</th>
-                            <th>Patient Name</th>
-                            <th>PIN</th>
+                            <th class="ps-4">Token</th>
+                            <th>Patient Info</th>
+                            <th>Schedule</th>
                             <th>Doctor</th>
-                            <th>Date</th>
-                            <th>Time</th>
                             <th>CVR</th>
                             <th>Status</th>
-                            <th>Type</th>
-                            <th>Actions</th>
+                            <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="appt in filteredAppointments | filter:searchQuery | orderBy:'-appointmentDate'"
-                            ng-class="{
-                                'table-warning': appt.status === 'CHECKED_IN',
-                                'table-primary': appt.status === 'IN_CONSULTATION',
-                                'table-success': appt.status === 'COMPLETED'
-                            }">
-                            <td>
-                                <span class="badge bg-dark fs-6">{{appt.tokenNumber}}</span>
+                        <tr ng-repeat="appt in finalFiltered = (filteredAppointments | filter:searchQuery | orderBy:'-appointmentDate')" ng-show="$index >= (currentPage-1)*pageSize && $index < currentPage*pageSize" class="modern-tr">
+                            <td class="ps-4">
+                                <div class="token-badge shadow-sm" ng-class="{
+                                    'token-scheduled': appt.status === 'SCHEDULED',
+                                    'token-checkedin': appt.status === 'CHECKED_IN',
+                                    'token-active': appt.status === 'IN_CONSULTATION',
+                                    'token-done': appt.status === 'COMPLETED'
+                                }">{{appt.tokenNumber}}</div>
+                                <div class="small text-muted mt-1 opacity-50 ms-1 fw-bold fs-xs" style="font-size: 10px;">{{appt.appointmentId}}</div>
                             </td>
                             <td>
-                                <small class="text-muted">{{appt.appointmentId}}</small>
+                                <div class="d-flex align-items-center">
+                                    <div class="patient-table-avatar shadow-sm me-3 bg-primary text-white">
+                                        {{appt.patientName.charAt(0).toUpperCase()}}
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark fs-sm">{{appt.patientName}}</h6>
+                                        <span class="badge bg-light text-dark shadow-sm mt-1 fs-xs border"><i class="fas fa-id-card me-1 text-primary opacity-50"></i> {{appt.pinNumber}}</span>
+                                    </div>
+                                </div>
                             </td>
                             <td>
-                                <strong>{{appt.patientName}}</strong>
+                                <div class="schedule-pill bg-light d-inline-block px-2 py-1 rounded-12 border">
+                                    <div class="fw-bold text-dark fs-xs mb-1"><i class="far fa-calendar text-primary me-2"></i>{{appt.appointmentDate | date:'dd-MMM-yyyy'}}</div>
+                                    <div class="fw-bold text-success fs-xs"><i class="far fa-clock text-success me-2"></i>{{formatTime(appt.appointmentTime)}}</div>
+                                </div>
                             </td>
                             <td>
-                                <span class="badge bg-info">{{appt.pinNumber}}</span>
+                                <div class="fw-bold text-dark fs-sm">Dr. {{appt.doctorName}}</div>
+                                <span class="fs-xs text-muted text-uppercase fw-bold" style="font-size: 10px;"><i class="fas fa-stethoscope mt-1 opacity-50"></i> {{appt.appointmentType}}</span>
                             </td>
                             <td>
-                                {{appt.doctorName}}
-                            </td>
-                            <td>
-                                {{appt.appointmentDate | date:'dd-MM-yyyy'}}
-                            </td>
-                            <td>
-                                {{formatTime(appt.appointmentTime)}}
-                            </td>
-                            <td>
-                                <span ng-if="appt.cvrNumber" class="badge bg-success">
-                                    {{appt.cvrNumber}}
+                                <span ng-if="appt.cvrNumber" class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 py-1 rounded-pill fw-bold shadow-sm">
+                                    <i class="fas fa-file-medical me-1"></i> {{appt.cvrNumber}}
                                 </span>
-                                <span ng-if="!appt.cvrNumber" class="text-muted small">
-                                    Not created
+                                <span ng-if="!appt.cvrNumber" class="badge bg-light text-muted border px-2 py-1 rounded-pill fs-xs">
+                                    Pending
                                 </span>
                             </td>
                             <td>
-                                <span class="badge" ng-class="{
-                                    'bg-secondary': appt.status === 'SCHEDULED',
-                                    'bg-warning': appt.status === 'CHECKED_IN',
-                                    'bg-primary': appt.status === 'IN_CONSULTATION',
-                                    'bg-success': appt.status === 'COMPLETED',
-                                    'bg-danger': appt.status === 'CANCELLED'
+                                <div class="status-dot-wrapper d-inline-flex align-items-center px-2 py-1 rounded-pill" ng-class="{
+                                    'status-scheduled': appt.status === 'SCHEDULED',
+                                    'status-checkedin': appt.status === 'CHECKED_IN',
+                                    'status-consulting': appt.status === 'IN_CONSULTATION',
+                                    'status-completed': appt.status === 'COMPLETED',
+                                    'status-cancelled': appt.status === 'CANCELLED'
                                 }">
-                                    {{appt.status}}
-                                </span>
+                                    <span class="status-dot me-2"></span>
+                                    <span class="fw-bold fs-xs">{{appt.status.replace('_', ' ')}}</span>
+                                </div>
                             </td>
-                            <td>
-                                <small>{{appt.appointmentType}}</small>
-                            </td>
-                            <td>
-                                <!-- Check-in Button (Only for SCHEDULED) -->
-                                <button class="btn btn-sm btn-success me-1" 
-                                        ng-if="appt.status === 'SCHEDULED'" 
-                                        ng-click="checkinAppointment(appt)"
-                                        title="Check-in Patient">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                
-                                <!-- View Patient -->
-                                <a class="btn btn-sm btn-outline-info me-1" 
-                                   href="#!/patient/details/{{appt.pinNumber}}"
-                                   title="View Patient">
-                                    <i class="fas fa-user"></i>
-                                </a>
-                                
-                                <!-- View CVR (if exists) -->
-                                <a class="btn btn-sm btn-outline-success me-1" 
-                                   ng-if="appt.cvrNumber"
-                                   href="#!/cvr/details/{{appt.cvrNumber}}"
-                                   title="View CVR">
-                                    <i class="fas fa-file-medical"></i>
-                                </a>
-                                
-                                <!-- Cancel Button (Only for SCHEDULED) -->
-                                <button class="btn btn-sm btn-outline-danger" 
-                                        ng-if="appt.status === 'SCHEDULED'" 
-                                        ng-click="cancelAppointment(appt)"
-                                        title="Cancel Appointment">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                            <td class="text-end pe-4">
+                                <div class="action-buttons-wrapper d-inline-flex gap-1">
+                                    
+                                    <!-- View Patient -->
+                                    <a class="btn btn-icon btn-light text-primary shadow-sm" href="#!/patient/details/{{appt.pinNumber}}" title="Patient Portfolio">
+                                        <i class="fas fa-user" style="font-size: 12px;"></i>
+                                    </a>
+
+                                    <!-- View CVR -->
+                                    <button class="btn btn-icon btn-light text-success shadow-sm" ng-if="appt.cvrNumber" ng-click="viewCVR(appt)" title="View CVR File Summary">
+                                        <i class="fas fa-file-medical-alt" style="font-size: 12px;"></i>
+                                    </button>
+
+                                    <!-- Actions Dropdown -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-icon btn-primary shadow-sm dropdown-toggle hide-caret" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v" style="font-size: 12px;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 modern-dropdown p-2 rounded-12">
+                                            <li ng-if="appt.status === 'SCHEDULED'">
+                                                <a class="dropdown-item text-success fw-bold py-2 rounded-2 fs-sm" href="" ng-click="checkinAppointment(appt)">
+                                                    <i class="fas fa-check-circle me-2"></i> Register Check-in
+                                                </a>
+                                            </li>
+                                            <li ng-if="appt.status === 'SCHEDULED'">
+                                                <a class="dropdown-item text-danger fw-bold py-2 rounded-2 fs-sm" href="" ng-click="cancelAppointment(appt)">
+                                                    <i class="fas fa-times-circle me-2"></i> Cancel Appointment
+                                                </a>
+                                            </li>
+                                            <li ng-if="appt.status !== 'SCHEDULED'"><span class="dropdown-item-text text-muted fs-sm"><i class="fas fa-lock me-2"></i> Actions locked</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination Bar (Only visible if records exist) -->
+            <div class="d-flex justify-content-between align-items-center p-3 border-top bg-light" ng-if="filteredAppointments.length > 0">
+                <div class="fs-sm text-muted fw-bold d-flex align-items-center">
+                    <span>Showing {{(currentPage-1)*pageSize + 1}} to {{ (currentPage*pageSize > finalFiltered.length) ? finalFiltered.length : currentPage*pageSize }} of {{finalFiltered.length}} entries</span>
+                    <select class="form-select form-select-sm d-inline-block w-auto ms-3 shadow-sm border-0 fw-bold" ng-model="pageSize" ng-change="currentPage = 1" style="min-width: 70px;">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                
+                <div class="pagination-controls d-flex gap-1" ng-if="Math.ceil(finalFiltered.length/pageSize) > 1">
+                    <button class="btn btn-sm btn-light border shadow-sm px-2" ng-disabled="currentPage == 1" ng-click="currentPage = currentPage - 1"><i class="fas fa-chevron-left text-primary"></i></button>
+                    
+                    <button class="btn btn-sm fw-bold border shadow-sm" ng-class="currentPage == ($index+1) ? 'btn-primary text-white' : 'btn-light'" 
+                            ng-repeat="page in getNumber(Math.ceil(finalFiltered.length/pageSize)) track by $index"
+                            ng-click="$parent.currentPage = $index + 1"
+                            ng-if="Math.abs(currentPage - ($index+1)) <= 1 || $index == 0 || $index == Math.ceil(finalFiltered.length/pageSize)-1">
+                        {{$index + 1}}
+                    </button>
+                    
+                    <button class="btn btn-sm btn-light border shadow-sm px-2" ng-disabled="currentPage >= Math.ceil(finalFiltered.length/pageSize)" ng-click="currentPage = currentPage + 1"><i class="fas fa-chevron-right text-primary"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CVR Summary Modal -->
+    <div class="modal fade" id="cvrModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                <div class="modal-header bg-success text-white border-0" style="border-radius: 20px 20px 0 0; padding: 1.5rem;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            <i class="fas fa-file-medical-alt fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Clinical Visit Record</h5>
+                            <span class="fs-xs opacity-75 text-uppercase fw-bold">Summary & Info</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <!-- Patient Info Card -->
+                    <div class="bg-white rounded-3 shadow-sm p-3 mb-3 border position-relative">
+                        <div class="position-absolute bg-primary text-white px-2 py-1 rounded fs-xs fw-bold" style="top: -10px; right: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">PATIENT</div>
+                        <h6 class="fw-bold text-dark mb-1">{{selectedCvrAppt.patientName}}</h6>
+                        <div class="text-muted fs-sm mt-2">
+                            <i class="fas fa-id-card me-2 text-primary opacity-50"></i> PIN Number: <span class="fw-bold text-dark">{{selectedCvrAppt.pinNumber}}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- CVR Details Card -->
+                    <div class="bg-white rounded-3 shadow-sm p-3 border border-success border-opacity-25 position-relative">
+                        <div class="position-absolute bg-success text-white px-2 py-1 rounded fs-xs fw-bold" style="top: -10px; right: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">CVR DATA</div>
+                        
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <span class="d-block text-muted fs-xs fw-bold text-uppercase mb-1">CVR Number</span>
+                                <h6 class="fw-bold text-success mb-0 d-flex align-items-center">
+                                    <i class="fas fa-hashtag text-success opacity-50 me-2" style="font-size: 0.8rem;"></i> {{selectedCvrAppt.cvrNumber}}
+                                </h6>
+                            </div>
+                            <div class="col-6">
+                                <span class="d-block text-muted fs-xs fw-bold text-uppercase mb-1">Consulting Doctor</span>
+                                <span class="fw-bold text-dark fs-sm d-flex align-items-center">
+                                    <i class="fas fa-user-md text-primary opacity-50 me-2" style="font-size: 0.8rem;"></i> Dr. {{selectedCvrAppt.doctorName}}
+                                </span>
+                            </div>
+                            <div class="col-6 pt-2 border-top">
+                                <span class="d-block text-muted fs-xs fw-bold text-uppercase mb-1"><i class="far fa-calendar-alt opacity-50 me-1"></i> Visit Date</span>
+                                <span class="fw-bold text-dark fs-sm">{{selectedCvrAppt.appointmentDate | date:'mediumDate'}}</span>
+                            </div>
+                            <div class="col-6 pt-2 border-top">
+                                <span class="d-block text-muted fs-xs fw-bold text-uppercase mb-1"><i class="far fa-clock opacity-50 me-1"></i> Check-in Time</span>
+                                <span class="fw-bold text-dark fs-sm">{{formatTime(selectedCvrAppt.checkedInAt || selectedCvrAppt.appointmentTime)}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <p class="fs-xs text-muted mb-0"><i class="fas fa-info-circle me-1 text-primary"></i> This is a system generated snapshot of the CVR.</p>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 pt-0 bg-light d-flex flex-column align-items-center gap-2">
+                    <button type="button" class="btn btn-secondary px-5 fw-bold rounded-pill" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+
 <style>
-.table-hover tbody tr {
-    cursor: pointer;
+/* Modern Styles for Appointment List */
+
+.fade-in { animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Utility */
+.fs-xs { font-size: 0.75rem; }
+.fs-sm { font-size: 0.875rem; }
+.ls-1 { letter-spacing: 1px; }
+.rounded-12 { border-radius: 12px !important; }
+
+/* Colors */
+.bg-primary-soft { background-color: rgba(99, 102, 241, 0.1); }
+.text-primary { color: #6366f1 !important; }
+.btn-primary { background-color: #6366f1; border-color: #6366f1; }
+.btn-primary:hover { background-color: #4f46e5; border-color: #4f46e5; }
+.btn-outline-primary { color: #6366f1; border-color: #6366f1; background: transparent;}
+.btn-outline-primary:hover { background-color: #6366f1; border-color: #6366f1; color: white;}
+.shadow-primary { box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39); }
+.shadow-success { box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39); }
+.shadow-sm { box-shadow: 0 .125rem .25rem rgba(0,0,0,.04) !important; }
+
+/* Layout Elements */
+.icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    margin-right: 10px;
+}
+
+.glass-card {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-header {
+    background: #fdfdfd;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Inputs */
+.modern-input { border-radius: 12px; transition: all 0.3s; padding: 10px 15px;}
+.modern-input:focus { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+
+.modern-search-box {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.modern-search-box .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    z-index: 5;
+}
+
+/* Modern Table */
+.modern-table-wrapper {
+    border-radius: 0 0 20px 20px;
+}
+
+.modern-table {
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    background: transparent;
+}
+
+.modern-table thead th {
+    border: none;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 10px;
+}
+
+.modern-tr {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modern-tr:hover {
+    transform: translateY(-3px) scale(1.005);
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.1);
+    position: relative;
+    z-index: 2;
+}
+
+.modern-tr td {
+    padding: 8px 12px; /* Halved padding here */
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+    font-size: 0.9rem;
+}
+
+.modern-tr td:first-child {
+    border-left: 1px solid #f1f5f9;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+.modern-tr td:last-child {
+    border-right: 1px solid #f1f5f9;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+/* Token Styling */
+.token-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1rem;
+    color: white;
+}
+.token-scheduled { background: linear-gradient(135deg, #a78bfa, #818cf8); }
+.token-checkedin { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+.token-active { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+.token-done { background: linear-gradient(135deg, #34d399, #10b981); }
+
+/* Avatar */
+.patient-table-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* Status Indicator */
+.status-dot-wrapper {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-scheduled { background: rgba(167, 139, 250, 0.1); color: #8b5cf6; border-color: rgba(167, 139, 250, 0.2); }
+.status-scheduled .status-dot { background: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
+
+.status-checkedin { background: rgba(251, 191, 36, 0.1); color: #d97706; border-color: rgba(251, 191, 36, 0.2); }
+.status-checkedin .status-dot { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
+
+.status-consulting { background: rgba(99, 102, 241, 0.1); color: #4f46e5; border-color: rgba(99, 102, 241, 0.2); }
+.status-consulting .status-dot { background: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); animation: pulse-status 2s infinite; }
+
+.status-completed { background: rgba(52, 211, 153, 0.1); color: #059669; border-color: rgba(52, 211, 153, 0.2); }
+.status-completed .status-dot { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+
+.status-cancelled { background: rgba(248, 113, 113, 0.1); color: #dc2626; border-color: rgba(248, 113, 113, 0.2); }
+.status-cancelled .status-dot { background: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2); }
+
+@keyframes pulse-status { 0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); } 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); } }
+
+/* Buttons & Dropdown */
+.btn-icon {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
     transition: all 0.2s;
 }
-
-.table-hover tbody tr:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+.btn-icon:hover {
+    transform: translateY(-2px);
 }
-
-.card {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.hide-caret::after {
+    display: none;
 }
-
-.badge {
-    font-size: 0.9em;
-    padding: 0.4em 0.8em;
+.modern-dropdown .dropdown-item {
+    transition: all 0.2s;
 }
-
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
+.modern-dropdown .dropdown-item:hover {
+    background: #f1f5f9;
+    padding-left: 20px;
 }
+.modern-dropdown .dropdown-item.text-danger:hover { background: #fef2f2; }
+.modern-dropdown .dropdown-item.text-success:hover { background: #ecfdf5; }
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Loaders */
+.modern-spinner {
+    width: 50px; height: 50px; position: relative; margin: 0 auto;
+}
+.double-bounce1, .double-bounce2 {
+    width: 100%; height: 100%; border-radius: 50%; background-color: #6366f1; opacity: 0.6;
+    position: absolute; top: 0; left: 0; animation: sk-bounce 2.0s infinite ease-in-out;
+}
+.double-bounce2 { animation-delay: -1.0s; }
+@keyframes sk-bounce { 0%, 100% { transform: scale(0.0) } 50% { transform: scale(1.0) } }
 </style>
-

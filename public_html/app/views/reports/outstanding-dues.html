@@ -1,0 +1,139 @@
+<!-- ============================================================
+     Report 14: Outstanding Dues Report
+     ============================================================ -->
+
+<div class="report-page-wrapper" ng-controller="ReportOutstandingDuesController">
+
+    <div class="card report-filter-card no-print">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Outstanding Dues Report</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm px-3" ng-click="generateReport()" ng-disabled="loading">
+                    <i class="fas fa-sync me-1"></i>Refresh
+                </button>
+                <button class="btn btn-success btn-sm btn-print px-3" ng-click="printReport()"
+                    ng-if="invoices.length > 0">
+                    <i class="fas fa-print me-1"></i>Print
+                </button>
+                <a href="#!/reports" class="btn btn-outline-secondary btn-sm btn-back"><i
+                        class="fas fa-arrow-left me-1"></i>Back</a>
+            </div>
+        </div>
+        <div class="card-body py-2">
+            <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Shows all invoices with pending or partial
+                payment across all patients</small>
+        </div>
+    </div>
+
+    <div class="text-center py-5" ng-if="loading">
+        <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+        <p class="mt-3 text-muted fw-semibold">Loading outstanding dues...</p>
+    </div>
+
+    <div class="report-empty-state" ng-if="!reportData && !loading">
+        <i class="fas fa-exclamation-triangle text-muted"></i>
+        <p>Click <strong>Refresh</strong> to load outstanding dues</p>
+    </div>
+
+    <div class="report-screen-view" ng-if="reportData && !loading">
+        <clinic-print-header report-title="Outstanding Dues Report"></clinic-print-header>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-3 no-print" ng-if="summary">
+            <div class="col-md-4">
+                <div class="stat-card bg-danger text-white">
+                    <div class="stat-number">{{summary.totalPendingInvoices || invoices.length}}</div>
+                    <div class="stat-label">Pending Invoices</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card bg-warning text-dark">
+                    <div class="stat-number">₹{{summary.totalOutstandingAmount | number:0}}</div>
+                    <div class="stat-label">Total Outstanding</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="stat-card bg-dark text-white">
+                            <div class="stat-number" style="font-size:1.4rem">{{summary.statusBreakdown &&
+                                summary.statusBreakdown.UNPAID || (invoices | filter:{paymentStatus:'UNPAID'}).length}}
+                            </div>
+                            <div class="stat-label">Unpaid</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card bg-secondary text-white">
+                            <div class="stat-number" style="font-size:1.4rem">{{summary.statusBreakdown &&
+                                summary.statusBreakdown.PARTIALLY_PAID || (invoices |
+                                filter:{paymentStatus:'PARTIALLY_PAID'}).length}}</div>
+                            <div class="stat-label">Partial</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices Table -->
+        <div class="card report-result-card" ng-if="invoices.length > 0">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-table me-2"></i>Pending Invoices
+                    <span class="badge bg-danger ms-2">{{invoices.length}}</span>
+                </h6>
+                <small class="text-muted">As of {{today | date:'dd-MMM-yyyy'}}</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="report-table-responsive">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Invoice No</th>
+                                <th>Patient Name</th>
+                                <th>PIN</th>
+                                <th>Invoice Date</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-end">Paid Amount</th>
+                                <th class="text-end" style="color:#dc3545">Outstanding</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="inv in invoices">
+                                <td>{{$index + 1}}</td>
+                                <td><strong style="color:#1a3a6b">{{inv.invoiceNumber}}</strong></td>
+                                <td>{{inv.patientName || '—'}}</td>
+                                <td>{{inv.pinNumber}}</td>
+                                <td>{{inv.invoiceDate | date:'dd-MM-yyyy'}}</td>
+                                <td class="text-end">₹{{inv.totalAmount | number:2}}</td>
+                                <td class="text-end text-success">₹{{inv.paidAmount | number:2}}</td>
+                                <td class="text-end text-danger fw-bold">₹{{inv.outstandingAmount | number:2}}</td>
+                                <td>
+                                    <span class="badge"
+                                        ng-class="inv.paymentStatus==='PARTIALLY_PAID'?'bg-warning text-dark':'bg-danger'">
+                                        {{inv.paymentStatus}}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot ng-if="invoices.length > 1">
+                            <tr>
+                                <td colspan="7" class="text-end fw-bold">Total Outstanding</td>
+                                <td class="text-end fw-bold text-danger">₹{{summary.totalOutstandingAmount | number:2}}
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-empty-state" ng-if="invoices.length === 0 && reportData">
+            <i class="fas fa-check-circle text-success" style="font-size:4rem;margin-bottom:16px;display:block"></i>
+            <p class="text-success fw-bold fs-5">No outstanding dues!</p>
+            <p class="text-muted">All invoices are cleared.</p>
+        </div>
+    </div>
+
+</div>

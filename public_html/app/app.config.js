@@ -5,19 +5,26 @@
  */
 
 
-// ============ APP CONFIG ============
-// File: app/app.config.js
+// ============ APP CONFIG - Multi-Tenant Support ============
 app.config(['$httpProvider', function($httpProvider) {
     
-    // Add Authorization Header Interceptor
+    // Add Authorization Header + X-Tenant-ID Interceptor
     $httpProvider.interceptors.push(['$q', '$location', '$rootScope', function($q, $location, $rootScope) {
         return {
             'request': function(config) {
-                // Add auth token to all requests
+                // ⭐ Add auth token to all requests
                 var token = localStorage.getItem('authToken');
                 if (token) {
                     config.headers = config.headers || {};
                     config.headers.Authorization = 'Bearer ' + token;
+                }
+                
+                // ⭐⭐⭐ Add X-Tenant-ID header to all requests (except login)
+                var tenantId = localStorage.getItem('tenantId');
+                if (tenantId && !config.url.includes('/auth/login')) {
+                    config.headers = config.headers || {};
+                    config.headers['X-Tenant-ID'] = tenantId;
+                    console.log('🏥 Request to:', config.url, '| Tenant:', tenantId);
                 }
                 
                 // Show loading
@@ -45,8 +52,7 @@ app.config(['$httpProvider', function($httpProvider) {
                 
                 // Handle 401 Unauthorized
                 if (rejection.status === 401) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('currentUser');
+                    localStorage.clear();
                     $location.path('/login');
                 }
                 
@@ -55,6 +61,11 @@ app.config(['$httpProvider', function($httpProvider) {
                     if ($rootScope.showAlert) {
                         $rootScope.showAlert('danger', 'Access Denied: You do not have permission to perform this action');
                     }
+                }
+                
+                // Handle 400 Bad Request (for debugging)
+                if (rejection.status === 400) {
+                    console.error('❌ Bad Request:', rejection.data);
                 }
                 
                 return $q.reject(rejection);

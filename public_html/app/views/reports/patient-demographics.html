@@ -1,0 +1,162 @@
+<!-- ============================================================
+     Report 2: Patient Demographics Report
+     ============================================================ -->
+<div class="report-page-wrapper" ng-controller="ReportPatientDemographicsController">
+    <div class="card report-filter-card no-print">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Patient Demographics Report</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm px-3" ng-click="generateReport()" ng-disabled="loading">
+                    <i class="fas fa-sync me-1"></i>Refresh
+                </button>
+                <button class="btn btn-success btn-sm btn-print px-3" ng-click="printReport()" ng-if="reportData">
+                    <i class="fas fa-print me-1"></i>Print
+                </button>
+                <a href="#!/reports" class="btn btn-outline-secondary btn-sm btn-back"><i
+                        class="fas fa-arrow-left me-1"></i>Back</a>
+            </div>
+        </div>
+        <div class="card-body py-2" ng-if="errorMsg">
+            <div class="alert alert-danger py-2 mb-0"><i class="fas fa-exclamation-triangle me-2"></i>{{errorMsg}}</div>
+        </div>
+    </div>
+
+    <div class="text-center py-5" ng-if="loading">
+        <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+        <p class="mt-3 text-muted fw-semibold">Loading demographics...</p>
+    </div>
+    <div class="report-empty-state" ng-if="!reportData && !loading">
+        <i class="fas fa-chart-pie text-muted"></i>
+        <p>Click <strong>Refresh</strong> to load patient demographics</p>
+    </div>
+
+    <div class="report-screen-view" ng-if="reportData && !loading">
+        <clinic-print-header report-title="Patient Demographics Report"></clinic-print-header>
+
+        <!-- Total card -->
+        <div class="row g-3 mb-4 no-print">
+            <div class="col-md-3">
+                <div class="stat-card bg-primary text-white">
+                    <div class="stat-number">{{data.totalPatients || 0}}</div>
+                    <div class="stat-label">Total Registered Patients</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribution Tables -->
+        <div class="row g-3">
+            <!-- Gender -->
+            <div class="col-md-3">
+                <div class="card report-result-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-venus-mars me-2"></i>Gender Distribution</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Gender</th>
+                                    <th class="text-center">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="g in genderArr">
+                                    <td>{{g.label}}</td>
+                                    <td class="text-center"><span class="badge bg-primary">{{g.count}}</span></td>
+                                </tr>
+                                <tr ng-if="genderArr.length === 0">
+                                    <td colspan="2" class="text-center text-muted">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Age Group -->
+            <div class="col-md-3">
+                <div class="card report-result-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-birthday-cake me-2"></i>Age Groups</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Age Group</th>
+                                    <th class="text-center">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="a in ageArr">
+                                    <td>{{a.label}}</td>
+                                    <td class="text-center"><span class="badge bg-success">{{a.count}}</span></td>
+                                </tr>
+                                <tr ng-if="ageArr.length === 0">
+                                    <td colspan="2" class="text-center text-muted">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blood Group -->
+            <div class="col-md-3">
+                <div class="card report-result-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-tint me-2"></i>Blood Groups</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Blood Group</th>
+                                    <th class="text-center">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="b in bloodArr">
+                                    <td><span class="badge bg-danger">{{b.label}}</span></td>
+                                    <td class="text-center"><span class="badge bg-secondary">{{b.count}}</span></td>
+                                </tr>
+                                <tr ng-if="bloodArr.length === 0">
+                                    <td colspan="2" class="text-center text-muted">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- City -->
+            <div class="col-md-3">
+                <div class="card report-result-card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-city me-2"></i>City Distribution</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>City</th>
+                                    <th class="text-center">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="c in cityArr">
+                                    <td>{{c.label}}</td>
+                                    <td class="text-center"><span class="badge bg-info text-dark">{{c.count}}</span>
+                                    </td>
+                                </tr>
+                                <tr ng-if="cityArr.length === 0">
+                                    <td colspan="2" class="text-center text-muted">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

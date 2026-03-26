@@ -1,0 +1,945 @@
+<!-- Super Admin Dashboard -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<div class="sad-root">
+    <!-- Top Nav -->
+    <div class="sad-nav">
+        <div class="sad-nav-left">
+            <div class="sad-nav-icon"><i class="fas fa-shield-alt"></i></div>
+            <div>
+                <div class="sad-nav-title">Super Admin Portal</div>
+                <div class="sad-nav-sub">HMS — Master Control Panel</div>
+            </div>
+        </div>
+        <div class="sad-nav-right">
+            <span class="sad-admin-badge"><i class="fas fa-user-shield"></i> Super Admin</span>
+            <button class="sad-logout-btn" ng-click="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="sad-container">
+        <div ng-if="error" class="sad-alert sad-alert--error">
+            <i class="fas fa-exclamation-circle"></i> {{error}}
+            <button ng-click="clearMessages()" class="sad-alert-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div ng-if="success" class="sad-alert sad-alert--success">
+            <i class="fas fa-check-circle"></i> {{success}}
+            <button ng-click="clearMessages()" class="sad-alert-close"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="sad-stats">
+            <div class="sad-stat-card sad-stat--total">
+                <i class="fas fa-clinic-medical sad-stat-icon"></i>
+                <div class="sad-stat-val">{{clinics.length}}</div>
+                <div class="sad-stat-lbl">Total Clinics</div>
+            </div>
+            <div class="sad-stat-card sad-stat--active">
+                <i class="fas fa-check-circle sad-stat-icon"></i>
+                <div class="sad-stat-val">{{(clinics | filter:{active:true}).length}}</div>
+                <div class="sad-stat-lbl">Active</div>
+            </div>
+            <div class="sad-stat-card sad-stat--inactive">
+                <i class="fas fa-pause-circle sad-stat-icon"></i>
+                <div class="sad-stat-val">{{(clinics | filter:{active:false}).length}}</div>
+                <div class="sad-stat-lbl">Inactive</div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="sad-toolbar">
+            <h3 class="sad-section-title"><i class="fas fa-hospital"></i> Clinic Management</h3>
+            <button class="sad-btn sad-btn--primary" ng-click="showCreateModal = true">
+                <i class="fas fa-plus-circle"></i> Create New Clinic
+            </button>
+        </div>
+
+        <!-- Clinics Table -->
+        <div class="sad-table-wrap" ng-if="!loading">
+            <table class="sad-table">
+                <thead>
+                    <tr>
+                        <th>Clinic Code</th>
+                        <th>Clinic Name</th>
+                        <th>Tenant ID</th>
+                        <th>Database</th>
+                        <th>Org ID</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="clinic in clinics" class="sad-row">
+                        <td><span class="sad-code-badge">{{clinic.clinicCode}}</span></td>
+                        <td><strong>{{clinic.clinicName}}</strong></td>
+                        <td class="sad-mono">{{clinic.tenantId}}</td>
+                        <td class="sad-mono">{{clinic.dbName}}</td>
+                        <td>{{clinic.organizationId || '—'}}</td>
+                        <td>{{clinic.phone || '—'}}</td>
+                        <td>
+                            <span class="sad-status"
+                                ng-class="clinic.active ? 'sad-status--active' : 'sad-status--inactive'">
+                                <i class="fas" ng-class="clinic.active ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                                {{clinic.active ? 'Active' : 'Inactive'}}
+                            </span>
+                        </td>
+                        <td class="sad-actions">
+                            <button class="sad-act-btn sad-act--login" ng-click="loginToClinic(clinic)"
+                                title="Login to Clinic">
+                                <i class="fas fa-sign-in-alt"></i>
+                            </button>
+                            <button class="sad-act-btn sad-act--admin" ng-click="openAdminModal(clinic)"
+                                title="Create Admin">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                            <button class="sad-act-btn"
+                                ng-class="clinic.active ? 'sad-act--deactivate' : 'sad-act--activate'"
+                                ng-click="toggleStatus(clinic)" title="{{clinic.active ? 'Deactivate' : 'Activate'}}">
+                                <i class="fas" ng-class="clinic.active ? 'fa-pause' : 'fa-play'"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr ng-if="clinics.length === 0">
+                        <td colspan="8" class="sad-empty">
+                            <i class="fas fa-inbox"></i> No clinics found. Create your first clinic!
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Loading -->
+        <div ng-if="loading" class="sad-loading">
+            <div class="sad-loader"></div>
+            <p>Loading clinics...</p>
+        </div>
+    </div>
+
+    <!-- ═══ CREATE CLINIC MODAL ═══ -->
+    <div class="sad-modal-overlay" ng-show="showCreateModal" ng-click="showCreateModal = false">
+        <div class="sad-modal" ng-click="$event.stopPropagation()">
+            <div class="sad-modal-header">
+                <h3><i class="fas fa-plus-circle"></i> Create New Clinic</h3>
+                <button type="button" class="sad-modal-close" ng-click="showCreateModal = false"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="sad-modal-body">
+                <div class="sad-form-row">
+                    <div class="sad-form-group">
+                        <label>Clinic Code *</label>
+                        <input type="text" ng-model="newClinic.clinicCode" placeholder="e.g., hms"
+                            class="sad-form-input">
+                        <small class="sad-form-hint">URL slug — lowercase, no spaces</small>
+                    </div>
+                    <div class="sad-form-group">
+                        <label>Clinic Name *</label>
+                        <input type="text" ng-model="newClinic.clinicName" placeholder="e.g., HMS Default Clinic"
+                            class="sad-form-input">
+                    </div>
+                </div>
+                <div class="sad-form-row">
+                    <div class="sad-form-group">
+                        <label>Database Name *</label>
+                        <input type="text" ng-model="newClinic.dbName" placeholder="Auto-filled from code"
+                            class="sad-form-input">
+                        <small class="sad-form-hint">Auto-generated from clinic code</small>
+                    </div>
+                    <div class="sad-form-group">
+                        <label>Tenant ID</label>
+                        <input type="text" ng-model="newClinic.tenantId" placeholder="Auto-generated if empty"
+                            class="sad-form-input">
+                    </div>
+                </div>
+                <div class="sad-form-row">
+                    <div class="sad-form-group">
+                        <label>Organization ID</label>
+                        <input type="text" ng-model="newClinic.organizationId" placeholder="ORG-XXX-001"
+                            class="sad-form-input">
+                    </div>
+                    <div class="sad-form-group">
+                        <label>Operational ID</label>
+                        <input type="text" ng-model="newClinic.operationalId" placeholder="OPR-XXX-001"
+                            class="sad-form-input">
+                    </div>
+                </div>
+                <div class="sad-form-row">
+                    <div class="sad-form-group">
+                        <label>Address</label>
+                        <input type="text" ng-model="newClinic.address" placeholder="Clinic address"
+                            class="sad-form-input">
+                    </div>
+                    <div class="sad-form-group">
+                        <label>Phone</label>
+                        <input type="text" ng-model="newClinic.phone" placeholder="+91-XXXXXXXXXX"
+                            class="sad-form-input">
+                    </div>
+                </div>
+                <div class="sad-form-row">
+                    <div class="sad-form-group">
+                        <label>Email</label>
+                        <input type="email" ng-model="newClinic.email" placeholder="info@clinic.com"
+                            class="sad-form-input">
+                    </div>
+                </div>
+
+                <!-- Admin Section -->
+                <div class="sad-form-divider">
+                    <span><i class="fas fa-user-shield"></i> Clinic Admin Account</span>
+                </div>
+                <div class="sad-form-row">
+                    <div class="sad-form-group">
+                        <label>Admin Username</label>
+                        <input type="text" ng-model="newClinic.adminUsername" placeholder="admin"
+                            class="sad-form-input">
+                    </div>
+                    <div class="sad-form-group">
+                        <label>Admin Password</label>
+                        <input type="text" ng-model="newClinic.adminPassword" placeholder="admin123"
+                            class="sad-form-input">
+                    </div>
+                </div>
+                <div class="sad-form-row">
+                    <div class="sad-form-group">
+                        <label>Admin Email</label>
+                        <input type="email" ng-model="newClinic.adminEmail" placeholder="admin@clinic.com"
+                            class="sad-form-input">
+                    </div>
+                    <div class="sad-form-group">
+                        <label>Admin Name</label>
+                        <input type="text" ng-model="newClinic.adminFirstName" placeholder="First Name"
+                            class="sad-form-input">
+                    </div>
+                </div>
+            </div>
+            <div class="sad-modal-footer">
+                <button type="button" class="sad-btn sad-btn--secondary"
+                    ng-click="showCreateModal = false">Cancel</button>
+                <button type="button" class="sad-btn sad-btn--primary" ng-click="createClinic()" ng-disabled="loading">
+                    <i class="fas fa-plus-circle"></i> Create Clinic
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ CREATE/UPDATE ADMIN MODAL ═══ -->
+    <div class="sad-modal-overlay" ng-show="showAdminModal" ng-click="showAdminModal = false">
+        <div class="sad-modal sad-modal--sm" ng-click="$event.stopPropagation()">
+            <div class="sad-modal-header">
+                <h3><i class="fas fa-user-cog"></i> Manage Admin — {{adminForm.clinicName}}</h3>
+                <button type="button" class="sad-modal-close" ng-click="showAdminModal = false"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="sad-modal-body">
+                <!-- Mode Toggle -->
+                <div class="sad-mode-toggle">
+                    <button type="button" class="sad-mode-btn"
+                        ng-class="{'sad-mode-btn--active': !adminForm.changePasswordMode}"
+                        ng-click="adminForm.changePasswordMode = false">
+                        <i class="fas fa-user-plus"></i> Create New Admin
+                    </button>
+                    <button type="button" class="sad-mode-btn"
+                        ng-class="{'sad-mode-btn--active': adminForm.changePasswordMode}"
+                        ng-click="adminForm.changePasswordMode = true">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </div>
+
+                <!-- Info Note -->
+                <div class="sad-info-note" ng-if="!adminForm.changePasswordMode">
+                    <i class="fas fa-info-circle"></i>
+                    If username already exists, password will be updated.
+                </div>
+
+                <div class="sad-form-group">
+                    <label>Username *</label>
+                    <input type="text" ng-model="adminForm.adminUsername" placeholder="admin_username"
+                        class="sad-form-input">
+                </div>
+                <div class="sad-form-group">
+                    <label>{{adminForm.changePasswordMode ? 'New Password' : 'Password'}} *</label>
+                    <input type="text" ng-model="adminForm.adminPassword" placeholder="password" class="sad-form-input">
+                </div>
+
+                <!-- Extra fields only for new admin -->
+                <div ng-if="!adminForm.changePasswordMode">
+                    <div class="sad-form-group">
+                        <label>Email</label>
+                        <input type="email" ng-model="adminForm.adminEmail" placeholder="admin@clinic.com"
+                            class="sad-form-input">
+                    </div>
+                    <div class="sad-form-row">
+                        <div class="sad-form-group">
+                            <label>First Name</label>
+                            <input type="text" ng-model="adminForm.adminFirstName" placeholder="First"
+                                class="sad-form-input">
+                        </div>
+                        <div class="sad-form-group">
+                            <label>Last Name</label>
+                            <input type="text" ng-model="adminForm.adminLastName" placeholder="Last"
+                                class="sad-form-input">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="sad-modal-footer">
+                <button type="button" class="sad-btn sad-btn--secondary"
+                    ng-click="showAdminModal = false">Cancel</button>
+                <button type="button" class="sad-btn sad-btn--primary" ng-click="createAdmin()" ng-disabled="loading">
+                    <i class="fas" ng-class="adminForm.changePasswordMode ? 'fa-key' : 'fa-user-plus'"></i>
+                    {{adminForm.changePasswordMode ? 'Update Password' : 'Create Admin'}}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ═══ SUPER ADMIN DASHBOARD STYLES ═══ */
+    .sad-root {
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        background: #f0f2f5;
+    }
+
+    /* Nav */
+    .sad-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #1a0a2e, #16213e);
+        padding: 14px 32px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .sad-nav-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .sad-nav-icon {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #e94560, #c23616);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.2rem;
+    }
+
+    .sad-nav-title {
+        color: #fff;
+        font-weight: 800;
+        font-size: 1.15rem;
+    }
+
+    .sad-nav-sub {
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.72rem;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+    }
+
+    .sad-nav-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .sad-admin-badge {
+        background: rgba(233, 69, 96, 0.15);
+        border: 1px solid rgba(233, 69, 96, 0.3);
+        color: #ff8fa3;
+        padding: 6px 14px;
+        border-radius: 100px;
+        font-size: 0.78rem;
+        font-weight: 500;
+    }
+
+    .sad-logout-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.85);
+        padding: 8px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .sad-logout-btn:hover {
+        background: rgba(233, 69, 96, 0.2);
+        border-color: rgba(233, 69, 96, 0.4);
+        color: #ff8fa3;
+    }
+
+    /* Container */
+    .sad-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 24px;
+    }
+
+    /* Alerts */
+    .sad-alert {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 18px;
+        border-radius: 12px;
+        font-size: 0.88rem;
+        margin-bottom: 20px;
+        animation: sadSlideIn 0.3s ease;
+    }
+
+    @keyframes sadSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-8px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    .sad-alert--error {
+        background: #fff0f0;
+        border: 1px solid #fecdd3;
+        color: #9b1c31;
+    }
+
+    .sad-alert--success {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+    }
+
+    .sad-alert-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        margin-left: auto;
+        color: inherit;
+        opacity: 0.7;
+    }
+
+    /* Stats */
+    .sad-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+
+    .sad-stat-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px 20px;
+        text-align: center;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s;
+    }
+
+    .sad-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .sad-stat-icon {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+
+    .sad-stat--total .sad-stat-icon {
+        color: #533483;
+    }
+
+    .sad-stat--active .sad-stat-icon {
+        color: #10b981;
+    }
+
+    .sad-stat--inactive .sad-stat-icon {
+        color: #f59e0b;
+    }
+
+    .sad-stat-val {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1a0a2e;
+    }
+
+    .sad-stat-lbl {
+        font-size: 0.78rem;
+        color: #6b7280;
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Toolbar */
+    .sad-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+    }
+
+    .sad-section-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #1a0a2e;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .sad-section-title i {
+        color: #533483;
+    }
+
+    /* Buttons */
+    .sad-btn {
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sad-btn--primary {
+        background: linear-gradient(135deg, #e94560, #c23616);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(233, 69, 96, 0.3);
+    }
+
+    .sad-btn--primary:hover {
+        box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .sad-btn--secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+
+    .sad-btn--secondary:hover {
+        background: #e5e7eb;
+    }
+
+    /* Table */
+    .sad-table-wrap {
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e5e7eb;
+    }
+
+    .sad-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .sad-table thead {
+        background: linear-gradient(135deg, #1a0a2e, #16213e);
+    }
+
+    .sad-table th {
+        padding: 14px 16px;
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.85);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    .sad-table td {
+        padding: 14px 16px;
+        font-size: 0.85rem;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .sad-row:hover {
+        background: #faf5ff;
+    }
+
+    .sad-mono {
+        font-family: 'JetBrains Mono', 'Courier New', monospace;
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .sad-code-badge {
+        background: #ede9fe;
+        color: #5b21b6;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .sad-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 100px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .sad-status--active {
+        background: #ecfdf5;
+        color: #065f46;
+    }
+
+    .sad-status--inactive {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .sad-empty {
+        text-align: center;
+        padding: 40px !important;
+        color: #9ca3af;
+        font-size: 0.95rem;
+    }
+
+    .sad-empty i {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    /* Action Buttons */
+    .sad-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .sad-act-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.82rem;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sad-act--login {
+        background: #ede9fe;
+        color: #7c3aed;
+    }
+
+    .sad-act--login:hover {
+        background: #7c3aed;
+        color: #fff;
+    }
+
+    .sad-act--admin {
+        background: #e0f2fe;
+        color: #0284c7;
+    }
+
+    .sad-act--admin:hover {
+        background: #0284c7;
+        color: #fff;
+    }
+
+    .sad-act--deactivate {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .sad-act--deactivate:hover {
+        background: #d97706;
+        color: #fff;
+    }
+
+    .sad-act--activate {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .sad-act--activate:hover {
+        background: #059669;
+        color: #fff;
+    }
+
+    /* Loading */
+    .sad-loading {
+        text-align: center;
+        padding: 60px;
+        color: #6b7280;
+    }
+
+    .sad-loader {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e5e7eb;
+        border-top-color: #e94560;
+        border-radius: 50%;
+        animation: sadSpin 0.8s linear infinite;
+        margin: 0 auto 16px;
+    }
+
+    @keyframes sadSpin {
+        to {
+            transform: rotate(360deg)
+        }
+    }
+
+    /* Modal */
+    .sad-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+        animation: sadFadeIn 0.2s ease;
+    }
+
+    @keyframes sadFadeIn {
+        from {
+            opacity: 0
+        }
+
+        to {
+            opacity: 1
+        }
+    }
+
+    .sad-modal {
+        background: #fff;
+        border-radius: 20px;
+        max-width: 680px;
+        width: 95%;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.3);
+        animation: sadModalIn 0.3s ease;
+    }
+
+    .sad-modal--sm {
+        max-width: 480px;
+    }
+
+    @keyframes sadModalIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.97)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1)
+        }
+    }
+
+    .sad-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 28px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .sad-modal-header h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a0a2e;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .sad-modal-header h3 i {
+        color: #e94560;
+    }
+
+    .sad-modal-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #6b7280;
+        font-size: 1.1rem;
+        transition: color 0.2s;
+    }
+
+    .sad-modal-close:hover {
+        color: #e94560;
+    }
+
+    .sad-modal-body {
+        padding: 24px 28px;
+    }
+
+    /* Mode Toggle */
+    .sad-mode-toggle {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+        background: #f3f4f6;
+        border-radius: 10px;
+        padding: 4px;
+    }
+
+    .sad-mode-btn {
+        flex: 1;
+        padding: 8px 14px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: #6b7280;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .sad-mode-btn--active {
+        background: #fff;
+        color: #1a0a2e;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .sad-mode-btn:hover:not(.sad-mode-btn--active) {
+        color: #374151;
+    }
+
+    /* Info Note */
+    .sad-info-note {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.8rem;
+        color: #1d4ed8;
+        margin-bottom: 16px;
+    }
+
+    .sad-info-note i {
+        font-size: 0.9rem;
+    }
+
+    .sad-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 18px 28px;
+        border-top: 1px solid #f3f4f6;
+    }
+
+    /* Form */
+    .sad-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .sad-form-group {
+        margin-bottom: 14px;
+    }
+
+    .sad-form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+
+    .sad-form-input {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        border: 1.5px solid #d1d5db;
+        border-radius: 10px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: #f9fafb;
+    }
+
+    .sad-form-input:focus {
+        border-color: #e94560;
+        box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
+        background: #fff;
+    }
+
+    .sad-form-hint {
+        display: block;
+        font-size: 0.72rem;
+        color: #9ca3af;
+        margin-top: 3px;
+    }
+
+    .sad-form-divider {
+        text-align: center;
+        margin: 20px 0 16px;
+        padding: 10px 0;
+        border-top: 1px solid #e5e7eb;
+        color: #533483;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    .sad-form-divider i {
+        margin-right: 6px;
+    }
+
+    /* Responsive */
+    @media(max-width:768px) {
+        .sad-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .sad-form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .sad-nav {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sad-toolbar {
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+    }
+</style>

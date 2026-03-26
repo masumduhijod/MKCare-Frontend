@@ -1,75 +1,155 @@
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+// ============================================
+// BILLING SERVICE
+// File: app/services/billing.service.js
+// Invoice & Payment Management
+// ============================================
 
-
-/**
- * Billing Service - Billing Service (Port 8088)
- * Invoice and Payment Management
- */
-
-app.factory('BillingService', ['$http', '$q', function($http, $q) {
-    
-    var service = {};
+app.service('BillingService', ['$http', function($http) {
     var baseUrl = API_CONFIG.GATEWAY_URL;
     
-    // ============ Invoice Management ============
+    // ============ INVOICE MANAGEMENT ============
     
     /**
-     * Create Invoice - POST /billing/invoices/create
-     * Request: { pinNumber, appointmentId, cvrNumber, doctorId, invoiceType, 
-     *            discountPercentage, taxPercentage, isInsuranceClaim, insuranceProvider, 
-     *            items: [{ itemName, description, quantity, unitPrice, itemType }], 
-     *            createdBy }
+     * Create new invoice
+     * @param {Object} invoiceData - Invoice details with items
      */
-    service.createInvoice = function(invoiceData) {
+    this.createInvoice = function(invoiceData) {
         return $http.post(baseUrl + API_CONFIG.ENDPOINTS.INVOICE.CREATE, invoiceData);
     };
     
     /**
-     * Get Invoice by Number - GET /billing/invoices/{invoiceNumber}
+     * Get invoice by invoice number
+     * @param {String} invoiceNumber - Invoice number
      */
-    service.getInvoice = function(invoiceNumber) {
-        var url = baseUrl + API_CONFIG.ENDPOINTS.INVOICE.GET_BY_NUMBER.replace('{invoiceNumber}', invoiceNumber);
-        return $http.get(url);
+    this.getInvoiceByNumber = function(invoiceNumber) {
+        var url = API_CONFIG.ENDPOINTS.INVOICE.GET_BY_NUMBER
+            .replace('{invoiceNumber}', invoiceNumber);
+        return $http.get(baseUrl + url);
     };
     
     /**
-     * Get Pending Invoices - GET /billing/invoices/pending
+     * Get all pending invoices
      */
-    service.getPendingInvoices = function() {
+    this.getPendingInvoices = function() {
         return $http.get(baseUrl + API_CONFIG.ENDPOINTS.INVOICE.GET_PENDING);
     };
     
     /**
-     * Get Patient Invoices - GET /billing/invoices/patient/{pinNumber}
+     * Get patient invoices by PIN
+     * @param {String} pinNumber - Patient PIN
      */
-    service.getPatientInvoices = function(pinNumber) {
-        var url = baseUrl + API_CONFIG.ENDPOINTS.INVOICE.GET_BY_PATIENT.replace('{pinNumber}', pinNumber);
-        return $http.get(url);
+    this.getPatientInvoices = function(pinNumber) {
+        var url = API_CONFIG.ENDPOINTS.INVOICE.GET_BY_PATIENT
+            .replace('{pinNumber}', pinNumber);
+        return $http.get(baseUrl + url);
     };
     
-    // ============ Payment Management ============
+    // ============ PAYMENT MANAGEMENT ============
     
     /**
-     * Process Payment - POST /billing/payments/process/{invoiceNumber}
-     * Request: { paymentId, invoiceNumber, amount, paymentMode, transactionId, 
-     *            paymentDate, receivedBy }
+     * Process payment for invoice
+     * @param {String} invoiceNumber - Invoice number
+     * @param {Object} paymentData - Payment details
      */
-    service.processPayment = function(invoiceNumber, paymentData) {
-        var url = baseUrl + API_CONFIG.ENDPOINTS.PAYMENT.PROCESS.replace('{invoiceNumber}', invoiceNumber);
-        return $http.post(url, paymentData);
+    this.processPayment = function(invoiceNumber, paymentData) {
+        var url = API_CONFIG.ENDPOINTS.PAYMENT.PROCESS
+            .replace('{invoiceNumber}', invoiceNumber);
+        return $http.post(baseUrl + url, paymentData);
     };
     
     /**
-     * Get Payments by Invoice - GET /billing/payments/invoice/{invoiceNumber}
+     * Get payment history for invoice
+     * @param {String} invoiceNumber - Invoice number
      */
-    service.getPaymentsByInvoice = function(invoiceNumber) {
-        var url = baseUrl + API_CONFIG.ENDPOINTS.PAYMENT.GET_BY_INVOICE.replace('{invoiceNumber}', invoiceNumber);
-        return $http.get(url);
+    this.getPaymentHistory = function(invoiceNumber) {
+        var url = API_CONFIG.ENDPOINTS.PAYMENT.GET_BY_INVOICE
+            .replace('{invoiceNumber}', invoiceNumber);
+        return $http.get(baseUrl + url);
     };
     
-    return service;
+    // ============ UTILITY FUNCTIONS ============
+    
+    /**
+     * Calculate invoice totals
+     * @param {Array} items - Invoice items
+     * @param {Number} discountPercentage
+     * @param {Number} taxPercentage
+     */
+    this.calculateTotals = function(items, discountPercentage, taxPercentage) {
+        var subTotal = 0;
+        
+        items.forEach(function(item) {
+            subTotal += (item.quantity * item.unitPrice);
+        });
+        
+        var discountAmount = (subTotal * (discountPercentage || 0)) / 100;
+        var taxableAmount = subTotal - discountAmount;
+        var taxAmount = (taxableAmount * (taxPercentage || 0)) / 100;
+        var totalAmount = taxableAmount + taxAmount;
+        
+        return {
+            subTotal: subTotal,
+            discountAmount: discountAmount,
+            taxAmount: taxAmount,
+            totalAmount: totalAmount
+        };
+    };
+    
+    /**
+     * Get payment status badge class
+     * @param {String} status - Payment status
+     */
+    this.getStatusBadgeClass = function(status) {
+        switch(status) {
+            case 'PAID':
+                return 'badge bg-success';
+            case 'PENDING':
+                return 'badge bg-warning text-dark';
+            case 'PARTIAL':
+                return 'badge bg-info';
+            case 'CANCELLED':
+                return 'badge bg-danger';
+            default:
+                return 'badge bg-secondary';
+        }
+    };
+    
+    /**
+     * Format currency
+     * @param {Number} amount
+     */
+    this.formatCurrency = function(amount) {
+        return '₹' + (amount || 0).toFixed(2);
+    };
+    
+    /**
+     * Get invoice type options
+     */
+    this.getInvoiceTypes = function() {
+        return ['OPD', 'IPD', 'PHARMACY', 'EMERGENCY'];
+    };
+    
+    /**
+     * Get item type options
+     */
+    this.getItemTypes = function() {
+        return ['CONSULTATION', 'MEDICINE', 'TEST', 'PROCEDURE', 'OTHER'];
+    };
+    
+    /**
+     * Get payment mode options
+     */
+    this.getPaymentModes = function() {
+        return ['CASH', 'UPI', 'CARD', 'NET_BANKING', 'CHEQUE'];
+    };
+    /**
+ * Get invoice by consultation ID
+ * @param {Number} consultationId
+ */
+this.getInvoiceByConsultation = function(consultationId) {
+    var url = API_CONFIG.ENDPOINTS.INVOICE.GET_BY_CONSULTATION
+        .replace('{consultationId}', consultationId);
+    return $http.get(baseUrl + url);
+};
+
 }]);

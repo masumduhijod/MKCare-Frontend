@@ -1,0 +1,152 @@
+<!-- Payment Collection Report -->
+<div class="report-page-wrapper" ng-controller="ReportPaymentCollectionController">
+    <div class="card report-filter-card no-print">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Collection Report</h5>
+            <a href="#!/reports" class="btn btn-outline-light btn-sm btn-back"><i
+                    class="fas fa-arrow-left me-1"></i>Back</a>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small">From Date *</label>
+                    <input type="date" class="form-control form-control-sm" ng-model="filter.fromDate">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small">To Date *</label>
+                    <input type="date" class="form-control form-control-sm" ng-model="filter.toDate">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small">Doctor <small
+                            class="text-muted">(optional)</small></label>
+                    <doctor-lov model="filter.doctorId"></doctor-lov>
+                </div>
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button class="btn btn-primary btn-sm px-3" ng-click="generateReport()" ng-disabled="loading">
+                        <i class="fas fa-chart-bar me-1"></i>
+                        <span ng-if="!loading">Generate</span>
+                        <span ng-if="loading"><span
+                                class="spinner-border spinner-border-sm me-1"></span>Loading...</span>
+                    </button>
+                    <button class="btn btn-success btn-sm btn-print px-3" ng-click="printReport()"
+                        ng-if="payments.length > 0">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                </div>
+            </div>
+            <div class="alert alert-danger mt-3 py-2 mb-0" ng-if="errorMsg">
+                <i class="fas fa-exclamation-triangle me-2"></i>{{errorMsg}}
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center py-5" ng-if="loading">
+        <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+        <p class="mt-3 text-muted fw-semibold">Loading payment data...</p>
+    </div>
+    <div class="report-empty-state" ng-if="!reportData && !loading">
+        <i class="fas fa-money-bill-wave text-muted"></i>
+        <p>Select date range and click <strong>Generate</strong></p>
+    </div>
+
+    <div class="report-screen-view" ng-if="reportData && !loading">
+        <clinic-print-header report-title="Payment Collection Report"></clinic-print-header>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-3 no-print">
+            <div class="col-md-3">
+                <div class="stat-card bg-primary text-white">
+                    <div class="stat-number">{{summary.totalPayments || 0}}</div>
+                    <div class="stat-label">Total Payments</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card bg-success text-white">
+                    <div class="stat-number">₹{{summary.totalCollected | number:0}}</div>
+                    <div class="stat-label">Total Collected</div>
+                </div>
+            </div>
+            <div ng-repeat="m in modeArr | limitTo:2" class="col-md-3">
+                <div class="stat-card bg-info text-white">
+                    <div class="stat-number" style="font-size:1.3rem">₹{{m.amount | number:0}}</div>
+                    <div class="stat-label">{{m.mode}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mode Breakdown + Payments -->
+        <div class="row g-3" ng-if="reportData">
+            <div class="col-md-4">
+                <div class="card report-result-card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Payment Mode Wise</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="report-table-responsive">
+                            <table class="table table-bordered mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Mode</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="m in modeArr">
+                                        <td><span class="badge bg-secondary me-1">{{m.mode}}</span></td>
+                                        <td class="text-end fw-bold text-success">₹{{m.amount | number:2}}</td>
+                                    </tr>
+                                    <tr class="table-secondary fw-bold">
+                                        <td>TOTAL</td>
+                                        <td class="text-end">₹{{summary.totalCollected | number:2}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card report-result-card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-list me-2"></i>Payment Transactions <span
+                                class="badge bg-primary ms-2">{{payments.length}}</span></h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="report-table-responsive" style="max-height:400px;overflow-y:auto">
+                            <table class="table table-bordered table-hover mb-0">
+                                <thead style="position:sticky;top:0;z-index:1">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Payment ID</th>
+                                        <th>Invoice No</th>
+                                        <th>Date</th>
+                                        <th class="text-end">Amount</th>
+                                        <th>Mode</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="p in payments">
+                                        <td>{{$index+1}}</td>
+                                        <td><strong class="text-primary">{{p.paymentId}}</strong></td>
+                                        <td>{{p.invoiceNumber}}</td>
+                                        <td>{{p.paymentDate | date:'dd-MM-yyyy HH:mm'}}</td>
+                                        <td class="text-end text-success fw-bold">₹{{p.amount | number:2}}</td>
+                                        <td><span class="badge bg-secondary">{{p.paymentMode}}</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /report-screen-view -->
+
+    <div class="text-center py-5" ng-if="loading">
+        <div class="spinner-border text-primary"></div>
+    </div>
+    <div class="report-empty-state" ng-if="!reportData && !loading"><i class="fas fa-money-bill-wave text-muted"></i>
+        <p>Select date range and generate</p>
+    </div>
+</div>

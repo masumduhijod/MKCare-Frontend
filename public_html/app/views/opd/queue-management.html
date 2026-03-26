@@ -8,38 +8,53 @@
 
 <!-- Queue Management View - queue-management.html -->
 <!-- Queue Management View - WITH MODERN MODALS -->
-<div class="container-fluid mt-4">
+<div class="container-fluid px-2 px-md-4 mt-2 fade-in">
     <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="fw-bold">
-                <i class="fas fa-users text-primary"></i> OPD Queue Management
-            </h2>
+    <div class="row mb-3 align-items-center">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary-soft text-primary rounded d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
+                    <i class="fas fa-users fs-5"></i>
+                </div> 
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">OPD Queue Management</h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0 fs-xs text-muted">
+                            <li class="breadcrumb-item"><a href="#!/dashboard" class="text-decoration-none">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Queue Management</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm shadow-sm fw-bold rounded-pill px-3" ng-click="refreshQueue()">
+                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                </button>
+                <button class="btn btn-success btn-sm shadow-sm fw-bold rounded-pill px-3" ng-click="callNext()">
+                    <i class="fas fa-phone me-1"></i> Call Next
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Doctor & Date Selection -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <label class="form-label">Select Doctor</label>
-            <select class="form-select" ng-model="selectedDoctor" ng-change="loadQueue()">
-                <option value="">-- Select Doctor --</option>
-                <option ng-repeat="doctor in doctors" value="{{doctor.doctorId}}">
-                    {{doctor.firstName}} {{doctor.lastName}} - {{doctor.specialization}}
-                </option>
-            </select>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Select Date</label>
-            <input type="date" class="form-control" ng-model="selectedDate" ng-change="loadQueue()">
-        </div>
-        <div class="col-md-4 d-flex align-items-end gap-2">
-            <button class="btn btn-primary" ng-click="refreshQueue()">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-            <button class="btn btn-success" ng-click="callNext()">
-                <i class="fas fa-phone"></i> Call Next
-            </button>
+    <div class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-body p-4 bg-light">
+            <div class="row g-4 align-items-center">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-user-md me-1 text-primary"></i> Select Doctor</label>
+                    <select class="form-select border-0 shadow-sm" ng-model="selectedDoctor" ng-change="loadQueue()" style="border-radius: 10px;">
+                        <option value="">-- Select Doctor --</option>
+                        <option ng-repeat="doctor in doctors" value="{{doctor.doctorId}}">
+                            {{doctor.firstName}} {{doctor.lastName}} - {{doctor.specialization}}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-calendar-alt me-1 text-primary"></i> Select Date</label>
+                    <input type="date" class="form-control border-0 shadow-sm" ng-model="selectedDate" ng-change="loadQueue()" style="border-radius: 10px;">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -155,12 +170,26 @@
                                         </div>
                                         
                                         <!-- IN_CONSULTATION - Show Complete -->
-                                        <button ng-if="entry.status === 'IN_CONSULTATION'" 
+<!--                                        <button ng-if="entry.status === 'IN_CONSULTATION'" 
                                                 class="btn btn-sm btn-success"
                                                 ng-click="completeConsultation(entry)">
                                             <i class="fas fa-check"></i> Complete
+                                        </button>-->
+                                        <!-- IN_CONSULTATION - Show Resume + Complete -->
+                                        <!-- CONSULTING patient -->
+                                        <div ng-if="entry.status === 'CONSULTING'" class="btn-group">
+
+                                            <button class="btn btn-sm btn-primary"
+                                                    ng-click="startConsultation(entry)">
+                                                Resume
                                         </button>
                                         
+<!--                                            <button class="btn btn-sm btn-success"
+                                                    ng-click="completeConsultation(entry)">
+                                                Complete
+                                            </button>-->
+
+                                        </div>
                                         <!-- COMPLETED - Show Info -->
                                         <span ng-if="entry.status === 'COMPLETED'" 
                                               class="badge bg-success">
@@ -190,10 +219,10 @@
 <!-- 1. Check-in Confirmation Modal -->
 <div class="modal fade" id="checkInConfirmModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title">
-                    <i class="fas fa-sign-in-alt"></i> Confirm Check-in
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-sign-in-alt me-2 text-primary"></i> Confirm Check-in
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -229,12 +258,12 @@
 <!-- 2. Check-in Success Modal -->
 <div class="modal fade" id="checkInSuccessModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-check-circle"></i> Check-in Successful!
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-check-circle me-2 text-success"></i> Check-in Successful!
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="text-center mb-4">
@@ -284,12 +313,12 @@
 <!-- 3. Call Next Patient Modal -->
 <div class="modal fade" id="callNextModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-phone"></i> Call Next Patient
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-phone-alt me-2 text-primary"></i> Call Next Patient
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center">
                 <i class="fas fa-user-check fa-3x text-success mb-3"></i>
@@ -314,12 +343,12 @@
 <!-- 4. Complete Consultation Modal -->
 <div class="modal fade" id="completeConsultationModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-check-circle"></i> Complete Consultation
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-check-circle me-2 text-primary"></i> Complete Consultation
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="text-center mb-3">

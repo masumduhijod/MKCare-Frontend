@@ -1,0 +1,329 @@
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+<!-- Consultation Management View -->
+<div class="container-fluid px-2 px-md-4 mt-2 fade-in">
+    <!-- Header -->
+    <div class="row mb-3 align-items-center">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary-soft text-primary rounded d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
+                    <i class="fas fa-search fs-5"></i>
+                </div> 
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">Consultation Management</h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0 fs-xs text-muted">
+                            <li class="breadcrumb-item"><a href="#!/dashboard" class="text-decoration-none">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Search Consultations</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-search text-primary me-2"></i> Search Consultations</h5>
+                </div>
+                <div class="card-body bg-light p-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Search By</label>
+                            <select class="form-select" ng-model="search.type">
+                                <option value="PIN">Patient PIN</option>
+                                <option value="CVR">CVR Number</option>
+                                <option value="NAME">Patient Name</option>
+                            </select>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label">Search Query</label>
+                            <input type="text" class="form-control" ng-model="search.query" 
+                                   placeholder="Enter search term...">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" ng-click="searchConsultations()">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient LOV Modal -->
+    <div ng-if="showLOV" class="modal-overlay" style="z-index: 1050; display: block; background: rgba(0,0,0,0.5);" ng-click="showLOV = false">
+        <div class="modal-dialog modal-dialog-centered" ng-click="$event.stopPropagation()" style="max-width: 850px; width: 100%; margin: 1.75rem auto;">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="fas fa-users text-primary me-2"></i> Select Patient
+                    </h5>
+                    <small class="text-muted ms-auto me-3 mt-1 fw-bold">Click select on the desired patient row</small>
+                    <button type="button" class="btn-close" ng-click="showLOV = false"></button>
+                </div>
+                <div class="modal-body p-0 bg-white">
+                    <div class="table-responsive m-0">
+                        <table class="table table-hover mb-0 modern-table">
+                            <thead style="background:#f8f9fa;">
+                                <tr>
+                                    <th class="ps-4 border-0">PIN</th>
+                                    <th class="border-0">Patient Name</th>
+                                    <th class="border-0">Age/Gender</th>
+                                    <th class="border-0">Contact</th>
+                                    <th class="pe-4 text-end border-0">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="patient in search.results">
+                                    <td class="ps-4 fw-bold text-muted">{{patient.pinNumber}}</td>
+                                    <td class="fw-bold text-dark">{{patient.firstName}} {{patient.lastName}}</td>
+                                    <td>{{patient.age}}y / {{patient.gender}}</td>
+                                    <td><i class="fas fa-phone-alt fs-7 text-muted me-1 opacity-50"></i>{{patient.contactNumber || 'N/A'}}</td>
+                                    <td class="pe-4 text-end">
+                                        <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3 shadow-sm" ng-click="selectPatient(patient)">
+                                            <i class="fas fa-check me-1"></i> Select
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top p-3 justify-content-end rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary px-4 fw-bold shadow-sm rounded-pill" ng-click="showLOV = false">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row" ng-if="filteredConsultations.length > 0">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Consultations Found ({{filteredConsultations.length}})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Consultation #</th>
+                                    <th>Patient</th>
+                                    <th>PIN</th>
+                                    <th>Doctor</th>
+                                    <th>Diagnosis</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="cons in getPagedConsultations()">
+                                    <td>{{cons.consultationDate | date:'dd-MM-yyyy'}}</td>
+                                    <td><strong>{{cons.consultationNumber}}</strong></td>
+                                    <td>{{cons.patientName}}</td>
+                                    <td>{{cons.pinNumber}}</td>
+                                    <td>Dr. {{cons.doctorName}}</td>
+                                    <td>{{cons.diagnosis || cons.assessment}}</td>
+                                    <td><span class="badge bg-success">{{cons.status}}</span></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-info me-1" ng-click="viewDetails(cons)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning me-1" ng-click="editConsultation(cons)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" ng-click="deleteConsultation(cons)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div ng-if="pagination.totalPages > 1" class="d-flex justify-content-center mt-3">
+                        <nav>
+                            <ul class="pagination">
+                                <li class="page-item" ng-class="{disabled: pagination.currentPage === 1}">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="goToPage(pagination.currentPage - 1)">
+                                        Previous
+                                    </a>
+                                </li>
+                                <li class="page-item" ng-class="{active: pagination.currentPage === page}" 
+                                    ng-repeat="page in [1,2,3,4,5] | limitTo:pagination.totalPages">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="goToPage(page)">{{page}}</a>
+                                </li>
+                                <li class="page-item" ng-class="{disabled: pagination.currentPage === pagination.totalPages}">
+                                    <a class="page-link" href="javascript:void(0)" ng-click="goToPage(pagination.currentPage + 1)">
+                                        Next
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div ng-if="editMode" class="modal-overlay" style="z-index: 1050; display: block; background: rgba(0,0,0,0.5);" ng-click="cancelEdit()">
+        <div class="modal-dialog modal-dialog-centered" ng-click="$event.stopPropagation()" style="max-width: 900px; width: 100%; margin: 1.75rem auto;">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header bg-light border-bottom rounded-top-4 py-3 px-4">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="fas fa-stethoscope text-primary me-2"></i> Edit Consultation
+                    </h5>
+                    <small class="text-muted ms-auto me-3 mt-1 fw-bold">Record: {{selectedConsultation.consultationNumber}}</small>
+                    <button class="btn-close" ng-click="cancelEdit()"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-exclamation-circle text-primary"></i> Chief Complaint</label>
+                            <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="4" ng-model="selectedConsultation.chiefComplaint"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-diagnoses text-primary"></i> Diagnosis</label>
+                            <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="4" ng-model="selectedConsultation.diagnosis"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-notes-medical text-primary"></i> Treatment Plan</label>
+                            <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="4" ng-model="selectedConsultation.treatmentPlan"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase"><i class="fas fa-clipboard-check text-primary"></i> Assessment</label>
+                            <textarea class="form-control border-0 shadow-sm" style="border-radius: 8px;" rows="4" ng-model="selectedConsultation.assessment"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-top p-3 justify-content-end rounded-bottom-4">
+                    <button class="btn btn-outline-secondary px-4 fw-bold shadow-sm rounded-pill" ng-click="cancelEdit()">Cancel</button>
+                    <button class="btn btn-success px-4 fw-bold shadow-sm rounded-pill" ng-click="updateConsultation()">
+                        <i class="fas fa-save me-1"></i> Update Consultation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* MODAL OVERLAY */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 35, 0.6);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* MODAL BOX */
+.med-modal {
+    width: 100%;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+    overflow: hidden;
+    animation: slideUp .3s ease;
+}
+
+/* HEADER */
+.med-header {
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* BODY */
+.med-body {
+    padding: 22px;
+    background: #f8f9fc;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+/* CARD */
+.med-card {
+    background: transparent;
+    border-radius: 0px;
+    padding: 0px;
+    box-shadow: none;
+    height: 100%;
+}
+
+/* TITLE STRIP */
+.med-card-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    color: #495057 !important;
+    background: transparent !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+}
+
+.med-card-title i {
+    color: #4e73df;
+    font-size: 1rem;
+}
+
+/* COLORS (Standard UI) */
+.purple, .blue, .orange, .green { background: transparent !important; }
+
+/* FOOTER */
+.med-footer {
+    padding: 16px 24px;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.med-card textarea {
+    background: #ffffff !important;
+    border: 1px solid #dfe3ea !important;
+    border-radius: 10px;
+    padding: 10px;
+    transition: .2s;
+    width: 100%;
+}
+
+.med-card textarea:focus {
+    border-color: #5b7cff !important;
+    box-shadow: 0 0 0 3px rgba(91,124,255,0.15);
+    outline: none;
+}
+</style>

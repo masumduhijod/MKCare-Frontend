@@ -1,0 +1,117 @@
+<!-- Invoice Details/Summary View -->
+<div class="container-fluid mt-4" ng-if="invoice">
+    <div class="row mb-3">
+        <div class="col-12">
+            <button class="btn btn-outline-secondary me-2" ng-click="backToList()">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </button>
+            <button class="btn btn-primary me-2" ng-click="printInvoice()">
+                <i class="fas fa-print"></i> Print Invoice
+            </button>
+            <button class="btn btn-success" ng-click="makePayment()" ng-if="invoice.paymentStatus !== 'PAID'">
+                <i class="fas fa-money-bill"></i> Make Payment
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Invoice Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <p><strong>Invoice Number:</strong> {{invoice.invoiceNumber}}</p>
+                            <p><strong>Date:</strong> {{invoice.invoiceDate | date:'dd-MM-yyyy'}}</p>
+                            <p><strong>Type:</strong> <span class="badge bg-info">{{invoice.invoiceType}}</span></p>
+                        </div>
+                        <div class="col-6 text-end">
+                            <p><strong>Patient:</strong> {{invoice.patientName}}</p>
+                            <p><strong>PIN:</strong> {{invoice.pinNumber}}</p>
+                            <p><strong>Status:</strong> <span ng-class="getStatusBadgeClass(invoice.paymentStatus)">{{invoice.paymentStatus}}</span></p>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3">Invoice Items</h5>
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Item</th>
+                                <th>Type</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="item in invoice.items">
+                                <td>{{$index + 1}}</td>
+                                <td>{{item.itemName}}<br><small class="text-muted">{{item.description}}</small></td>
+                                <td><span class="badge bg-secondary">{{item.itemType}}</span></td>
+                                <td class="text-end">{{item.quantity}}</td>
+                                <td class="text-end">{{formatCurrency(item.unitPrice)}}</td>
+                                <td class="text-end"><strong>{{formatCurrency(item.quantity * item.unitPrice)}}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="row mt-4">
+                        <div class="col-8"></div>
+                        <div class="col-4">
+                            <table class="table">
+                                <tr>
+                                    <td>Sub Total:</td>
+                                    <td class="text-end">{{formatCurrency(invoice.subTotal)}}</td>
+                                </tr>
+                                <tr ng-if="invoice.discountAmount > 0">
+                                    <td>Discount:</td>
+                                    <td class="text-end text-danger">- {{formatCurrency(invoice.discountAmount)}}</td>
+                                </tr>
+                                <tr ng-if="invoice.taxAmount > 0">
+                                    <td>Tax:</td>
+                                    <td class="text-end">{{formatCurrency(invoice.taxAmount)}}</td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td><strong>Total:</strong></td>
+                                    <td class="text-end"><strong>{{formatCurrency(invoice.totalAmount)}}</strong></td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td><strong>Paid:</strong></td>
+                                    <td class="text-end"><strong>{{formatCurrency(invoice.paidAmount)}}</strong></td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td><strong>Outstanding:</strong></td>
+                                    <td class="text-end"><strong>{{formatCurrency(invoice.outstandingAmount)}}</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Payment History</h5>
+                </div>
+                <div class="card-body">
+                    <div ng-if="paymentHistory.length === 0" class="alert alert-info">
+                        No payments recorded yet
+                    </div>
+                    <div ng-repeat="pmt in paymentHistory" class="mb-3 p-2 border-bottom">
+                        <p class="mb-1"><strong>{{formatCurrency(pmt.amount)}}</strong></p>
+                        <p class="mb-1 small">
+                            {{pmt.paymentDate | date:'dd-MM-yyyy HH:mm'}}<br>
+                            Mode: {{pmt.paymentMode}}<br>
+                            <span ng-if="pmt.transactionId">TXN: {{pmt.transactionId}}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
