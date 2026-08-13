@@ -1,0 +1,283 @@
+<div class="report-container no-sidebar" ng-controller="ReportPatientCaseFileController">
+    <!-- Header: Hidden in normal view, shown in Print -->
+    <div class="report-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="hospital-name text-primary mb-0">{{clinicName}}</h2>
+            <p class="text-muted mb-0">Comprehensive Patient Medical Record</p>
+        </div>
+        <div class="text-end print-hide">
+            <button class="btn btn-primary" ng-click="printFile()" ng-disabled="!patient">
+                <i class="bi bi-printer"></i> Print Full File
+            </button>
+            <a href="#!/reports" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Selection Area (Print Hide) -->
+    <div class="card shadow-sm mb-4 border-0 print-hide">
+        <div class="card-body bg-light rounded shadow-sm p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <label class="form-label fw-bold">Select Patient to Generate File</label>
+                    <div class="d-flex gap-2">
+                        <div style="flex:1">
+                            <pin-lov model="filter.pinNumber" on-select="onPatientSelect(patient)"></pin-lov>
+                        </div>
+                        <button class="btn btn-success" ng-click="generateFile()">
+                            <i class="bi bi-file-earmark-medical"></i> Load Full File
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end text-muted small">
+                    <p class="mb-0">This report compiles all consultations, vitals, and prescriptions for the selected patient.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error / Loading -->
+    <div ng-if="loading" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Compiling clinical data from all departments... Please wait.</p>
+    </div>
+
+    <div ng-if="errorMsg" class="alert alert-danger shadow-sm border-start border-4 border-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> {{errorMsg}}
+    </div>
+
+    <!-- THE CASE FILE -->
+    <div ng-if="patient && !loading" class="patient-file-content animate-fade-in">
+        
+        <!-- SECTION 1: PATIENT PROFILE -->
+        <div class="case-section mb-4 p-4 border rounded shadow-sm bg-white">
+            <h4 class="section-title border-bottom pb-2 mb-3 text-primary">
+                <i class="bi bi-person-badge"></i> 1. Patient Profile
+            </h4>
+            <div class="row g-4">
+                <div class="col-md-2 text-center border-end">
+                    <div class="avatar-container mb-2">
+                        <img ng-src="{{patient.photoUrl || 'assets/img/default-patient.png'}}" class="img-fluid rounded shadow-sm" style="max-height: 120px;">
+                    </div>
+                    <div class="badge bg-primary fs-6">{{patient.pinNumber}}</div>
+                </div>
+                <div class="col-md-10">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small d-block">Full Name</label>
+                            <span class="fw-bold fs-5">{{patient.fullName || (patient.firstName + ' ' + patient.lastName)}}</span>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="text-muted small d-block">Gender</label>
+                            <span class="fw-bold">{{patient.gender}}</span>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="text-muted small d-block">Age</label>
+                            <span class="fw-bold">{{patient.age}} Years</span>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="text-muted small d-block">Blood Group</label>
+                            <span class="badge bg-danger">{{patient.bloodGroup || 'Not Set'}}</span>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="text-muted small d-block">Contact</label>
+                            <span class="fw-bold">{{patient.contactNumber}}</span>
+                        </div>
+                        
+                        <div class="col-12 mt-2">
+                            <label class="text-muted small d-block">Address</label>
+                            <span class="fw-semibold">{{patient.city}}, {{patient.state}} - {{patient.pincode}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: MEDICAL HISTORY -->
+        <div class="case-section mb-4 p-4 border rounded shadow-sm bg-white">
+            <h4 class="section-title border-bottom pb-2 mb-3 text-primary">
+                <i class="bi bi-clipboard2-pulse"></i> 2. Medical Background
+            </h4>
+            <div class="row">
+                <div class="col-md-6 border-end">
+                    <div class="mb-3">
+                        <label class="fw-bold text-danger"><i class="bi bi-virus"></i> Known Allergies</label>
+                        <p class="p-2 bg-light rounded text-dark">{{medicalHistory.allergies || 'No known allergies reported.'}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold text-warning"><i class="bi bi-activity"></i> Chronic Conditions</label>
+                        <p class="p-2 bg-light rounded">{{medicalHistory.chronicDiseases || 'None reported.'}}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="fw-bold text-info"><i class="bi bi-scissors"></i> Past Surgeries</label>
+                        <p class="p-2 bg-light rounded">{{medicalHistory.pastSurgeries || 'No surgical history available.'}}</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Smoking</label>
+                            <p class="fw-bold">{{medicalHistory.smokingStatus || 'NEVER'}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Alcohol</label>
+                            <p class="fw-bold">{{medicalHistory.alcoholConsumption || 'NEVER'}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: VITALS TREND -->
+        <div class="case-section mb-4 p-4 border rounded shadow-sm bg-white" ng-if="vitals.length > 0">
+            <h4 class="section-title border-bottom pb-2 mb-3 text-primary">
+                <i class="bi bi-graph-up-arrow"></i> 3. Vital Signs Summary (Recent)
+            </h4>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-light text-center small uppercase fw-bold">
+                        <tr>
+                            <th>Date</th>
+                            <th>Temp (°F)</th>
+                            <th>BP (mmHg)</th>
+                            <th>Pulse (bpm)</th>
+                            <th>Resp (bpm)</th>
+                            <th>SpO2 (%)</th>
+                            <th>Weight (kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        <tr ng-repeat="v in vitals | orderBy:'-visitDate' | limitTo: 5">
+                            <td>{{v.visitDate | date:'dd/MM/yyyy'}}</td>
+                            <td>{{v.temperatureF || '-'}}</td>
+                            <td>{{v.bloodPressureSystolic}}/{{v.bloodPressureDiastolic}}</td>
+                            <td>{{v.pulseRate || '-'}}</td>
+                            <td>{{v.respiratoryRate || '-'}}</td>
+                            <td ng-class="v.spo2Percentage < 95 ? 'text-danger fw-bold' : ''">{{v.spo2Percentage || '-'}}</td>
+                            <td>{{v.weightKg || '-'}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECTION 4: VISIT LOGS & CONSULTATIONS -->
+        <div class="case-section mb-4">
+            <h4 class="section-title border-bottom pb-2 mb-3 text-primary">
+                <i class="bi bi-journal-medical"></i> 4. Visit Logs & Clinical Notes
+            </h4>
+            
+            <div class="timeline">
+                <div class="timeline-item mb-5" ng-repeat="visit in visits | orderBy:'-visitDate'">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between">
+                            <span class="fw-bold"><i class="bi bi-calendar-event"></i> Visit Date: {{visit.visitDate || visit.appointmentDate | date:'dd MMM yyyy hh:mm a'}}</span>
+                            <span>Visit ID: {{visit.cvrNumber}}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3 border-bottom pb-2">
+                                <div class="col-md-4">
+                                    <label class="text-muted small d-block">Department</label>
+                                    <span class="fw-bold text-dark">{{visit.department}}</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="text-muted small d-block">Doctor</label>
+                                    <span class="fw-bold text-dark">Dr. {{visit.doctorName}}</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="text-muted small d-block">Visit Type</label>
+                                    <span class="badge" ng-class="visit.visitType === 'FOLLOW_UP' ? 'bg-info' : 'bg-success'">{{visit.visitType}}</span>
+                                </div>
+                            </div>
+
+                            <div class="clinical-details row">
+                                <div class="col-md-6 border-end">
+                                    <h6 class="fw-bold text-primary small uppercase mb-2">Subjective / Chief Complaint</h6>
+                                    <p class="text-dark">{{visit.chiefComplaint}}</p>
+                                    
+                                    <h6 class="fw-bold text-primary small uppercase mt-3 mb-2">Diagnosis</h6>
+                                    <p class="fw-bold text-danger" ng-if="visit.consultation.diagnosis">{{visit.consultation.diagnosis}}</p>
+                                    <p class="text-muted italic" ng-if="!visit.consultation.diagnosis">No diagnosis recorded for this visit.</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold text-primary small uppercase mb-2">Examination Findings</h6>
+                                    <p class="text-dark">{{visit.consultation.examinationFindings || 'N/A'}}</p>
+
+                                    <h6 class="fw-bold text-primary small uppercase mt-3 mb-2">Treatment Plan / Instructions</h6>
+                                    <p class="text-dark fw-semibold">{{visit.consultation.treatmentPlan || 'Follow routine.'}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div ng-if="visits.length === 0" class="text-center py-5 bg-light rounded">
+                <i class="bi bi-cloud-slash fs-1 text-muted"></i>
+                <p class="text-muted mt-2">No visit history found for this patient.</p>
+            </div>
+        </div>
+
+        <!-- FOOTER: Print Only -->
+        <div class="print-footer mt-5 border-top pt-3 text-center d-none d-print-block">
+            <div class="row">
+                <div class="col-4">
+                    <hr class="mb-1 w-75 mx-auto">
+                    <p class="small text-muted">Generated On: {{printDate}}</p>
+                </div>
+                <div class="col-4">
+                    <p class="fw-bold">{{clinicName}}</p>
+                    <p class="small text-muted">HMIS Health Information System</p>
+                </div>
+                <div class="col-4">
+                    <hr class="mb-1 w-75 mx-auto">
+                    <p class="small text-muted">Authorized Signature / Stamp</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Patient Selection LOV Modal handled by pin-lov directive -->
+
+</div>
+
+<style>
+    .report-container { max-width: 1100px; margin: 0 auto; }
+    .section-title { font-weight: 700; letter-spacing: 0.5px; }
+    .case-section { background-color: #fff; }
+    .uppercase { text-transform: uppercase; }
+    
+    /* Timeline styling */
+    .timeline { position: relative; padding-left: 20px; }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 3px;
+        background: #e9ecef;
+    }
+    .timeline-item { position: relative; }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -24px; top: 15px;
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: #0d6efd;
+        border: 2px solid #fff;
+        z-index: 1;
+    }
+
+    @media print {
+        body { background: #fff; padding: 0; margin: 0; }
+        .print-hide { display: none !important; }
+        .report-container { max-width: 100%; border: none; padding: 0; }
+        .card, .case-section { border: none !important; box-shadow: none !important; }
+        .card-header { background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #ddd !important; }
+        .timeline::before { display: none; }
+        .timeline-item::before { display: none; }
+        .case-section { page-break-inside: avoid; }
+    }
+</style>

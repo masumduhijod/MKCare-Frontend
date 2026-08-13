@@ -147,6 +147,11 @@ and open the template in the editor.
                                             title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </button>
+                                    <button class="btn btn-primary" 
+                                            ng-click="manageUserPermissions(user)"
+                                            title="Manage Permissions">
+                                        <i class="fas fa-user-shield"></i>
+                                    </button>
                                     <button class="btn btn-warning" 
                                             ng-click="editUser(user)"
                                             title="Edit User">
@@ -386,6 +391,48 @@ and open the template in the editor.
                         <span ng-if="passwordReset.loading">
                             <span class="spinner-border spinner-border-sm"></span> Resetting...
                         </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- User Permissions Modal -->
+    <div class="modal fade" id="userPermissionsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-shield"></i> Custom Permissions: {{permUser.username}}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <strong>Note:</strong> Setting custom permissions here will override the default role-based access for this user.
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6" ng-repeat="mod in modules">
+                            <div class="p-2 border rounded d-flex align-items-center justify-content-between"
+                                 ng-class="{'bg-light border-primary': userPerms[mod.module_code]}">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas {{mod.icon || 'fa-cube'}} text-primary me-2"></i>
+                                    <span>{{mod.module_name}}</span>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" 
+                                           ng-model="userPerms[mod.module_code]">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info" ng-click="resetToRoleDefault()">Reset to Role Default</button>
+                    <button type="button" class="btn btn-primary" ng-click="saveUserPermissions()">
+                        <i class="fas fa-save"></i> Save Permissions
                     </button>
                 </div>
             </div>

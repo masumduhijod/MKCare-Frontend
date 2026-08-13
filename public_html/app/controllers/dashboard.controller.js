@@ -160,93 +160,129 @@ app.controller('DashboardController', [
             }
         };
 
+        // ─── Resolve correct doctorId ───────────────
+        $scope.getDoctorIdAsync = function(callback) {
+            if ($scope.userRole !== 'DOCTOR' || !$scope.currentUser) {
+                callback(null);
+                return;
+            }
+            if ($scope.currentUser.doctorId) {
+                callback($scope.currentUser.doctorId);
+                return;
+            }
+            DoctorService.getActiveDoctors().then(function(res) {
+                var docs = res.data.data || [];
+                var myDoctor = docs.find(function(d) {
+                    return (d.userId && d.userId == $scope.currentUser.userId) ||
+                           (d.email && d.email === $scope.currentUser.email) || 
+                           (d.username && d.username === $scope.currentUser.username) ||
+                           (d.contactNumber && d.contactNumber === $scope.currentUser.contactNumber) ||
+                           (d.doctorId === $scope.currentUser.username) ||
+                           (d.fullName && $scope.currentUser.fullName && d.fullName.toLowerCase().trim() === $scope.currentUser.fullName.toLowerCase().trim());
+                });
+                if (myDoctor) {
+                    console.log("✅ getDoctorIdAsync FOUND MATCH:", myDoctor.doctorId);
+                    $scope.currentUser.doctorId = myDoctor.doctorId; // Cache
+                    callback(myDoctor.doctorId);
+                } else {
+                    console.warn("❌ getDoctorIdAsync FAILED TO MATCH. Falling back to:", $scope.currentUser.username || $scope.currentUser.userId);
+                    console.warn("User data was:", $scope.currentUser);
+                    console.warn("Available doctors:", docs);
+                    callback($scope.currentUser.username || $scope.currentUser.userId);
+                }
+            }).catch(function() {
+                callback($scope.currentUser.username || $scope.currentUser.userId);
+            });
+        };
+
         // ─── Load today's revenue + update visit count ───────────────
         $scope.loadTodayRevenue = function () {
             $scope.revenueLoading = true;
             $scope.revenueError = '';
 
-            var doctorId = ($scope.userRole === 'DOCTOR' && $scope.currentUser)
-                ? ($scope.currentUser.doctorId || $scope.currentUser.userId)
-                : null;
+            $scope.getDoctorIdAsync(function(doctorId) {
+                var dailyParams = { fromDate: today(), toDate: today() };
+                var monthlyParams = { fromDate: firstOfMonth(), toDate: today() };
+                var yearlyParams = { fromDate: firstOfYear(), toDate: today() };
 
-            var dailyParams = { fromDate: today(), toDate: today() };
-            var monthlyParams = { fromDate: firstOfMonth(), toDate: today() };
-            var yearlyParams = { fromDate: firstOfYear(), toDate: today() };
+                if (doctorId) {
+                    dailyParams.doctorId = doctorId;
+                    monthlyParams.doctorId = doctorId;
+                    yearlyParams.doctorId = doctorId;
+                }
 
-            if (doctorId) {
-                dailyParams.doctorId = doctorId;
-                monthlyParams.doctorId = doctorId;
-                yearlyParams.doctorId = doctorId;
-            }
+                // ── Daily (also drives visit count + transaction table + chart) ──
+                $http.get(base + '/reports/billing/payment-collection', {
+                    params: dailyParams,
+                    headers: authHeaders()
+                }).then(function (res) {
+                    var d = (res.data && res.data.data) ? res.data.data : {};
 
-            // ── Daily (also drives visit count + transaction table + chart) ──
-            $http.get(base + '/reports/billing/payment-collection', {
-                params: dailyParams,
-                headers: authHeaders()
-            }).then(function (res) {
-                var d = (res.data && res.data.data) ? res.data.data : {};
+                    // totalCollected comes as BigDecimal → serialised as number by Jackson
+                    $scope.revenue.daily.amount = parseFloat(d.totalCollected) || 0;
+                    $scope.revenue.daily.count = parseInt(d.totalPayments, 10) || 0;
 
-                // totalCollected comes as BigDecimal → serialised as number by Jackson
-                $scope.revenue.daily.amount = parseFloat(d.totalCollected) || 0;
-                $scope.revenue.daily.count = parseInt(d.totalPayments, 10) || 0;
+                    // Payments list for visit-count and transaction table
+                    var paidToday = (d.payments && Array.isArray(d.payments)) ? d.payments : [];
 
-                // Payments list for visit-count and transaction table
-                var paidToday = (d.payments && Array.isArray(d.payments)) ? d.payments : [];
+                    // ── Today's Visits: CVRs + paid payments deduped by PIN ──
+                    updateVisitCount(paidToday);
 
-                // ── Today's Visits: CVRs + paid payments deduped by PIN ──
-                updateVisitCount(paidToday);
+                    // ── Transaction table (latest 50) ──
+                    $scope.revenue.transactions = paidToday.slice(0, 50).map(function (p) {
+                        return {
+                            paymentId: p.paymentId || '—',
+                            patientName: p.patientName || p.pinNumber || '—',
+                            pinNumber: p.pinNumber || '—',
+                            invoiceNo: p.invoiceNumber || '—',
+                            amount: parseFloat(p.amount) || 0,
+                            mode: p.paymentMode || '—',
+                            date: p.paymentDate ? new Date(p.paymentDate) : null
+                        };
+                    });
 
-                // ── Transaction table (latest 50) ──
-                $scope.revenue.transactions = paidToday.slice(0, 50).map(function (p) {
-                    return {
-                        paymentId: p.paymentId || '—',
-                        patientName: p.patientName || p.pinNumber || '—',
-                        pinNumber: p.pinNumber || '—',
-                        invoiceNo: p.invoiceNumber || '—',
-                        amount: parseFloat(p.amount) || 0,
-                        mode: p.paymentMode || '—',
-                        date: p.paymentDate ? new Date(p.paymentDate) : null
-                    };
+                    // Build chart using today's payment list
+                    buildChart(paidToday);
+                    
+                    // Fetch actual patient names instead of PIN fallback
+                    loadTransactionNames();
+
+                }).catch(function (err) {
+                    console.warn('[Dashboard] Daily revenue error:', err && err.status, err && err.data);
+                    $scope.revenueError = 'Revenue data unavailable (billing service). Showing visit count from CVR data.';
+
+                    // ── FALLBACK: Even if billing fails, count visits from CVRs ──
+                    updateVisitCount([]);
+
+                    // Show empty chart
+                    buildChart([]);
                 });
 
-                // Build chart using today's payment list
-                buildChart(paidToday);
+                // ── Monthly ──
+                $http.get(base + '/reports/billing/payment-collection', {
+                    params: monthlyParams,
+                    headers: authHeaders()
+                }).then(function (res) {
+                    var d = (res.data && res.data.data) ? res.data.data : {};
+                    $scope.revenue.monthly.amount = parseFloat(d.totalCollected) || 0;
+                    $scope.revenue.monthly.count = parseInt(d.totalPayments, 10) || 0;
+                }).catch(function (err) {
+                    console.warn('[Dashboard] Monthly revenue error:', err && err.status);
+                });
 
-            }).catch(function (err) {
-                console.warn('[Dashboard] Daily revenue error:', err && err.status, err && err.data);
-                $scope.revenueError = 'Revenue data unavailable (billing service). Showing visit count from CVR data.';
-
-                // ── FALLBACK: Even if billing fails, count visits from CVRs ──
-                updateVisitCount([]);
-
-                // Show empty chart
-                buildChart([]);
-            });
-
-            // ── Monthly ──
-            $http.get(base + '/reports/billing/payment-collection', {
-                params: monthlyParams,
-                headers: authHeaders()
-            }).then(function (res) {
-                var d = (res.data && res.data.data) ? res.data.data : {};
-                $scope.revenue.monthly.amount = parseFloat(d.totalCollected) || 0;
-                $scope.revenue.monthly.count = parseInt(d.totalPayments, 10) || 0;
-            }).catch(function (err) {
-                console.warn('[Dashboard] Monthly revenue error:', err && err.status);
-            });
-
-            // ── Yearly ──
-            $http.get(base + '/reports/billing/payment-collection', {
-                params: yearlyParams,
-                headers: authHeaders()
-            }).then(function (res) {
-                var d = (res.data && res.data.data) ? res.data.data : {};
-                $scope.revenue.yearly.amount = parseFloat(d.totalCollected) || 0;
-                $scope.revenue.yearly.count = parseInt(d.totalPayments, 10) || 0;
-            }).catch(function (err) {
-                console.warn('[Dashboard] Yearly revenue error:', err && err.status);
-            }).finally(function () {
-                $scope.revenueLoading = false;
+                // ── Yearly ──
+                $http.get(base + '/reports/billing/payment-collection', {
+                    params: yearlyParams,
+                    headers: authHeaders()
+                }).then(function (res) {
+                    var d = (res.data && res.data.data) ? res.data.data : {};
+                    $scope.revenue.yearly.amount = parseFloat(d.totalCollected) || 0;
+                    $scope.revenue.yearly.count = parseInt(d.totalPayments, 10) || 0;
+                }).catch(function (err) {
+                    console.warn('[Dashboard] Yearly revenue error:', err && err.status);
+                }).finally(function () {
+                    $scope.revenueLoading = false;
+                });
             });
         };
 
@@ -370,6 +406,21 @@ app.controller('DashboardController', [
                 }).catch(function () { a.doctorName = 'Dr. Unknown'; });
             });
         };
+
+        // ─── Load actual patient names for transactions ────────────────
+        function loadTransactionNames() {
+            angular.forEach($scope.revenue.transactions, function (t) {
+                if (t.patientName === t.pinNumber && t.pinNumber && t.pinNumber !== '—') {
+                    PatientService.getByPin(t.pinNumber).then(function (r) {
+                        if (r.data && r.data.success && r.data.data) {
+                            var name = r.data.data.firstName || '';
+                            if (r.data.data.lastName) name += ' ' + r.data.data.lastName;
+                            t.patientName = name.trim();
+                        }
+                    });
+                }
+            });
+        }
 
         // ═════════════════════════════════════════════
         //  QUICK ACTIONS

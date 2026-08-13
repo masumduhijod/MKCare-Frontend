@@ -34,7 +34,8 @@
                         <label class="form-label">Select Doctor</label>
                         <select class="form-select"
                                 ng-model="selectedDoctorId"
-                                ng-options="doc.doctorId as doc.fullName for doc in doctorList">
+                                ng-options="doc.doctorId as doc.fullName for doc in doctorList"
+                                ng-disabled="currentUser.role !== 'ADMIN' && currentUser.role !== 'SUPER_ADMIN'">
                             <option value="">--- Select Doctor ---</option>
                         </select>
                     </div>

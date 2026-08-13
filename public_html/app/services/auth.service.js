@@ -58,8 +58,12 @@ app.factory('AuthService', ['$http', '$q', function($http, $q) {
                         fullName: data.fullName,
                         expiresAt: data.expiresAt,
                         tenantId: data.tenantId,
-                        clinicName: data.clinicName
+                        clinicName: data.clinicName,
+                        permissions: data.permissions || []
                     }));
+
+                    // ⭐ Store permissions separately for easy access
+                    localStorage.setItem('userPermissions', JSON.stringify(data.permissions || []));
                     
                     console.log('✅ Login successful - Tenant:', data.tenantId, 'Clinic:', data.clinicName);
                     
@@ -138,6 +142,7 @@ app.factory('AuthService', ['$http', '$q', function($http, $q) {
         localStorage.removeItem('clinicLogo');
         localStorage.removeItem('clinicAddress');
         localStorage.removeItem('clinicPhone');
+        localStorage.removeItem('userPermissions');
     };
     
     /**

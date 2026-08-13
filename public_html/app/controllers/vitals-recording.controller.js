@@ -228,6 +228,8 @@ $scope.checkExistingVitals = function() {
     $scope.recordVitals = function() {
         console.log('========== RECORDING VITALS ==========');
         
+        $scope.validateBloodPressure(); // Ensure BP is validated even if blur didn't fire
+        
         // Validation
         if (!$scope.vitals.temperatureF || $scope.vitals.temperatureF < 90 || $scope.vitals.temperatureF > 110) {
             $rootScope.showAlert('warning', 'Please enter valid temperature (90-110°F)');
@@ -263,7 +265,7 @@ $scope.checkExistingVitals = function() {
                 if (response.data.success) {
                     console.log('✅ Vitals recorded successfully');
                     
-                    // ✅ SHOW SUCCESS WITH OPTIONS
+                    // ✅ SHOW SUCCESS AND REDIRECT (1-CLICK WORKFLOW)
                     $scope.showVitalsSuccessOptions();
                     
                 } else {
@@ -286,76 +288,20 @@ $scope.checkExistingVitals = function() {
     };
     
     /**
-     * ✅ NEW: SHOW VITALS SUCCESS WITH OPTIONS
+     * ✅ NEW: SHOW VITALS SUCCESS AND REDIRECT (1-CLICK)
      */
     $scope.showVitalsSuccessOptions = function() {
-//    $rootScope.showAlert('success', '✅ Vitals saved successfully!');
-    
-    if ($scope.isEditMode) {
-        // ✅ EDIT MODE - just go back to OPD list, no consultation prompt
+        $rootScope.showAlert('success', '✅ Vitals saved successfully!');
+        
         setTimeout(function() {
-            $location.path('/opd/list');
+            if ($scope.isEditMode) {
+                $location.path('/opd/list');
+            } else {
+                $location.path('/opd/queue');
+            }
             $scope.$apply();
         }, 1000);
-        
-    } else {
-        // ✅ NEW MODE - ask about consultation
-        setTimeout(function() {
-            $rootScope.showGlobalConfirm({
-                title: 'Vitals Recorded',
-                message: 'Vitals recorded successfully.',
-                subMessage: 'Would you like to start a consultation?',
-                type: 'success',
-                icon: 'fas fa-check-circle',
-                okText: 'Start Consultation',
-                cancelText: 'Return to Queue',
-                onConfirm: function() {
-                    if ($scope.cvr && $scope.cvr.appointmentId) {
-                        $scope.startConsultationFromVitals();
-                    } else {
-                        $location.path('/opd/queue');
-                    }
-                },
-                onCancel: function() {
-                    $location.path('/opd/queue');
-                }
-            });
-        }, 300);
-    }
-};
-//    $scope.showVitalsSuccessOptions = function() {
-//        var successMsg = '✅ Vitals Recorded Successfully!\n\n' +
-//            'CVR: ' + cvrNumber + '\n' +
-//            '🌡️ Temperature: ' + $scope.vitals.temperatureF + '°F\n' +
-//            '💓 BP: ' + $scope.vitals.bloodPressure + '\n' +
-//            '💗 Pulse: ' + $scope.vitals.pulseRate + ' bpm\n' +
-//            '🫁 SpO2: ' + $scope.vitals.spo2Percentage + '%';
-//        
-//        if ($scope.bmi) {
-//            successMsg += '\n⚖️ BMI: ' + $scope.bmi + ' (' + $scope.bmiCategory + ')';
-//        }
-//        
-//        $rootScope.showAlert('success', successMsg);
-//        
-//        // ✅ SHOW OPTIONS MODAL
-//        setTimeout(function() {
-//            var nextAction = confirm(
-//                '✅ Vitals recorded successfully!\n\n' +
-//                'What would you like to do next?\n\n' +
-//                'Click OK to START CONSULTATION\n' +
-//                'Click Cancel to RETURN TO QUEUE'
-//            );
-//            
-//            if (nextAction && $scope.cvr && $scope.cvr.appointmentId) {
-//                // Start consultation
-//                $scope.startConsultationFromVitals();
-//            } else {
-//                // Return to queue
-//                $location.path('/opd/queue');
-//                $scope.$apply();
-//            }
-//        }, 1000);
-//    };
+    };
     
     /**
      * ✅ NEW: START CONSULTATION FROM VITALS PAGE

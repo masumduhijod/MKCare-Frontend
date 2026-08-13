@@ -145,7 +145,7 @@ app.controller('InvoiceCreateController', ['$scope', '$rootScope', '$location', 
                                         });
 
                                         // 🔹 Add new consultation fee
-//                            $scope.addConsultationFee();
+                                        $scope.addConsultationFee();
                                     }
                                 });
                             }
@@ -157,6 +157,34 @@ app.controller('InvoiceCreateController', ['$scope', '$rootScope', '$location', 
                         $scope.loading = false;
                     });
         };
+
+        /**
+         * Automatically add consultation fee from doctor profile
+         */
+        $scope.addConsultationFee = function () {
+            if (!$scope.doctor) return;
+
+            var fee = $scope.doctor.consultationFee || 0;
+            
+            // Check if consultation fee is already in the list
+            var existing = $scope.invoice.items.find(function(item) {
+                return item.itemType === 'CONSULTATION';
+            });
+
+            if (!existing) {
+                $scope.invoice.items.push({
+                    itemName: 'Consultation Fee',
+                    description: 'Regular Consultation Fee for Dr. ' + ($scope.doctor.fullName || $scope.doctor.firstName),
+                    quantity: 1,
+                    unitPrice: fee,
+                    itemType: 'CONSULTATION'
+                });
+                $scope.consultationFeeAdded = true;
+                $scope.calculateTotals();
+                console.log('✅ Consultation fee added:', fee);
+            }
+        };
+
 
         /**
          * Add item to invoice

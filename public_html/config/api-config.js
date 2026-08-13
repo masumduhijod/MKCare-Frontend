@@ -241,7 +241,8 @@ var API_CONFIG = {
             GET_PATIENT_COUNT: '/cvr/patient/{pinNumber}/count',
             EXISTS: '/cvr/exists/{cvrNumber}',
             RECORD_VITALS: '/cvr/vitals/record',
-            GET_VITALS: '/cvr/{cvrNumber}/vitals'
+            GET_VITALS: '/cvr/{cvrNumber}/vitals',
+            GET_ACTIVE_CASES: '/cvr/active-cases/{pinNumber}/{doctorId}'
         },
 
         // ============ DOCTOR SERVICE (Port 8086) ============
@@ -332,6 +333,7 @@ var API_CONFIG = {
             UPDATE: '/opd/consultations/{consultationId}',
             DELETE: '/opd/consultations/{consultationId}',
             GET_BY_DOCTOR_DATE: '/opd/consultations/by-doctor-date?doctorId={doctorId}&date={date}',
+            GET_CLINICALLY_FINALIZED: '/opd/consultations/clinically-finalized?doctorId={doctorId}&date={date}',
 
             SEARCH: '/opd/consultations/search',  // For LOV search
             GET_BY_CVR: '/opd/consultations/cvr/{cvrNumber}',
@@ -341,11 +343,19 @@ var API_CONFIG = {
             CREATE: '/opd/prescriptions/create',
             GET_BY_ID: '/opd/prescriptions/{prescriptionId}',
             GET_BY_PATIENT: '/opd/prescriptions/patient/{pinNumber}',
-            GET_BY_CONSULTATION: '/opd/prescriptions/consultation/{consultationId}', // ✅ ADD
-            DELETE: '/opd/prescriptions/{prescriptionId}',  // ✅ ADD
-            UPDATE: '/opd/prescriptions/{prescriptionId}'   // ✅ ADD THIS
-
-
+            GET_BY_CONSULTATION: '/opd/prescriptions/consultation/{consultationId}',
+            DELETE: '/opd/prescriptions/{prescriptionId}',
+            UPDATE: '/opd/prescriptions/{prescriptionId}'
+        },
+        MEDICINE: {
+            CREATE: '/opd/medicines/create',
+            BULK_CREATE: '/opd/medicines/bulk-create',
+            UPDATE: '/opd/medicines/update/{id}',
+            GET_BY_ID: '/opd/medicines/{id}',
+            LIST: '/opd/medicines/list',
+            SEARCH: '/opd/medicines/search',
+            SEARCH_LIST: '/opd/medicines/search-list',
+            DELETE: '/opd/medicines/delete/{id}'
         },
 
         // ============ BILLING SERVICE (Port 8088) ============
@@ -355,7 +365,9 @@ var API_CONFIG = {
             GET_PENDING: '/billing/invoices/pending',
             GET_BY_PATIENT: '/billing/invoices/patient/{pinNumber}',
             GET_BY_CONSULTATION: '/billing/invoices/consultation/{consultationId}',
-            GET_BY_CVR: '/billing/invoices/by-cvr/{cvrNumber}' // <-- New endpoint
+            GET_BY_CVR: '/billing/invoices/by-cvr/{cvrNumber}',
+            GET_BY_DOCTOR_DATE: '/billing/invoices/doctor/{doctorId}/date/{date}',
+            GET_BY_CVRS: '/billing/invoices/search/by-cvrs'
         },
         PAYMENT: {
             PROCESS: '/billing/payments/process/{invoiceNumber}',

@@ -58,6 +58,12 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
             requireAuth: true,
             roles: ['ADMIN']
         })
+        .when('/user/role-master', {
+            templateUrl: 'app/views/user/role-master.html',
+            controller: 'RoleMasterController',
+            requireAuth: true,
+            roles: ['ADMIN']
+        })
         .when('/user/list', {
             templateUrl: 'app/views/user/user-list.html',
             controller: 'UserListController',
@@ -101,7 +107,7 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
             templateUrl: 'app/views/cvr/vitals-recording.html',
             controller: 'VitalsRecordingController',
             requireAuth: true,
-            roles: ['NURSE', 'RECEPTIONIST', 'ADMIN']
+            roles: ['NURSE', 'RECEPTIONIST', 'ADMIN', 'DOCTOR']
         })
 
         // ============ Doctor Management ============
@@ -110,6 +116,12 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
             controller: 'DoctorRegistrationController',
             requireAuth: true,
             roles: ['ADMIN']
+        })
+        .when('/doctor/edit/:doctorId', {
+            templateUrl: 'app/views/doctor/doctor-registration.html',
+            controller: 'DoctorRegistrationController',
+            requireAuth: true,
+            roles: ['ADMIN', 'DOCTOR']
         })
         .when('/doctor/list', {
             templateUrl: 'app/views/doctor/doctor-list.html',
@@ -177,6 +189,14 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
             controller: 'ConsultationManagementController',
             requireAuth: true,
             roles: ['DOCTOR', 'ADMIN']
+        })
+
+        // ============ Master Data ============
+        .when('/master/medicine', {
+            templateUrl: 'app/views/master/medicine-master.html',
+            controller: 'MedicineMasterController',
+            requireAuth: true,
+            roles: ['ADMIN', 'DOCTOR']
         })
 
         // ============ Billing ============
@@ -247,6 +267,12 @@ app.config(['$routeProvider', '$locationProvider', function ($routeProvider, $lo
             controller: 'ReportPatientVisitHistoryController',
             requireAuth: true,
             roles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST']
+        })
+        .when('/reports/patient-case-file', {
+            templateUrl: 'app/views/reports/patient-case-file.html',
+            controller: 'ReportPatientCaseFileController',
+            requireAuth: true,
+            roles: ['ADMIN', 'DOCTOR']
         })
         // OPD Reports
         .when('/reports/opd-daily', {

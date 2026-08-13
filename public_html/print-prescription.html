@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Prescription</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        .print-page {
+            page-break-after: always;
+            padding: 30px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        .print-page:last-child {
+            page-break-after: auto;
+        }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #1e293b;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .logo-container {
+            width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .logo-container img {
+            max-width: 100%;
+            max-height: 80px;
+            object-fit: contain;
+        }
+        .clinic-info {
+            text-align: center;
+            flex-grow: 1;
+            padding: 0 15px;
+        }
+        .clinic-info h2 {
+            margin: 0;
+            font-weight: bold;
+            color: #1e293b;
+            font-size: 1.8rem;
+        }
+        .clinic-info p {
+            margin: 5px 0 0;
+            font-size: 1rem;
+            color: #475569;
+        }
+        .meta-info {
+            text-align: right;
+            font-size: 0.85rem;
+            width: 200px;
+        }
+        .patient-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 20px;
+            margin-bottom: 20px;
+            border: 1px solid #cbd5e1;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8fafc;
+        }
+        .patient-info .info-item {
+            display: flex;
+        }
+        .patient-info .info-label {
+            font-weight: 600;
+            width: 130px;
+            color: #475569;
+        }
+        .patient-info .info-val {
+            flex-grow: 1;
+            font-weight: 500;
+            color: #0f172a;
+        }
+        .table {
+            border-color: #cbd5e1;
+        }
+        .table th {
+            background-color: #e2e8f0 !important;
+            color: #1e293b;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .table td {
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+        .timing-badge {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            line-height: 22px;
+            text-align: center;
+            border-radius: 50%;
+            background: #e2e8f0;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 3px;
+        }
+        .timing-badge.active {
+            background: #3b82f6;
+            color: white;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .print-page {
+                padding: 0;
+            }
+            @page {
+                margin: 1.5cm;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .badge {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="print-container"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const dataStr = localStorage.getItem('printPrescriptionData');
+        if (!dataStr) {
+            document.getElementById('print-container').innerHTML = '<div class="alert alert-danger m-4">No prescription data found. Please go back and try again.</div>';
+            return;
+        }
+        
+        try {
+            const data = JSON.parse(dataStr);
+            const container = document.getElementById('print-container');
+            
+            const itemsPerPage = 12; // Adjusted to easily fit on A4
+            const items = data.items || [];
+            const totalItems = items.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+            
+            for (let i = 0; i < totalPages; i++) {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'print-page';
+                
+                // Chunk items
+                const chunk = items.slice(i * itemsPerPage, (i + 1) * itemsPerPage);
+                
+                // Logo rendering
+                let logoHtml = '';
+                if (data.clinicLogo) {
+                    logoHtml = `<img src="${data.clinicLogo}" alt="Clinic Logo">`;
+                } else {
+                    logoHtml = `<div style="width: 60px; height: 60px; background: #6366f1; color: white; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 24px; font-weight: bold;">+</div>`;
+                }
+
+                // Header
+                const headerHtml = `
+                    <div class="header-section">
+                        <div class="logo-container">
+                            ${logoHtml}
+                        </div>
+                        <div class="clinic-info">
+                            <h2>${data.clinicName}</h2>
+                            <p>${data.clinicAddress}</p>
+                            <p><strong>Mob:</strong> ${data.clinicPhone}</p>
+                        </div>
+                        <div class="meta-info">
+                            <div class="mb-1"><strong>Doctor:</strong> ${data.loginName}</div>
+                            <div class="mb-1"><strong>Role:</strong> ${data.role}</div>
+                            <div class="mb-1"><strong>Date:</strong> ${data.dateTime}</div>
+                            <div><strong>Page:</strong> ${i + 1} / ${totalPages}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Patient Info
+                const patientHtml = `
+                    <div class="patient-info">
+                        <div class="info-item">
+                            <div class="info-label">Patient Name:</div>
+                            <div class="info-val">${data.patientName || 'N/A'} ${data.patientAge ? '(' + data.patientAge + '/' + data.patientGender + ')' : ''}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">PIN No:</div>
+                            <div class="info-val">${data.pinNumber || 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">CVR No:</div>
+                            <div class="info-val">${data.cvrNumber || 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Medicine Table
+                let rowsHtml = '';
+                if (chunk.length === 0) {
+                    rowsHtml = '<tr><td colspan="8" class="text-center text-muted py-4">No medicines prescribed</td></tr>';
+                } else {
+                    chunk.forEach((item, index) => {
+                        const globalIndex = i * itemsPerPage + index + 1;
+                        
+                        const mClass = item.morning ? 'active' : '';
+                        const aClass = item.afternoon ? 'active' : '';
+                        const eClass = item.evening ? 'active' : '';
+                        const nClass = item.night ? 'active' : '';
+                        
+                        const timingHtml = `
+                            <span class="timing-badge ${mClass}">M</span>
+                            <span class="timing-badge ${aClass}">A</span>
+                            <span class="timing-badge ${eClass}">E</span>
+                            <span class="timing-badge ${nClass}">N</span>
+                        `;
+                        
+                        let foodBadge = '-';
+                        if (item.beforeFood) foodBadge = '<span class="badge bg-warning text-dark border">Before</span>';
+                        if (item.afterFood) foodBadge = '<span class="badge bg-success border">After</span>';
+                        
+                        rowsHtml += `
+                            <tr>
+                                <td class="text-center">${globalIndex}</td>
+                                <td><strong>${item.medicineName}</strong></td>
+                                <td>${item.dosage || '-'}</td>
+                                <td>${item.frequency || '-'}</td>
+                                <td>${item.duration || '-'}</td>
+                                <td class="text-center text-nowrap">${timingHtml}</td>
+                                <td class="text-center">${foodBadge}</td>
+                                <td>${item.instructions || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+                const tableHtml = `
+                    <table class="table table-bordered table-sm mb-4">
+                        <thead>
+                            <tr>
+                                <th width="3%" class="text-center">#</th>
+                                <th width="22%">Medicine Name</th>
+                                <th width="10%">Dosage</th>
+                                <th width="15%">Frequency</th>
+                                <th width="10%">Duration</th>
+                                <th width="12%" class="text-center">Timing</th>
+                                <th width="8%" class="text-center">Food</th>
+                                <th width="20%">Instructions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                `;
+                
+                // General Instructions (Only on last page)
+                let generalHtml = '';
+                if (i === totalPages - 1) {
+                    generalHtml = `
+                        <div class="row mt-4">
+                            <div class="col-8">
+                                <h6 class="fw-bold text-decoration-underline mb-2">General Instructions:</h6>
+                                <p class="text-muted" style="white-space: pre-wrap;">${data.instructions || 'None'}</p>
+                            </div>
+                            <div class="col-4 text-end border-start">
+                                <div class="mb-4">
+                                    <h6 class="fw-bold mb-1">Validity</h6>
+                                    <h4 class="text-primary">${data.validityDays || 0} Days</h4>
+                                </div>
+                                <div class="mt-5 pt-4">
+                                    <div style="border-top: 1px solid #000; width: 80%; margin-left: auto;"></div>
+                                    <p class="mt-2 mb-0"><strong>Doctor's Signature</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                pageDiv.innerHTML = headerHtml + patientHtml + tableHtml + generalHtml;
+                container.appendChild(pageDiv);
+            }
+            
+            // Auto print after a short delay to allow rendering
+            setTimeout(function() {
+                window.print();
+            }, 800);
+            
+        } catch (e) {
+            console.error("Error generating print view:", e);
+            document.getElementById('print-container').innerHTML = '<div class="alert alert-danger m-4">Error processing prescription data.</div>';
+        }
+    });
+</script>
+</body>
+</html>

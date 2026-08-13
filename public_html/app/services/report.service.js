@@ -20,10 +20,35 @@ app.factory('ReportService', ['$http', '$q', function($http, $q) {
         };
     }
 
+    function formatParamValue(val) {
+        if (!val) return val;
+        // If it's a JS Date object, convert to YYYY-MM-DD
+        if (val instanceof Date) {
+            var y = val.getFullYear();
+            var m = String(val.getMonth() + 1).padStart(2, '0');
+            var d = String(val.getDate()).padStart(2, '0');
+            return y + '-' + m + '-' + d;
+        }
+        // If it's an ISO string generated from ng-model="date"
+        if (typeof val === 'string' && val.indexOf('T') !== -1 && val.endsWith('Z')) {
+            return val.split('T')[0];
+        }
+        return val;
+    }
+
+    function formatParams(params) {
+        if (!params) return params;
+        var formatted = {};
+        for (var k in params) {
+            formatted[k] = formatParamValue(params[k]);
+        }
+        return formatted;
+    }
+
     function doGet(url, params) {
         var deferred = $q.defer();
         $http.get(url, {
-            params: params,
+            params: formatParams(params),
             headers: getTenantHeaders()
         }).then(function(res) {
             deferred.resolve(res.data);
@@ -185,19 +210,77 @@ app.factory('ReportService', ['$http', '$q', function($http, $q) {
     };
 
     /** Search invoices for Invoice LOV */
+//    service.searchInvoiceLov = function(query) {
+//        var deferred = $q.defer();
+//        $http.get(API_CONFIG.GATEWAY_URL + '/invoices/search', {
+//            params: { query: query || '', page: 0, size: 20 },
+//            headers: getTenantHeaders()
+//        }).then(function(res) {
+//            deferred.resolve(res.data);
+//        }).catch(function(err) {
+//            deferred.reject(err);
+//        });
+//        return deferred.promise;
+//    };
+/** Search invoices for Invoice LOV */
     service.searchInvoiceLov = function(query) {
         var deferred = $q.defer();
-        $http.get(API_CONFIG.GATEWAY_URL + '/invoices/search', {
-            params: { query: query || '', page: 0, size: 20 },
+    
+    // âœ… Use Report Service endpoint instead of direct billing
+    var url = baseUrl + '/reports/billing/invoices';
+    var params = {};
+    
+    if (query && query.trim()) {
+        // If query is entered, search by invoice number
+        params.invoiceNumber = query;
+    } else {
+        // If no query, get recent invoices (last 30 days)
+        var today = service.today();
+        var thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        var fromDate = thirtyDaysAgo.getFullYear() + '-' + 
+                       String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(thirtyDaysAgo.getDate()).padStart(2, '0');
+        params.fromDate = fromDate;
+        params.toDate = today;
+    }
+    
+    $http.get(url, {
+        params: params,
             headers: getTenantHeaders()
         }).then(function(res) {
-            deferred.resolve(res.data);
-        }).catch(function(err) {
-            deferred.reject(err);
+        var data = res.data;
+        var invoices = [];
+        
+        if (data.data && data.data.invoices) {
+            invoices = data.data.invoices;
+        } else if (data.data && data.data.invoice) {
+            invoices = [data.data.invoice];
+        } else if (Array.isArray(data.data)) {
+            invoices = data.data;
+        }
+        
+        // Format for LOV display
+        var formattedInvoices = invoices.map(function(inv) {
+            return {
+                id: inv.invoiceNumber,
+                text: inv.invoiceNumber + ' - â‚¹' + inv.totalAmount + ' (' + inv.pinNumber + ')',
+                invoiceNumber: inv.invoiceNumber,
+                pinNumber: inv.pinNumber,
+                patientName: inv.patientName,
+                totalAmount: inv.totalAmount,
+                invoiceDate: inv.invoiceDate
+            };
         });
+        
+        deferred.resolve({ data: formattedInvoices });
+        }).catch(function(err) {
+        console.error('Invoice LOV error:', err);
+        deferred.resolve({ data: [] });
+        });
+    
         return deferred.promise;
     };
-
     /** Get today's date in yyyy-MM-dd */
     service.today = function() {
         return new Date().toISOString().split('T')[0];

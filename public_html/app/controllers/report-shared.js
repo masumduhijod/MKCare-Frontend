@@ -151,16 +151,96 @@ app.directive('clinicPrintHeader', ['$timeout', function ($timeout) {
 // ═══════════════════════════════════════════════════════════
 // SHARED printReport HELPER
 // ═══════════════════════════════════════════════════════════
-app.run(['$rootScope', function ($rootScope) {
-    $rootScope.doPrint = function () {
-        var hdrs = document.querySelectorAll('.clinic-print-header');
-        hdrs.forEach(function (h) { h.style.display = 'block'; });
-        setTimeout(function () {
+app.run(['$rootScope', '$window', function ($rootScope, $window) {
+    $rootScope.doPrint = function (titleText) {
+        var screenView = document.querySelector('.report-screen-view');
+        if (!screenView) {
             window.print();
-            setTimeout(function () {
-                hdrs.forEach(function (h) { h.style.display = ''; });
-            }, 500);
-        }, 200);
+            return;
+        }
+
+        var printDoc = screenView.cloneNode(true);
+        
+        // Remove existing print header as we use the new template's header
+        var header = printDoc.querySelector('clinic-print-header');
+        if (header) header.remove();
+        
+        // Remove print footers or buttons
+        var noPrintElems = printDoc.querySelectorAll('.report-print-footer, button, a.btn');
+        noPrintElems.forEach(function(el) { el.remove(); });
+
+        // Un-hide no-print summary cards & format them for printing
+        var statCardsRow = printDoc.querySelector('.row.g-3');
+        if (statCardsRow) {
+            statCardsRow.classList.remove('no-print');
+            var statCards = statCardsRow.querySelectorAll('.stat-card');
+            statCards.forEach(function(sc) {
+                // Clear all classes and just style it inline so it prints with white bg
+                sc.className = 'stat-card';
+                sc.style.border = '1px solid #cbd5e1';
+                sc.style.borderRadius = '8px';
+                sc.style.padding = '15px';
+                sc.style.textAlign = 'center';
+                sc.style.marginBottom = '15px';
+                sc.style.backgroundColor = '#f8fafc';
+                sc.style.color = '#000';
+                
+                var num = sc.querySelector('.stat-number');
+                if(num) { num.style.fontSize = '24px'; num.style.fontWeight = 'bold'; num.style.color = '#1a3a6b'; }
+                var lbl = sc.querySelector('.stat-label');
+                if(lbl) { lbl.style.fontSize = '12px'; lbl.style.textTransform = 'uppercase'; }
+            });
+        }
+        
+        // Unhide meta info (Period: Date to Date)
+        var metaSection = printDoc.querySelector('.d-flex.justify-content-between.align-items-center.mb-3.no-print');
+        if (metaSection) {
+            metaSection.classList.remove('no-print');
+        }
+
+        var tableResp = printDoc.querySelector('.report-table-responsive');
+        if (tableResp) {
+            var table = tableResp.querySelector('table');
+            if (table) {
+                table.style.width = '100%';
+                table.style.borderCollapse = 'collapse';
+                var ths = table.querySelectorAll('th');
+                ths.forEach(function(th) {
+                    th.style.backgroundColor = '#e2e8f0';
+                    th.style.color = '#1e293b';
+                    th.style.padding = '10px';
+                    th.style.border = '1px solid #cbd5e1';
+                    th.style.fontSize = '0.9rem';
+                });
+                var tds = table.querySelectorAll('td');
+                tds.forEach(function(td) {
+                    td.style.padding = '8px';
+                    td.style.border = '1px solid #cbd5e1';
+                    td.style.fontSize = '0.95rem';
+                });
+            }
+        }
+
+        var contentHtml = printDoc.innerHTML;
+        var currentUser = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null;
+
+        var titleEl = document.querySelector('.report-print-title');
+        var actualTitle = titleText || (titleEl ? titleEl.innerText : 'Report');
+
+        var printData = {
+            reportTitle: actualTitle,
+            clinicName: localStorage.getItem('clinicName') || 'Hospital Management System',
+            clinicLogo: localStorage.getItem('clinicLogo') || '',
+            clinicAddress: localStorage.getItem('clinicAddress') || 'N/A',
+            clinicPhone: localStorage.getItem('clinicPhone') || 'N/A',
+            loginName: currentUser ? (currentUser.fullName || currentUser.username) : 'Admin',
+            role: currentUser ? currentUser.role : '',
+            dateTime: new Date().toLocaleString(),
+            contentHtml: contentHtml
+        };
+
+        localStorage.setItem('printReportData', JSON.stringify(printData));
+        $window.open('print-report.html', '_blank');
     };
 }]);
 
@@ -926,6 +1006,169 @@ app.directive('doctorLov', ['$http', '$timeout', function ($http, $timeout) {
             scope.$on('$destroy', function () {
                 clearTimeout(searchTimer);
                 allDoctors = [];
+                var bsInst = bootstrap.Modal.getInstance($modalEl[0]);
+                if (bsInst) bsInst.dispose();
+                $modalEl.remove();
+            });
+        }
+    };
+}]);
+
+// ═══════════════════════════════════════════════════════════
+// MEDICINE LOV DIRECTIVE
+// Endpoint: GET /opd/medicines/search?query=<q>
+// ═══════════════════════════════════════════════════════════
+app.directive('medicineLov', ['$http', '$timeout', function ($http, $timeout) {
+    var counter = 0;
+    return {
+        restrict: 'E',
+        scope: { model: '=', onSelect: '&' },
+        link: function (scope, element) {
+            counter++;
+            var id = 'medLovModal_' + counter;
+            scope.displayVal = '';
+
+            element.html([
+                '<div class="input-group input-group-sm">',
+                '  <input type="text" class="form-control lov-display-input" readonly',
+                '         style="cursor:pointer;background:#f8f9fa;border-right:0"',
+                '         placeholder="Search Medicine...">',
+                '  <button class="btn btn-outline-secondary lov-clear-btn" type="button"',
+                '          style="display:none;border-right:0">',
+                '    <i class="fas fa-times text-danger"></i>',
+                '  </button>',
+                '  <button class="btn btn-info lov-search-btn" type="button">',
+                '    <i class="fas fa-search me-1"></i>Search',
+                '  </button>',
+                '</div>'
+            ].join(''));
+
+            var $modalEl = angular.element([
+                '<div class="modal fade" id="' + id + '" tabindex="-1">',
+                '  <div class="modal-dialog modal-xl modal-dialog-scrollable">',
+                '    <div class="modal-content">',
+                '      <div class="modal-header" style="background:linear-gradient(135deg,#0d6efd,#0dcaf0);color:white">',
+                '        <h5 class="modal-title"><i class="fas fa-capsules me-2"></i>Medicine Search</h5>',
+                '        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>',
+                '      </div>',
+                '      <div class="modal-body" style="background:#f0f7ff">',
+                '        <div class="input-group mb-3">',
+                '          <span class="input-group-text bg-white"><i class="fas fa-search text-info"></i></span>',
+                '          <input type="text" class="form-control lov-qinput" placeholder="Search by Name, Generic, Brand or Composition...">',
+                '        </div>',
+                '        <div class="lov-loading text-center py-4" style="display:none">',
+                '          <div class="spinner-border text-info"></div><p class="mt-2 text-muted small">Searching medicines...</p>',
+                '        </div>',
+                '        <div class="lov-empty text-center text-muted py-5" style="display:none">',
+                '          <i class="fas fa-pills fa-3x mb-2 d-block opacity-50"></i><p>No medicines found</p>',
+                '        </div>',
+                '        <div class="lov-table-wrap" style="background:white;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)">',
+                '          <table class="table table-bordered table-hover align-middle mb-0">',
+                '            <thead><tr>',
+                '              <th style="' + LOV_TH_TEAL + '">Medicine Name</th>',
+                '              <th style="' + LOV_TH_TEAL + '">Generic / Brand</th>',
+                '              <th style="' + LOV_TH_TEAL + '">Composition</th>',
+                '              <th style="' + LOV_TH_TEAL + '">Type</th>',
+                '              <th style="' + LOV_TH_TEAL + '">Strength</th>',
+                '              <th style="' + LOV_TH_TEAL + '">Action</th>',
+                '            </tr></thead>',
+                '            <tbody class="lov-tbody"></tbody>',
+                '          </table>',
+                '        </div>',
+                '      </div>',
+                '      <div class="modal-footer" style="background:#e8f4ff">',
+                '        <span class="text-muted small me-auto lov-count"></span>',
+                '        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>',
+                '      </div>',
+                '    </div>',
+                '  </div>',
+                '</div>'
+            ].join(''));
+            angular.element(document.body).append($modalEl);
+
+            var $trigger = angular.element(element[0]);
+            var $input = $trigger.find('.lov-display-input');
+            var $clearBtn = $trigger.find('.lov-clear-btn');
+            var $searchBtn = $trigger.find('.lov-search-btn');
+            var $qInput = $modalEl.find('.lov-qinput');
+            var $loading = $modalEl.find('.lov-loading');
+            var $empty = $modalEl.find('.lov-empty');
+            var $tbody = $modalEl.find('.lov-tbody');
+            var $count = $modalEl.find('.lov-count');
+
+            function updateTrigger() {
+                $input.val(scope.displayVal || '');
+                $clearBtn[0].style.display = scope.model ? '' : 'none';
+            }
+            scope.$watch('model', function (v) { if (!v) { scope.displayVal = ''; updateTrigger(); } });
+            $searchBtn.on('click', openModal);
+            $input.on('click', openModal);
+            $clearBtn.on('click', function () { scope.$apply(function () { scope.model = ''; scope.displayVal = ''; }); updateTrigger(); });
+
+            function openModal() {
+                $qInput.val(''); $tbody.empty(); $count.text(''); $empty.hide();
+                doSearch('');
+                openBsModal(id);
+                $timeout(function () { if ($qInput[0]) $qInput[0].focus(); }, 450);
+            }
+
+            var searchTimer = null;
+            $qInput.on('input', function () {
+                clearTimeout(searchTimer);
+                var q = $qInput.val();
+                searchTimer = setTimeout(function () { doSearch(q); }, 350);
+            });
+
+            function doSearch(q) {
+                $loading.show(); $empty.hide(); $tbody.empty(); $count.text('');
+                var base = (typeof API_CONFIG !== 'undefined') ? API_CONFIG.GATEWAY_URL : 'http://localhost:8080/api';
+
+                $http.get(base + '/opd/medicines/search', {
+                    params: { query: q || '', page: 0, size: 50 }
+                }).then(function (res) {
+                    $loading.hide();
+                    var list = extractList(res.data);
+                    renderRows(list);
+                }).catch(function (err) {
+                    $loading.hide();
+                    $empty.html('<p class="text-danger small">Error loading medicines</p>').show();
+                });
+            }
+
+            function renderRows(list) {
+                $tbody.empty();
+                if (!list || list.length === 0) {
+                    $empty.show();
+                    $count.text('0 found');
+                    return;
+                }
+                $empty.hide();
+                $count.text(list.length + ' found');
+                list.forEach(function (m) {
+                    var tr = angular.element(
+                        '<tr style="cursor:pointer">' +
+                        '<td><strong class="text-primary">' + m.medicineName + '</strong></td>' +
+                        '<td><small>' + (m.genericName || '-') + ' / ' + (m.brandName || '-') + '</small></td>' +
+                        '<td>' + (m.composition || '-') + '</td>' +
+                        '<td><span class="badge bg-info">' + m.medicineType + '</span></td>' +
+                        '<td>' + (m.strength || '-') + ' ' + (m.unit || '') + '</td>' +
+                        '<td><button class="btn btn-sm btn-primary">Select</button></td>' +
+                        '</tr>'
+                    );
+                    tr.on('click', function () {
+                        scope.$apply(function () {
+                            scope.model = m.medicineName;
+                            scope.displayVal = m.medicineName;
+                        });
+                        updateTrigger(); closeBsModal(id);
+                        if (scope.onSelect) scope.$apply(function () { scope.onSelect({ medicine: m }); });
+                    });
+                    $tbody.append(tr);
+                });
+            }
+
+            scope.$on('$destroy', function () {
+                clearTimeout(searchTimer);
                 var bsInst = bootstrap.Modal.getInstance($modalEl[0]);
                 if (bsInst) bsInst.dispose();
                 $modalEl.remove();

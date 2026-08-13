@@ -70,6 +70,36 @@ app.factory('UserService', ['$http', '$q', function($http, $q) {
             var url = baseUrl + '/users/' + username;
             return $http.delete(url);
         };
+
+        // =====================================================================
+        // ⭐ RBAC (Permissions)
+        // =====================================================================
+
+        service.getModules = function() {
+            return $http.get(baseUrl + '/users/modules');
+        };
+
+        service.getUserPermissions = function(tenantId, userId) {
+            // Updated to use clinic-admin friendly endpoints in UserController
+            return $http.get(baseUrl + '/users/' + userId + '/permissions');
+        };
+
+        service.updateUserPermissions = function(tenantId, userId, modules) {
+            // Updated to use clinic-admin friendly endpoints in UserController
+            return $http.post(baseUrl + '/users/' + userId + '/permissions', modules);
+        };
+
+        service.getRoles = function() {
+            return $http.get(baseUrl + '/users/roles');
+        };
+
+        service.getRolePermissions = function(roleName) {
+            return $http.get(baseUrl + '/users/role-permissions/' + roleName);
+        };
+
+        service.updateRolePermissions = function(roleName, modules) {
+            return $http.post(baseUrl + '/users/role-permissions/' + roleName, modules);
+        };
     
     return service;
 }]);

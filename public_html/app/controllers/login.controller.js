@@ -23,6 +23,29 @@ app.controller('LoginController', ['$scope', '$location', '$rootScope', '$routeP
         $scope.error = '';
         $scope.clinicLoading = false;
 
+        // ── Stylish Popup State ──
+        $scope.subPopup = { show: false, title: '', message: '', time: '', icon: '' };
+
+        var showExpiredPopup = function (expiredAt) {
+            $scope.subPopup = {
+                show: true,
+                icon: 'fa-calendar-times',
+                title: 'Subscription Expired',
+                message: 'This clinic\'s subscription plan has ended. Please contact your Super Admin to renew and regain access.',
+                time: 'Expired on: ' + expiredAt
+            };
+        };
+
+        var showInactivePopup = function () {
+            $scope.subPopup = {
+                show: true,
+                icon: 'fa-power-off',
+                title: 'Clinic is Turned OFF',
+                message: 'This clinic is currently disabled by the Super Admin. Please contact them to restore access.',
+                time: ''
+            };
+        };
+
         // ── URL-based clinic detection ──
         var clinicCode = $routeParams.clinicCode;
         if (clinicCode) {
@@ -30,6 +53,17 @@ app.controller('LoginController', ['$scope', '$location', '$rootScope', '$routeP
             SuperAdminService.getClinicByCode(clinicCode)
                 .then(function (response) {
                     var clinic = response.data.data;
+                    
+                    if (clinic.subscriptionExpiry && new Date(clinic.subscriptionExpiry) < new Date()) {
+                        var d = new Date(clinic.subscriptionExpiry);
+                        showExpiredPopup(d.toLocaleDateString() + ' ' + d.toLocaleTimeString());
+                        return;
+                    }
+                    if (!clinic.active) {
+                        showInactivePopup();
+                        return;
+                    }
+
                     $scope.validatedClinic = clinic;
                     $scope.credentials.clinicId = clinic.tenantId;
                     $scope.clinicInput.id = clinic.tenantId;
@@ -66,17 +100,36 @@ app.controller('LoginController', ['$scope', '$location', '$rootScope', '$routeP
             SuperAdminService.validateClinicId(id)
                 .then(function (response) {
                     if (response.data.success && response.data.data) {
-                        $scope.validatedClinic = response.data.data;
-                        $scope.credentials.clinicId = response.data.data.tenantId;
+                        var clinic = response.data.data;
+                        
+                        // Frontend double-check (even though backend already blocks)
+                        if (clinic.subscriptionExpiry && new Date(clinic.subscriptionExpiry) < new Date()) {
+                            var d = new Date(clinic.subscriptionExpiry);
+                            showExpiredPopup(d.toLocaleDateString() + ' ' + d.toLocaleTimeString());
+                            return;
+                        }
+                        if (!clinic.active) {
+                            showInactivePopup();
+                            return;
+                        }
+
+                        $scope.validatedClinic = clinic;
+                        $scope.credentials.clinicId = clinic.tenantId;
                         $scope.step = 2;
-                        console.log('✅ Clinic validated:', response.data.data.clinicName);
+                        console.log('\u2705 Clinic validated:', clinic.clinicName);
                     } else {
                         $scope.error = 'Invalid Clinic ID. Please check and try again.';
                     }
                 })
                 .catch(function (err) {
-                    var msg = (err.data && err.data.message) ? err.data.message : 'Invalid Clinic ID';
-                    $scope.error = msg;
+                    var backendMsg = (err.data && err.data.message) ? err.data.message : null;
+                    if (err.status === 403) {
+                        showInactivePopup();
+                    } else if (err.status === 402) {
+                        showExpiredPopup(backendMsg || 'Check with Super Admin');
+                    } else {
+                        $scope.error = backendMsg || 'Invalid Clinic ID. Please check and try again.';
+                    }
                 })
                 .finally(function () {
                     $scope.clinicLoading = false;

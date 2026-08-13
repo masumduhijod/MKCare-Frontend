@@ -13,9 +13,9 @@
  */
 
 app.controller('AppointmentBookingController', ['$scope', '$rootScope', '$location', '$routeParams',
-    'PatientService', 'DoctorService', 'AppointmentService', 'AuthService',
+    'PatientService', 'DoctorService', 'AppointmentService', 'AuthService', 'CVRService',
     function($scope, $rootScope, $location, $routeParams, PatientService, DoctorService, 
-             AppointmentService, AuthService) {
+             AppointmentService, AuthService, CVRService) {
     
     var currentUser = AuthService.getCurrentUser();
     
@@ -49,6 +49,10 @@ app.controller('AppointmentBookingController', ['$scope', '$rootScope', '$locati
         notes: '',
         createdBy: currentUser ? currentUser.username : ''
     };
+    
+    $scope.activeOpCases = [];
+    $scope.showOpCaseLov = false;
+    $scope.selectedOpCase = null;
     
     $scope.loading = false;
     $scope.searchQuery = '';
@@ -219,6 +223,9 @@ app.controller('AppointmentBookingController', ['$scope', '$rootScope', '$locati
             }
             $scope.appointment.pinNumber = $scope.patient.pinNumber;
             $rootScope.showAlert && $rootScope.showAlert('success', 'Patient found: ' + $scope.patient.fullName);
+            
+            // ⭐ Fetch active cases immediately after finding patient
+            $scope.fetchPatientActiveCases();
         } else {
             $rootScope.showAlert && $rootScope.showAlert('warning', 'Patient not found');
         }
@@ -229,6 +236,9 @@ app.controller('AppointmentBookingController', ['$scope', '$rootScope', '$locati
         $scope.appointment.pinNumber = patient.pinNumber;
         $scope.searchQuery = patient.pinNumber;
         $rootScope.showAlert('success', 'Patient selected: ' + patient.fullName);
+        
+        // ⭐ Fetch active cases
+        $scope.fetchPatientActiveCases();
     };
 
     $scope.openPatientLov = function(paramQuery) {
@@ -297,6 +307,9 @@ app.controller('AppointmentBookingController', ['$scope', '$rootScope', '$locati
         $scope.searchQuery = patient.pinNumber;
         $rootScope.showAlert('success', 'Patient selected: ' + patient.fullName);
         
+        // ⭐ Fetch active cases
+        $scope.fetchPatientActiveCases();
+        
         // Hide Bootstrap 5 modal
         var modalEl = document.getElementById('patientLovModal');
         if (modalEl) {
@@ -340,6 +353,8 @@ app.controller('AppointmentBookingController', ['$scope', '$rootScope', '$locati
                 $rootScope.showAlert('warning', 'Please select a time slot');
                 return;
             }
+            // Fetch Active Cases for Follow-up LOV
+            $scope.fetchActiveCases();
         }
         
         $scope.currentStep++;
@@ -698,6 +713,94 @@ app.controller('AppointmentBookingController', ['$scope', '$rootScope', '$locati
     
     $scope.printAppointmentCard = function() {
         window.print();
+    };
+    
+    // --- FOLLOW-UP CASE LOGIC ---
+    $scope.patientActiveCases = [];
+    
+    $scope.fetchPatientActiveCases = function() {
+        if (!$scope.patient) return;
+        
+        $scope.patientActiveCases = [];
+        // Use a generic doctor ID or a separate endpoint to get all active cases for this PIN
+        var docId = $scope.selectedDoctor ? $scope.selectedDoctor.doctorId : 'ALL';
+        
+        // 1. Check for Active OP Cases (Follow-up logic)
+        CVRService.getActiveOpCases($scope.patient.pinNumber, docId)
+            .then(function(response) {
+                if (response.data.success && response.data.data) {
+                    $scope.patientActiveCases = response.data.data;
+                    console.log('✅ Found patient active cases:', $scope.patientActiveCases.length);
+                    
+                    if ($scope.patientActiveCases.length > 0) {
+                        $scope.showActiveCasesLov();
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.error('Error fetching patient cases:', error);
+            });
+            
+        // 2. Check if patient already has an appointment today (to prevent duplicates)
+        AppointmentService.getByPatient($scope.patient.pinNumber)
+            .then(function(response) {
+                if (response.data.success && response.data.data) {
+                    var today = getTodayString();
+                    var existingToday = response.data.data.filter(function(apt) {
+                        return apt.appointmentDate === today && apt.status !== 'CANCELLED';
+                    });
+                    
+                    if (existingToday.length > 0) {
+                        var msg = '⚠️ ALERT: Patient already has ' + existingToday.length + ' appointment(s) booked for TODAY.';
+                        $rootScope.showAlert('warning', msg);
+                    }
+                }
+            });
+    };
+
+    $scope.showActiveCasesLov = function() {
+        var modalEl = document.getElementById('activeCasesModal');
+        if (modalEl) {
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    };
+
+    $scope.fetchActiveCases = function() {
+        if (!$scope.patient || !$scope.selectedDoctor) return;
+        
+        $scope.activeOpCases = [];
+        CVRService.getActiveOpCases($scope.patient.pinNumber, $scope.selectedDoctor.doctorId)
+            .then(function(response) {
+                if (response.data.success && response.data.data) {
+                    $scope.activeOpCases = response.data.data;
+                    console.log('✅ Found active cases for selected doctor:', $scope.activeOpCases.length);
+                }
+            })
+            .catch(function(error) {
+                console.error('Error fetching active cases:', error);
+            });
+    };
+
+    $scope.selectOpCase = function(opCase) {
+        if (!opCase) {
+            $scope.selectedOpCase = null;
+            $scope.appointment.opCaseNumber = '';
+            $scope.appointment.appointmentType = 'Consultation';
+            return;
+        }
+        
+        $scope.selectedOpCase = opCase;
+        $scope.appointment.opCaseNumber = opCase.opCaseNumber;
+        $scope.appointment.appointmentType = 'Follow-up';
+        
+        // If we are in Step 1 and selected a case, we might want to auto-select the doctor
+        if ($scope.currentStep === 1 && opCase.doctorId) {
+            // Logic to transition to Step 2/3 with this doctor
+            console.log('Auto-linking doctor from case:', opCase.doctorId);
+        }
+        
+        $rootScope.showAlert('info', 'Linked to Case: ' + opCase.opCaseNumber + ' (Follow-up)');
     };
     
     $scope.cancel = function() {

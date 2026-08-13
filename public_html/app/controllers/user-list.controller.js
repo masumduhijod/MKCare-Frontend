@@ -254,8 +254,60 @@ app.controller('UserListController', ['$scope', '$rootScope', '$location', 'User
     $scope.goToRegister = function() {
         $location.path('/user/register');
     };
+
+    // =====================================================================
+    // ⭐ RBAC: User Specific Permissions
+    // =====================================================================
+    $scope.modules = [];
+    $scope.permUser = null;
+    $scope.userPerms = {};
+
+    $scope.loadModules = function() {
+        UserService.getModules().then(function(res) {
+            $scope.modules = res.data.data;
+        });
+    };
+
+    $scope.manageUserPermissions = function(user) {
+        $scope.permUser = user;
+        $scope.userPerms = {};
+        $scope.loadModules();
+
+        var tenantId = AuthService.getCurrentUser().tenantId;
+        UserService.getUserPermissions(tenantId, user.userId)
+            .then(function(res) {
+                var perms = res.data.data || [];
+                perms.forEach(function(code) {
+                    $scope.userPerms[code] = true;
+                });
+                var modal = new bootstrap.Modal(document.getElementById('userPermissionsModal'));
+                modal.show();
+            });
+    };
+
+    $scope.resetToRoleDefault = function() {
+        if (confirm('Resetting will remove all custom overrides for this user. Continue?')) {
+            $scope.userPerms = {};
+            $scope.saveUserPermissions();
+        }
+    };
+
+    $scope.saveUserPermissions = function() {
+        var selectedCodes = Object.keys($scope.userPerms).filter(k => $scope.userPerms[k]);
+        var tenantId = AuthService.getCurrentUser().tenantId;
+
+        UserService.updateUserPermissions(tenantId, $scope.permUser.userId, selectedCodes)
+            .then(function(res) {
+                $rootScope.showAlert('success', 'Permissions updated for ' + $scope.permUser.username);
+                bootstrap.Modal.getInstance(document.getElementById('userPermissionsModal')).hide();
+            })
+            .catch(function(err) {
+                $rootScope.showAlert('danger', 'Failed to update permissions');
+            });
+    };
     
     // Initialize
     console.log('User List Controller initialized');
     $scope.loadUsers();
+    $scope.loadModules();
 }]);

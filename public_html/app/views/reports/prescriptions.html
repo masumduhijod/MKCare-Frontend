@@ -1,5 +1,5 @@
 <!-- ============================================================
-     Report 11: Prescription Report
+     Report 11: Prescription Report (Enhanced with LOV + Multi-Print)
      ============================================================ -->
 <div class="report-page-wrapper" ng-controller="ReportPrescriptionController">
     <div class="card report-filter-card no-print">
@@ -9,20 +9,19 @@
                     class="fas fa-arrow-left me-1"></i>Back</a>
         </div>
         <div class="card-body">
-            <!-- Search Mode -->
             <div class="mb-3">
                 <label class="form-label fw-semibold small mb-2">Search By</label>
                 <div class="d-flex gap-2">
                     <input type="radio" class="btn-check" ng-model="filter.searchMode" value="pin" id="rxModePin">
-                    <label class="btn btn-outline-primary btn-sm" for="rxModePin"><i
-                            class="fas fa-user me-1"></i>Patient PIN</label>
-
+                    <label class="btn btn-outline-primary btn-sm" for="rxModePin">
+                        <i class="fas fa-user me-1"></i>Patient PIN
+                    </label>
                     <input type="radio" class="btn-check" ng-model="filter.searchMode" value="date" id="rxModeDate">
-                    <label class="btn btn-outline-secondary btn-sm" for="rxModeDate"><i
-                            class="fas fa-calendar me-1"></i>By Date</label>
+                    <label class="btn btn-outline-secondary btn-sm" for="rxModeDate">
+                        <i class="fas fa-calendar me-1"></i>By Date
+                    </label>
                 </div>
             </div>
-
             <div class="row g-3 align-items-end">
                 <div class="col-md-5" ng-if="filter.searchMode === 'pin'">
                     <label class="form-label fw-semibold small">Patient PIN</label>
@@ -36,12 +35,9 @@
                     <button class="btn btn-primary btn-sm px-3" ng-click="generateReport()" ng-disabled="loading">
                         <i class="fas fa-chart-bar me-1"></i>
                         <span ng-if="!loading">Generate</span>
-                        <span ng-if="loading"><span
-                                class="spinner-border spinner-border-sm me-1"></span>Loading...</span>
-                    </button>
-                    <button class="btn btn-success btn-sm btn-print px-3" ng-click="printReport()"
-                        ng-if="prescriptions.length > 0">
-                        <i class="fas fa-print me-1"></i>Print
+                        <span ng-if="loading">
+                            <span class="spinner-border spinner-border-sm me-1"></span>Loading...
+                        </span>
                     </button>
                 </div>
             </div>
@@ -55,25 +51,104 @@
         <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
         <p class="mt-3 text-muted fw-semibold">Loading prescriptions...</p>
     </div>
+
     <div class="report-empty-state" ng-if="!reportData && !loading">
         <i class="fas fa-pills text-muted"></i>
         <p>Select filter and click <strong>Generate</strong></p>
     </div>
 
-    <div class="report-screen-view" ng-if="reportData && !loading">
+    <!-- ── LOV TABLE: select prescriptions to print ── -->
+    <div class="card report-result-card no-print mt-3" ng-if="reportData && !loading && prescriptions.length > 0">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                {{prescriptions.length}} Prescription(s) Found
+                <small class="text-muted ms-2">— Select to Print</small>
+            </h6>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm" ng-click="toggleSelectAll()">
+                    <i class="fas me-1" ng-class="allSelected ? 'fa-check-square' : 'fa-square'"></i>
+                    {{allSelected ? 'Deselect All' : 'Select All'}}
+                </button>
+                <button class="btn btn-success btn-sm px-3"
+                        ng-click="printSelected()"
+                        ng-disabled="selectedCount() === 0">
+                    <i class="fas fa-print me-1"></i>Print Selected ({{selectedCount()}})
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="report-table-responsive">
+                <table class="table table-hover table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:40px; text-align:center">
+                                <input type="checkbox"
+                                       ng-model="allSelected"
+                                       ng-change="toggleSelectAll()"
+                                       title="Select All">
+                            </th>
+                            <th>#</th>
+                            <th>Prescription ID</th>
+                            <th>Patient</th>
+                            <th>Date</th>
+                            <th>Doctor</th>
+                            <th class="text-center">Medicines</th>
+                            <th class="text-center">Quick Print</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="rx in prescriptions"
+                            ng-class="rx.$selected ? 'table-info' : ''"
+                            ng-click="rx.$selected = !rx.$selected; updateAllSelected()">
+                            <td class="text-center" ng-click="$event.stopPropagation()">
+                                <input type="checkbox"
+                                       ng-model="rx.$selected"
+                                       ng-change="updateAllSelected()">
+                            </td>
+                            <td>{{$index + 1}}</td>
+                            <td><strong style="color:#065f46">{{rx.prescriptionId}}</strong></td>
+                            <td>{{rx.patientName || rx.pinNumber || '—'}}</td>
+                            <td>{{rx.prescriptionDate | date:'dd-MM-yyyy'}}</td>
+                            <td>{{rx.doctorName || '—'}}</td>
+                            <td class="text-center">
+                                <span class="badge bg-primary">
+                                    {{rx.items ? rx.items.length : 0}}
+                                </span>
+                            </td>
+                            <td class="text-center" ng-click="$event.stopPropagation()">
+                                <button class="btn btn-sm btn-outline-success py-0 px-2"
+                                        ng-click="printSingle(rx)"
+                                        title="Print this prescription">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── PRINTABLE DETAIL SECTION (only shows selected) ── -->
+    <div class="report-screen-view" ng-if="selectedPrescriptions.length > 0">
         <clinic-print-header report-title="Prescription Report"></clinic-print-header>
 
-        <div class="mb-3 no-print" ng-if="prescriptions.length > 0">
-            <span class="badge bg-primary fs-6">{{prescriptions.length}} Prescription(s)</span>
-        </div>
-
-        <div ng-repeat="rx in prescriptions" class="card report-result-card mb-3">
+        <div ng-repeat="rx in selectedPrescriptions" class="card report-result-card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center"
-                style="background:linear-gradient(135deg,#065f46,#059669);color:white">
-                <span><i class="fas fa-prescription-bottle me-2"></i><strong>{{rx.prescriptionId}}</strong></span>
+                 style="background:linear-gradient(135deg,#065f46,#059669);color:white">
+                <span>
+                    <i class="fas fa-prescription-bottle me-2"></i>
+                    <strong>{{rx.prescriptionId}}</strong>
+                </span>
                 <span>{{rx.prescriptionDate | date:'dd-MM-yyyy'}} &bull; Dr. {{rx.doctorName}}</span>
             </div>
             <div class="card-body p-0">
+                <div class="px-3 pt-2 pb-1 border-bottom small" ng-if="rx.patientName || rx.pinNumber">
+                    <strong>Patient:</strong> {{rx.patientName || '—'}}
+                    &nbsp;|&nbsp;
+                    <strong>PIN:</strong> {{rx.pinNumber || '—'}}
+                </div>
                 <div ng-if="rx.instructions" class="px-3 pt-2 pb-1 text-muted small fst-italic border-bottom">
                     <i class="fas fa-info-circle me-1"></i>{{rx.instructions}}
                 </div>
@@ -99,17 +174,21 @@
                                 <td>{{item.dosage || '—'}}</td>
                                 <td><span class="badge bg-primary">{{item.frequency}}</span></td>
                                 <td>{{item.duration}}</td>
-                                <td class="text-center"><i class="fas"
-                                        ng-class="item.morning ? 'fa-check-circle text-success' : 'fa-times-circle text-secondary'"></i>
+                                <td class="text-center">
+                                    <i class="fas"
+                                       ng-class="item.morning ? 'fa-check-circle text-success' : 'fa-times-circle text-secondary'"></i>
                                 </td>
-                                <td class="text-center"><i class="fas"
-                                        ng-class="item.afternoon ? 'fa-check-circle text-success' : 'fa-times-circle text-secondary'"></i>
+                                <td class="text-center">
+                                    <i class="fas"
+                                       ng-class="item.afternoon ? 'fa-check-circle text-success' : 'fa-times-circle text-secondary'"></i>
                                 </td>
-                                <td class="text-center"><i class="fas"
-                                        ng-class="item.night ? 'fa-check-circle text-success' : 'fa-times-circle text-secondary'"></i>
+                                <td class="text-center">
+                                    <i class="fas"
+                                       ng-class="item.night ? 'fa-check-circle text-success' : 'fa-times-circle text-secondary'"></i>
                                 </td>
-                                <td class="text-center"><i class="fas"
-                                        ng-class="item.afterFood ? 'fa-check-circle text-success' : 'fa-times-circle text-secondary'"></i>
+                                <td class="text-center">
+                                    <i class="fas"
+                                       ng-class="item.afterFood ? 'fa-check-circle text-success' : 'fa-times-circle text-secondary'"></i>
                                 </td>
                             </tr>
                         </tbody>
@@ -117,10 +196,10 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="report-empty-state" ng-if="reportData && prescriptions.length === 0">
-            <i class="fas fa-pills text-muted"></i>
-            <p>No prescriptions found</p>
-        </div>
+    <div class="report-empty-state" ng-if="reportData && prescriptions.length === 0 && !loading">
+        <i class="fas fa-pills text-muted"></i>
+        <p>No prescriptions found</p>
     </div>
 </div>

@@ -151,6 +151,13 @@
                             </div>
                         </div>
                     </div>
+
+                            <div ng-if="patientActiveCases.length > 0" class="mt-2">
+                                <div class="alert alert-info py-2 px-3 border-0 shadow-sm d-flex align-items-center mb-0">
+                                    <div class="spinner-grow spinner-grow-sm text-info me-2" role="status"></div>
+                                    <span class="fs-xs fw-bold">Active Case Found! <a href="" ng-click="showActiveCasesLov()" class="text-info text-decoration-underline ms-1">Link as Follow-up?</a></span>
+                                </div>
+                            </div>
                 </div>
             </div>
             
@@ -326,6 +333,44 @@
                 </div>
 
                 <div class="bg-white p-3 rounded shadow-sm border">
+                    <!-- Active Cases LOV for Follow-up -->
+                    <div ng-if="activeOpCases.length > 0" class="mb-3 p-3 bg-primary-soft rounded border border-primary border-opacity-10">
+                        <label class="form-label fw-bold fs-xs text-primary mb-2 text-uppercase ls-1">
+                            <i class="fas fa-history me-1"></i> Active Treatment Cases (Found {{activeOpCases.length}})
+                        </label>
+                        <div class="row g-2">
+                            <div class="col-12" ng-repeat="case in activeOpCases">
+                                <div class="border rounded p-2 d-flex align-items-center cursor-pointer transition-all shadow-sm"
+                                     ng-class="{'border-primary bg-white ring-offset-1': appointment.opCaseNumber === case.opCaseNumber, 'bg-white border-opacity-50': appointment.opCaseNumber !== case.opCaseNumber}"
+                                     ng-click="selectOpCase(case)">
+                                    <div class="me-3">
+                                        <div class="avatar-sm text-primary rounded-circle border d-flex align-items-center justify-content-center"
+                                             ng-class="{'bg-primary text-white border-primary': appointment.opCaseNumber === case.opCaseNumber, 'bg-white': appointment.opCaseNumber !== case.opCaseNumber}">
+                                            <i class="fas" ng-class="appointment.opCaseNumber === case.opCaseNumber ? 'fa-check' : 'fa-folder-open'"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold fs-sm text-dark">{{case.opCaseNumber}}</span>
+                                            <span class="badge bg-light text-primary border fs-xs">{{case.visitDate | date:'dd MMM yyyy'}}</span>
+                                        </div>
+                                        <div class="fs-xs text-muted text-truncate" style="max-width: 400px;">
+                                            <i class="fas fa-notes-medical opacity-50 me-1"></i> {{case.symptoms || 'General Consultation'}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-2" ng-if="appointment.opCaseNumber">
+                                <button class="btn btn-xs btn-link text-danger text-decoration-none w-100 py-0 fw-bold" ng-click="selectOpCase(null)">
+                                    <i class="fas fa-times-circle me-1"></i> Clear Selection (Create New Case)
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-center" ng-if="!appointment.opCaseNumber">
+                            <small class="text-muted fs-xs"><i class="fas fa-info-circle me-1"></i> Click a case above to link as **Follow-up**, or leave blank for **New Consultation**.</small>
+                        </div>
+                    </div>
+
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label fw-bold fs-xs text-muted mb-1">Visit Type <span class="text-danger">*</span></label>
@@ -464,6 +509,51 @@
         </div>
     </div>
 </div>
+
+    <!-- Active Cases LOV Modal -->
+    <div class="modal fade" id="activeCasesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white py-2">
+                    <h6 class="modal-title fw-bold fs-sm"><i class="fas fa-history me-2"></i> Active Clinical Cases (Last 7 Days)</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="p-3 bg-light border-bottom">
+                        <p class="fs-xs text-muted mb-0">Select a recent visit to link this appointment as a <strong>Follow-up</strong>. If this is a new health issue, please close this window.</p>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <button type="button" class="list-group-item list-group-item-action p-3" 
+                                ng-repeat="case in patientActiveCases" 
+                                ng-click="selectOpCase(case)">
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                <span class="badge bg-primary-soft text-primary fs-xs">{{case.opCaseNumber}}</span>
+                                <small class="text-muted fw-bold">{{case.lastVisitDate | date:'dd-MMM-yyyy'}} {{formatSlotTime(case.visitTime)}}</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="bg-light rounded p-2 text-primary">
+                                        <i class="fas fa-file-medical-alt fs-5"></i>
+                                    </div>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <div class="fw-bold text-dark fs-sm text-truncate">CVR: {{case.cvrNumber}}</div>
+                                    <div class="fs-xs text-muted text-truncate">{{case.chiefComplaint || 'Consultation Visit'}}</div>
+                                </div>
+                                <div class="ms-auto" ng-if="appointment.opCaseNumber === case.opCaseNumber">
+                                    <i class="fas fa-check-circle text-success fs-4"></i>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">New Consultation</button>
+                    <button type="button" class="btn btn-sm btn-primary px-4" data-bs-dismiss="modal" ng-disabled="!appointment.opCaseNumber">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <style>
 /* COMPACT MODERN CSS */

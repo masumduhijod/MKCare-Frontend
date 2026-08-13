@@ -103,6 +103,35 @@ this.updateConsultation = function(consultationId, consultationData) {
             return $http.put(baseUrl + url);
         };
 
+        /**
+         * Get completed consultations for a doctor on a specific date
+         */
+        this.getCompletedConsultationsByDoctor = function (doctorId, date) {
+            var url = API_CONFIG.ENDPOINTS.CONSULTATION.GET_BY_DOCTOR_DATE
+                    .replace('{doctorId}', doctorId)
+                    .replace('{date}', date);
+            return $http.get(baseUrl + url);
+        };
+
+        /**
+         * Get consultation by CVR Number
+         */
+        this.getConsultationByCvr = function (cvrNumber) {
+            var url = API_CONFIG.ENDPOINTS.CONSULTATION.GET_BY_CVR
+                    .replace('{cvrNumber}', cvrNumber);
+            return $http.get(baseUrl + url);
+        };
+
+        /**
+         * Get clinically finalized CVRs (Consultation + Prescription done)
+         */
+        this.getClinicallyFinalizedCvrs = function (doctorId, date) {
+            var url = API_CONFIG.ENDPOINTS.CONSULTATION.GET_CLINICALLY_FINALIZED
+                    .replace('{doctorId}', doctorId)
+                    .replace('{date}', date);
+            return $http.get(baseUrl + url);
+        };
+
         // ============ PRESCRIPTION MANAGEMENT ============
 
         /**

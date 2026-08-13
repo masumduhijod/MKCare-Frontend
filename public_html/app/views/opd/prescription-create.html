@@ -84,7 +84,7 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Medicine Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" ng-model="currentItem.medicineName" placeholder="e.g., Paracetamol">
+                            <medicine-lov model="currentItem.medicineName" on-select="onMedicineSelect(medicine)"></medicine-lov>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Dosage <span class="text-danger">*</span></label>
@@ -92,14 +92,14 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Frequency <span class="text-danger">*</span></label>
-                            <select class="form-select" ng-model="currentItem.frequency">
+                            <select class="form-select" ng-model="currentItem.frequency" ng-change="updateTimingsFromFrequency()">
                                 <option value="">Select</option>
                                 <option ng-repeat="freq in frequencies" value="{{freq}}">{{freq}}</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Duration <span class="text-danger">*</span></label>
-                            <select class="form-select" ng-model="currentItem.duration">
+                            <select class="form-select" ng-model="currentItem.duration" ng-change="calculateQuantity()">
                                 <option value="">Select</option>
                                 <option ng-repeat="dur in durations" value="{{dur}}">{{dur}}</option>
                             </select>
@@ -158,9 +158,11 @@
 
                     <div class="row mb-3">
                         <div class="col-md-10">
-                            <label class="form-label">Special Instructions</label>
                             <input type="text" class="form-control" ng-model="currentItem.instructions" 
                                    placeholder="Any special instructions...">
+                            <div ng-if="addMedicineError" class="text-danger fw-bold mt-1 small animate-fade-in">
+                                <i class="fas fa-exclamation-circle me-1"></i> {{addMedicineError}}
+                            </div>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-primary w-100" ng-click="addMedicine()">

@@ -9,6 +9,7 @@ app.controller('InvoiceListController', ['$scope', '$rootScope', '$location', '$
     function ($scope, $rootScope, $location, $http, $filter, BillingService, PatientService, DoctorService) {
 
         // Initialize
+        $scope.currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
         $scope.loading = false;
         $scope.invoices = [];
         $scope.filteredInvoices = [];
@@ -48,6 +49,23 @@ app.controller('InvoiceListController', ['$scope', '$rootScope', '$location', '$
                     function (response) {
                         if (response.data.success) {
                             $scope.doctorList = response.data.data;
+                            
+                            if ($scope.currentUser.role === 'DOCTOR') {
+                                var myDoctor = $scope.doctorList.find(function(d) {
+                                    return (d.userId && d.userId == $scope.currentUser.userId) ||
+                                           (d.email && d.email === $scope.currentUser.email) || 
+                                           (d.username && d.username === $scope.currentUser.username) ||
+                                           (d.contactNumber && d.contactNumber === $scope.currentUser.contactNumber) ||
+                                           (d.doctorId === $scope.currentUser.username) ||
+                                           (d.fullName && $scope.currentUser.fullName && d.fullName.toLowerCase() === $scope.currentUser.fullName.toLowerCase());
+                                });
+                                
+                                if (myDoctor) {
+                                    $scope.selectedDoctorId = myDoctor.doctorId;
+                                } else {
+                                    $scope.selectedDoctorId = $scope.currentUser.username;
+                                }
+                            }
                         } else {
                             $scope.doctorList = [];
                         }
@@ -73,238 +91,82 @@ app.controller('InvoiceListController', ['$scope', '$rootScope', '$location', '$
         };
 
         /**
-         * Load invoices
+         * Load invoices + consultations via API Gateway (fixes CORS & Tenant ID)
          */
-        $scope.loadInvoices = function () {
+        $scope.loadInvoicesAndConsultations = function () {
+            if (!$scope.selectedDoctorId) return;
 
-            if (!$scope.selectedDoctorId) {
-                console.warn("⚠️ Doctor not selected");
-                return;
-            }
-
-            if (!$scope.selectedDate) {
-                console.warn("⚠️ Date not selected");
-                return;
-            }
-
+            var formattedDate = $filter('date')($scope.selectedDate, 'yyyy-MM-dd');
             $scope.loading = true;
 
-            var formattedDate = $filter('date')($scope.selectedDate, 'yyyy-MM-dd');
-
-            var url = 'http://localhost:8088/billing/invoices/doctor/' +
-                    $scope.selectedDoctorId +
-                    '/date/' + formattedDate;
-
-            console.log("==================================");
-            console.log("📤 BILLING API CALL (8088)");
-            console.log("Doctor ID:", $scope.selectedDoctorId);
-            console.log("Date:", formattedDate);
-            console.log("URL:", url);
-
-            $http.get(url).then(
-                    function (response) {
-
-                        console.log("📥 BILLING RESPONSE SUCCESS");
-                        console.log("Status:", response.status);
-                        console.log("Full Response:", response);
-                        console.log("Data:", response.data);
-
-                        $scope.loading = false;
-
-                        if (response.data.success) {
-                            $scope.invoices = response.data.data || [];
-                            console.log("Invoices Count:", $scope.invoices.length);
-                            $scope.applyFilters();
-                        } else {
-                            console.warn("Billing success = false");
-                            $scope.invoices = [];
-                            $scope.filteredInvoices = [];
-                            $scope.updatePagination();
-                        }
-                    },
-                    function (error) {
-
-                        console.error("❌ BILLING API ERROR");
-                        console.error("Status:", error.status);
-                        console.error("Error Object:", error);
-
-                        $scope.loading = false;
-                    }
-            );
-
-        };
-
-
-
-
-        /**
-         * Load completed consultations without invoices
-         */
-//    $scope.loadCompletedConsultations = function() {
-//
-//    if (!$scope.selectedDoctorId) {
-//        console.warn("⚠️ Doctor not selected for consultations");
-//        return;
-//    }
-//
-//    var formattedDate = $filter('date')($scope.selectedDate, 'yyyy-MM-dd');
-//
-// var url = API_CONFIG.GATEWAY_URL +
-//          API_CONFIG.ENDPOINTS.CONSULTATION.GET_BY_DOCTOR_DATE
-//            .replace('{doctorId}', $scope.selectedDoctorId)
-//            .replace('{date}', formattedDate);
-//
-//    console.log("==================================");
-//    console.log("📤 OPD API CALL (8087)");
-//    console.log("Doctor ID:", $scope.selectedDoctorId);
-//    console.log("Date:", formattedDate);
-//    console.log("URL:", url);
-//
-//    $http.get(url).then(
-//        function(response) {
-//
-//            console.log("📥 OPD RESPONSE SUCCESS");
-//            console.log("Status:", response.status);
-//            console.log("Full Response:", response);
-//            console.log("Data:", response.data);
-//
-//            if (response.data.success) {
-//                $scope.completedConsultations = response.data.data || [];
-//    console.log("Loaded Consultations:", $scope.completedConsultations);
-//                    // ✅ Easy check: log all consultations to console
-//                    // Add displayStatus for debugging
-//   // After fillConsultationNames() completes
-//$scope.completedConsultations.forEach(c => {
-//    console.log('Patient:', c.patientName, 
-//                'Payment:', c.paymentStatus, 
-//                'Display:', c.displayStatus);
-//});
-//
-//
-//                console.log("Consultations Count:", $scope.completedConsultations.length);
-//                    $scope.filteredConsultations = angular.copy($scope.completedConsultations);
-//                    $scope.applyFilters();
-//                    // Fill patient and doctor names
-//    $scope.fillConsultationNames();
-// 
-//            }
-//        },
-//        function(error) {
-//
-//            console.error("❌ OPD API ERROR");
-//            console.error("Status:", error.status);
-//            console.error("Error Object:", error);
-//        }
-//    );
-//};
-//
-//
-// 
-
-        $scope.loadCompletedConsultations = function () {
-
-            if (!$scope.selectedDoctorId) {
-                console.warn("⚠️ Doctor not selected for consultations");
-                return;
-            }
-
-            var formattedDate = $filter('date')($scope.selectedDate, 'yyyy-MM-dd');
-
-            var url = API_CONFIG.GATEWAY_URL +
-                    API_CONFIG.ENDPOINTS.CONSULTATION.GET_BY_DOCTOR_DATE
+            // 1. First load consultations for the doctor/date
+            var consultUrl = API_CONFIG.GATEWAY_URL +
+                API_CONFIG.ENDPOINTS.CONSULTATION.GET_BY_DOCTOR_DATE
                     .replace('{doctorId}', $scope.selectedDoctorId)
                     .replace('{date}', formattedDate);
 
-            console.log("📤 OPD API CALL", "Doctor ID:", $scope.selectedDoctorId, "Date:", formattedDate, "URL:", url);
-
-            $http.get(url).then(function (response) {
-                console.log("📥 OPD RESPONSE SUCCESS", response.data);
-
-                if (response.data.success) {
+            $http.get(consultUrl).then(function (response) {
+                if (response && response.data && response.data.success) {
                     $scope.completedConsultations = response.data.data || [];
+                    
+                    if ($scope.completedConsultations.length === 0) {
+                        $scope.loading = false;
+                        $scope.filteredConsultations = [];
+                        $scope.applyFilters();
+                        return;
+                    }
 
-                    // Initialize payment status and displayStatus immediately
-                    // ✅ CHECK LOCALSTORAGE FOR PAID INVOICES
-// ✅ GET PAID INVOICES AND CVR MAPPING FROM LOCALSTORAGE
-                    var paidInvoices = JSON.parse(localStorage.getItem('paidInvoices') || '[]');
-                    var cvrMapping = JSON.parse(localStorage.getItem('cvrInvoiceMapping') || '{}');
-                    console.log('📋 Paid invoices from localStorage:', paidInvoices);
-                    console.log('📋 CVR to Invoice mapping:', cvrMapping);
+                    // 2. Collect all CVR numbers to check their invoice status
+                    var cvrList = $scope.completedConsultations
+                        .map(c => c.cvrNumber)
+                        .filter(cvr => !!cvr);
 
-// Initialize payment status and displayStatus immediately
+                    // 3. Fetch invoices for these specific consultations
+                    return BillingService.getInvoicesByCvrs(cvrList);
+                } else {
+                    throw new Error("Failed to load consultations");
+                }
+            }).then(function (response) {
+                $scope.loading = false;
+                if (response && response.data && response.data.success) {
+                    $scope.invoices = response.data.data || [];
+
+                    // 4. Map real payment status from backend invoices to consultations
                     $scope.completedConsultations.forEach(function (c) {
+                        var matchedInvoice = $scope.invoices.find(function(inv) {
+                            return (c.cvrNumber && inv.cvrNumber === c.cvrNumber) ||
+                                   (c.appointmentId && inv.appointmentId === c.appointmentId);
+                        });
 
-                        // ✅ PRIORITY 1: Check CVR number in mapping (most reliable)
-                        if (c.cvrNumber && cvrMapping[c.cvrNumber]) {
-                            var mapping = cvrMapping[c.cvrNumber];
-                            
-                            // Prevent stale mapping during testing (DB resets causing CVR reuse)
-                            let isMappingStale = false;
-                            if (mapping.paidAt && c.consultationDate) {
-                                let paidTime = new Date(mapping.paidAt).getTime();
-                                // Parse consultation date (pattern: yyyy-MM-dd HH:mm:ss string or iso)
-                                let consultTime = new Date(c.consultationDate).getTime();
-                                if (consultTime > paidTime) {
-                                    isMappingStale = true;
-                                    console.log('⚠️ Ignoring stale CVR mapping (reused CVR):', c.cvrNumber);
-                                }
-                            }
-                            
-                            if (!isMappingStale) {
-                                c.invoiceNumber = mapping.invoiceNumber;
-                                if (mapping.paid === true) {
-                                    c.paymentStatus = 'PAID';
-                                    c.displayStatus = 'Done';
-                                } else {
-                                    c.paymentStatus = 'INVOICED';
-                                    c.displayStatus = 'INVOICED';
-                                }
-                                console.log('✅ Marked via CVR mapping:', c.cvrNumber, '→', c.invoiceNumber);
-                            }
-                        }
-                        // ✅ PRIORITY 2: Check if invoice number exists and is in paid list
-                        else if (c.invoiceNumber && paidInvoices.includes(c.invoiceNumber)) {
-                            c.paymentStatus = 'PAID';
-                            c.displayStatus = 'Done';
-                            console.log('✅ Marked as PAID (from localStorage):', c.invoiceNumber);
-                        }
-                        // PRIORITY 3: Check existing in-memory data
-                        else {
-                            let existing = $scope.filteredConsultations.find(f => f.consultationId === c.consultationId);
-
-                            if (existing && existing.paymentStatus === 'PAID') {
+                        if (matchedInvoice) {
+                            c.invoiceNumber = matchedInvoice.invoiceNumber;
+                            // Check if fully paid
+                            if (matchedInvoice.paymentStatus === 'PAID') {
                                 c.paymentStatus = 'PAID';
                                 c.displayStatus = 'Done';
-                                c.invoiceNumber = existing.invoiceNumber;
-                            } else if (existing && existing.paymentStatus === 'INVOICED') {
+                            } else {
                                 c.paymentStatus = 'INVOICED';
                                 c.displayStatus = 'INVOICED';
-                                c.invoiceNumber = existing.invoiceNumber;
-                            } else if (c.invoiceNumber) {
-                                c.paymentStatus = (c.paymentStatus === 'PAID') ? 'PAID' : 'INVOICED';
-                                c.displayStatus = (c.paymentStatus === 'PAID') ? 'Done' : 'INVOICED';
-                            } else {
-                                c.paymentStatus = 'NOT INVOICED';
-                                c.displayStatus = 'NOT INVOICED';
                             }
+                        } else {
+                            c.paymentStatus = 'NOT INVOICED';
+                            c.displayStatus = 'NOT INVOICED';
                         }
                     });
 
-
-                    console.log("Before patient fetch:", $scope.completedConsultations);
-
-                    // Fill patient names asynchronously
                     $scope.fillConsultationNames();
-
-                    $scope.filteredConsultations = angular.copy($scope.completedConsultations);
                     $scope.applyFilters();
-
-                    console.log("Consultations Count:", $scope.completedConsultations.length);
                 }
-            }, function (error) {
-                console.error("❌ OPD API ERROR", error);
+            }).catch(function (error) {
+                $scope.loading = false;
+                console.error('❌ Billing/Consultation load error:', error);
+                if (error.status === 403) {
+                    $rootScope.showAlert && $rootScope.showAlert('danger', 'Access denied. Please check your permissions.');
+                }
             });
         };
+
+
 
         /**
          * Search patient and load invoices
@@ -578,19 +440,14 @@ app.controller('InvoiceListController', ['$scope', '$rootScope', '$location', '$
                 dateTo: new Date().toISOString().split('T')[0]
             };
 
-            $scope.loadInvoices();
-            $scope.loadCompletedConsultations();
+            $scope.loadInvoicesAndConsultations();
         };
 
         /**
          * Refresh data
          */
         $scope.refreshData = function () {
-            if ($scope.activeTab === 'invoices') {
-                $scope.loadInvoices();
-            } else {
-                $scope.loadCompletedConsultations();
-            }
+            $scope.loadInvoicesAndConsultations();
         };
 
         /**
@@ -634,25 +491,101 @@ app.controller('InvoiceListController', ['$scope', '$rootScope', '$location', '$
             window.URL.revokeObjectURL(url);
         };
 
+        /**
+         * Load records (alias for loadInvoicesAndConsultations to match HTML)
+         */
+        $scope.loadCompletedConsultations = function() {
+            $scope.loadInvoicesAndConsultations();
+        };
+
+        /**
+         * Apply local filters and handle pagination
+         */
+        $scope.applyFilters = function() {
+            let filtered = $scope.completedConsultations || [];
+
+            // Filter by search text
+            if ($scope.filter.searchText) {
+                let search = $scope.filter.searchText.toLowerCase();
+                filtered = filtered.filter(function(c) {
+                    return (c.pinNumber && c.pinNumber.toLowerCase().includes(search)) ||
+                           (c.patientName && c.patientName.toLowerCase().includes(search)) ||
+                           (c.cvrNumber && c.cvrNumber.toLowerCase().includes(search)) ||
+                           (c.invoiceNumber && c.invoiceNumber.toLowerCase().includes(search));
+                });
+            }
+
+            $scope.filteredConsultations = filtered;
+            $scope.pagination.totalItems = filtered.length;
+            $scope.pagination.totalPages = Math.ceil(filtered.length / $scope.pagination.itemsPerPage);
+            $scope.pagination.currentPage = 1;
+        };
+
+        /**
+         * Get current page of consultations
+         */
+        $scope.getPagedConsultations = function() {
+            let start = ($scope.pagination.currentPage - 1) * $scope.pagination.itemsPerPage;
+            let end = start + $scope.pagination.itemsPerPage;
+            return $scope.filteredConsultations.slice(start, end);
+        };
+
+        /**
+         * Page navigation
+         */
+        $scope.goToPage = function(page) {
+            if (page >= 1 && page <= $scope.pagination.totalPages) {
+                $scope.pagination.currentPage = page;
+            }
+        };
+
+        $scope.getPageNumbers = function() {
+            let pages = [];
+            for (let i = 1; i <= $scope.pagination.totalPages; i++) {
+                pages.push(i);
+            }
+            return pages;
+        };
+
+        /**
+         * Action: Create Invoice for a consultation
+         */
+        $scope.createInvoiceForConsultation = function(consultation) {
+            // Store consultation info for the create invoice page (using the key expected by InvoiceCreateController)
+            localStorage.setItem('pendingInvoiceData', JSON.stringify(consultation));
+            
+            // Navigate to create invoice page with consultationId in the route
+            // This prevents the InvoiceCreateController from clearing the localStorage data
+            let id = consultation.consultationId || consultation.cvrNumber || 'new';
+            $location.path('/billing/invoice/create/' + id);
+        };
+
+        /**
+         * Action: Process Payment
+         */
+        $scope.makePayment = function(invoiceNumber) {
+            if (!invoiceNumber) return;
+            $location.path('/billing/payment/process/' + invoiceNumber);
+        };
+
         // Initialize
         $scope.init();
+
         $scope.refreshInvoices = function () {
-            $scope.loadInvoices();
-            $scope.loadCompletedConsultations();
+            $scope.loadInvoicesAndConsultations();
         };
-// Auto load when doctor changes
+
+        // Auto load when doctor changes
         $scope.$watch('selectedDoctorId', function (newVal) {
             if (newVal) {
-//        $scope.loadInvoices();
-                $scope.loadCompletedConsultations();
+                $scope.loadInvoicesAndConsultations();
             }
         });
 
-// Auto load when date changes
+        // Auto load when date changes
         $scope.$watch('selectedDate', function (newVal) {
             if (newVal && $scope.selectedDoctorId) {
-//        $scope.loadInvoices();
-                $scope.loadCompletedConsultations();
+                $scope.loadInvoicesAndConsultations();
             }
         });
 
@@ -661,11 +594,13 @@ app.controller('InvoiceListController', ['$scope', '$rootScope', '$location', '$
                 if (!c.patientName && c.pinNumber) {
                     PatientService.getByPin(c.pinNumber)
                             .then(function (res) {
-                                c.patientName = res.data.success && res.data.data
-                                        ? res.data.data.fullName
-                                        : 'Unknown';
-                                $scope.$applyAsync(); // ensures Angular updates view
-                                console.log("Patient name loaded:", c.pinNumber, "→", c.patientName);
+                                if (res.data && res.data.data) {
+                                    let pt = res.data.data;
+                                    c.patientName = pt.fullName || (pt.firstName + ' ' + pt.lastName);
+                                } else {
+                                    c.patientName = 'Unknown';
+                                }
+                                $scope.$applyAsync();
                             })
                             .catch(function () {
                                 c.patientName = 'Unknown';
@@ -674,90 +609,14 @@ app.controller('InvoiceListController', ['$scope', '$rootScope', '$location', '$
                 }
             });
         };
-      // ==========================================
-// ✅ LISTEN FOR INVOICE CREATED EVENT
-// ==========================================
+
+        // Event listeners
         $scope.$on('invoiceCreated', function (event, invoice) {
-    let consult = $scope.completedConsultations.find(
-        c => c.consultationId === invoice.consultationId
-    );
-            if (consult) {
-                consult.invoiceNumber = invoice.invoiceNumber;
-        consult.paymentStatus = (invoice.paidAmount >= invoice.totalAmount)
-            ? 'PAID'
-            : 'INVOICED';
-        consult.displayStatus =
-            (consult.paymentStatus === 'PAID')
-            ? 'Done'
-            : 'INVOICED';
-
-        $scope.filteredConsultations =
-            angular.copy($scope.completedConsultations);
-
-                $scope.$applyAsync();
-            }
+             $scope.loadInvoicesAndConsultations();
         });
+
         $scope.$on('consultationPaid', function (event, invoiceNumber) {
-            console.log('=================================');
-            console.log('💰 PAYMENT EVENT RECEIVED');
-            console.log('Invoice Number:', invoiceNumber);
-
-            // Update localStorage
-            var paidInvoices = JSON.parse(localStorage.getItem('paidInvoices') || '[]');
-            if (!paidInvoices.includes(invoiceNumber)) {
-                paidInvoices.push(invoiceNumber);
-                localStorage.setItem('paidInvoices', JSON.stringify(paidInvoices));
-            }
-
-            // Find consultation by invoice number OR by CVR
-            let consult = $scope.completedConsultations.find(c => c.invoiceNumber === invoiceNumber);
-
-            // If not found by invoice number, try CVR mapping
-            if (!consult) {
-                var cvrMapping = JSON.parse(localStorage.getItem('cvrInvoiceMapping') || '{}');
-                for (var cvr in cvrMapping) {
-                    if (cvrMapping[cvr].invoiceNumber === invoiceNumber) {
-                        consult = $scope.completedConsultations.find(c => c.cvrNumber === cvr);
-                        if (consult) {
-                            consult.invoiceNumber = invoiceNumber;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (consult) {
-                console.log('✅ Found consultation:', consult);
-                consult.paymentStatus = 'PAID';
-                consult.displayStatus = 'Done';
-                $scope.filteredConsultations = angular.copy($scope.completedConsultations);
-                $scope.$applyAsync();
-                console.log('✅ Updated consultation to PAID');
-            } else {
-                console.log('⚠️ Consultation not found (will update on next load)');
-            }
-            console.log('=================================');
+             $scope.loadInvoicesAndConsultations();
         });
-        $scope.markConsultationPaid = function (consultation) {
-            consultation.paymentStatus = 'PAID';
-            consultation.displayStatus = 'Done';   // This will show in the UI
-            $scope.$applyAsync();                  // Refresh view immediately
-        };
 
-// Navigate to Vitals Recording page for a consultation
-$scope.editVitals = function(consultation) {
-            if (!consultation.cvrNumber) {
-                $rootScope.showAlert('warning', 'CVR not available for this consultation');
-                return;
-            }
-
-            // Save consultation/CVR info in localStorage or pass via route param
-            localStorage.setItem('currentVitalsConsultation', JSON.stringify(consultation));
-
-            // Navigate to Vitals Recording page
-            $location.path('/vitals/record/' + consultation.cvrNumber);
-        };
-
-
-
-    }]);
+    }]);

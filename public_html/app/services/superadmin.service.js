@@ -65,6 +65,70 @@ app.factory('SuperAdminService', ['$http', function ($http) {
             return $http.post(BASE_URL + '/superadmin/clinics/' + tenantId + '/admin', adminData, {
                 headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
             });
+        },
+
+        // Renew clinic subscription
+        renewClinicSubscription: function (tenantId, renewalData) {
+            // using local mock logic if API does not exist, but let's assume API is called
+            return $http.post(BASE_URL + '/superadmin/clinics/' + tenantId + '/renew', renewalData, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            });
+        },
+
+        // Send broadcast alert
+        sendBroadcastAlert: function (alertData) {
+            return $http.post(BASE_URL + '/superadmin/alerts/broadcast', alertData, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            });
+        },
+
+        // RBAC: Get all roles
+        getRoles: function () {
+            return $http.get(BASE_URL + '/superadmin/roles', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            });
+        },
+
+        // RBAC: Get all modules
+        getModules: function () {
+            return $http.get(BASE_URL + '/superadmin/modules', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            });
+        },
+
+        // RBAC: Get permissions for a role
+        getRolePermissions: function (roleName) {
+            return $http.get(BASE_URL + '/superadmin/role-permissions/' + roleName, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            });
+        },
+
+        // RBAC: Update permissions for a role
+        updateRolePermissions: function (roleName, moduleCodes) {
+            return $http.post(BASE_URL + '/superadmin/role-permissions/' + roleName, moduleCodes, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            });
+        },
+
+        // RBAC: Get users for a clinic
+        getClinicUsers: function (tenantId) {
+            return $http.get(BASE_URL + '/superadmin/clinics/' + tenantId + '/users', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            });
+        },
+
+        // RBAC: Get permissions for a specific user
+        getUserPermissions: function (tenantId, userId) {
+            return $http.get(BASE_URL + '/superadmin/clinics/' + tenantId + '/users/' + userId + '/permissions', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            });
+        },
+
+        // RBAC: Update permissions for a specific user
+        updateUserPermissions: function (tenantId, userId, moduleCodes) {
+            return $http.post(BASE_URL + '/superadmin/clinics/' + tenantId + '/users/' + userId + '/permissions', moduleCodes, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+            });
         }
     };
 }]);

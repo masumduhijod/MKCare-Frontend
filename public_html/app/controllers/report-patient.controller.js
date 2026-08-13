@@ -142,8 +142,8 @@ app.controller('ReportPatientDemographicsController', ['$scope', '$rootScope', '
 
 
 // ── Report 3: Patient Visit History ─────────────────
-app.controller('ReportPatientVisitHistoryController', ['$scope', '$rootScope', 'ReportService',
-    function ($scope, $rootScope, ReportService) {
+app.controller('ReportPatientVisitHistoryController', ['$scope', '$rootScope', 'ReportService', 'DoctorService', 'PatientService', 'BillingService',
+    function ($scope, $rootScope, ReportService, DoctorService, PatientService, BillingService) {
 
         $scope.reportTitle = 'Patient Visit History Report';
         $scope.filter = { pinNumber: '' };
@@ -169,7 +169,46 @@ app.controller('ReportPatientVisitHistoryController', ['$scope', '$rootScope', '
                     $scope.visitData = data.data || {};
                     $scope.patientInfo = $scope.visitData.patient || $scope.visitData.patientInfo || null;
                     $scope.visits = $scope.visitData.recentVisits || $scope.visitData.visits || [];
-                    $scope.loading = false;
+                    
+                    // Fetch Patient Info if missing
+                    if (!$scope.patientInfo && $scope.filter.pinNumber) {
+                        PatientService.getByPin($scope.filter.pinNumber).then(function(res) {
+                            if (res.data && res.data.success) {
+                                $scope.patientInfo = res.data.data;
+                            }
+                        });
+                    }
+
+                    // Map missing details
+                    DoctorService.getActiveDoctors().then(function(docRes) {
+                        var doctors = (docRes.data && docRes.data.data) ? docRes.data.data : [];
+                        
+                        BillingService.getPatientInvoices($scope.filter.pinNumber).then(function(invRes) {
+                            var invoices = (invRes.data && invRes.data.data) ? invRes.data.data : [];
+                            
+                            $scope.visits.forEach(function(v) {
+                                // Map Visit Date fallback
+                                if (!v.visitDate && v.appointmentDate) v.visitDate = v.appointmentDate;
+                                
+                                // Map Doctor
+                                if (!v.doctorName && v.doctorId) {
+                                    var doc = doctors.find(function(d) { return d.doctorId === v.doctorId; });
+                                    if (doc) v.doctorName = doc.fullName;
+                                }
+                                
+                                // Map Amount from invoice
+                                if (v.cvrNumber) {
+                                    var inv = invoices.find(function(i) { return i.cvrNumber === v.cvrNumber; });
+                                    if (inv) v.amount = inv.totalAmount;
+                                }
+                            });
+                            $scope.loading = false;
+                        }).catch(function() {
+                            $scope.loading = false;
+                        });
+                    }).catch(function() {
+                        $scope.loading = false;
+                    });
                 })
                 .catch(function (err) {
                     $scope.loading = false;

@@ -75,14 +75,14 @@
             <div class="collapse navbar-collapse" id="moduleNav">
                 <ul class="navbar-nav w-100">
                     <!-- Dashboard -->
-                    <li class="nav-item">
+                    <li class="nav-item" ng-if="hasModule('DASHBOARD')">
                         <a class="nav-link" href="#!/dashboard">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     </li>
 
                     <!-- Admin - User Management -->
-                    <li class="nav-item dropdown" ng-if="hasRole(['ADMIN'])">
+                    <li class="nav-item dropdown" ng-if="hasModule('USER_MGMT')">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-users-cog"></i> User Management
                         </a>
@@ -90,6 +90,11 @@
                             <li>
                                 <a class="dropdown-item" href="#!/user/register">
                                     <i class="fas fa-user-plus"></i> Register User
+                                </a>
+                            </li>
+                            <li ng-if="hasRole(['ADMIN'])">
+                                <a class="dropdown-item" href="#!/user/role-master">
+                                    <i class="fas fa-user-shield"></i> User Role Master
                                 </a>
                             </li>
                             <li>
@@ -101,17 +106,17 @@
                     </li>
 
                     <!-- Patient Management -->
-                    <li class="nav-item dropdown" ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
+                    <li class="nav-item dropdown" ng-if="hasModule('PATIENT_REG') || hasModule('PATIENT_LIST')">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-injured"></i> Patients
                         </a>
                         <ul class="dropdown-menu">
-                            <li>
+                            <li ng-if="hasModule('PATIENT_REG')">
                                 <a class="dropdown-item" href="#!/patient/register">
                                     <i class="fas fa-user-plus"></i> Register Patient
                                 </a>
                             </li>
-                            <li>
+                            <li ng-if="hasModule('PATIENT_LIST')">
                                 <a class="dropdown-item" href="#!/patient/list">
                                     <i class="fas fa-list"></i> Patient List
                                 </a>
@@ -120,12 +125,12 @@
                     </li>
 
                     <!-- Doctor Management -->
-                    <li class="nav-item dropdown" ng-if="hasRole(['ADMIN'])">
+                    <li class="nav-item dropdown" ng-if="hasModule('USER_MGMT') || hasRole(['DOCTOR'])">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-md"></i> Doctors
                         </a>
                         <ul class="dropdown-menu">
-                            <li>
+                            <li ng-if="hasModule('USER_MGMT')">
                                 <a class="dropdown-item" href="#!/doctor/register">
                                     <i class="fas fa-user-plus"></i> Register Doctor
                                 </a>
@@ -139,17 +144,17 @@
                     </li>
 
                     <!-- Appointment Management -->
-                    <li class="nav-item dropdown" ng-if="hasRole(['RECEPTIONIST', 'ADMIN'])">
+                    <li class="nav-item dropdown" ng-if="hasModule('APP_BOOKING') || hasModule('APP_LIST')">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-calendar-check"></i> Appointments
                         </a>
                         <ul class="dropdown-menu">
-                            <li>
+                            <li ng-if="hasModule('APP_BOOKING')">
                                 <a class="dropdown-item" href="#!/appointment/book">
                                     <i class="fas fa-calendar-plus"></i> Book Appointment
                                 </a>
                             </li>
-                            <li>
+                            <li ng-if="hasModule('APP_LIST')">
                                 <a class="dropdown-item" href="#!/appointment/list">
                                     <i class="fas fa-list"></i> Appointment List
                                 </a>
@@ -158,31 +163,36 @@
                     </li>
 
                     <!-- OPD Management -->
-                    <li class="nav-item dropdown" ng-if="hasRole(['DOCTOR', 'RECEPTIONIST', 'ADMIN'])">
+                    <li class="nav-item dropdown" ng-if="hasModule('OPD_QUEUE') || hasModule('OPD_CONSULT')">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-clinic-medical"></i> OPD Management
                         </a>
                         <ul class="dropdown-menu">
-                            <li>
+                            <li ng-if="hasModule('OPD_QUEUE')">
                                 <a class="dropdown-item" href="#!/opd/queue">
                                     <i class="fas fa-users"></i> OPD Queue
                                 </a>
                             </li>
-                            <li ng-if="hasRole(['DOCTOR', 'ADMIN'])">
+                            <li ng-if="hasModule('OPD_CONSULT')">
                                 <a class="dropdown-item" href="#!/opd/list">
                                     <i class="fas fa-list-alt"></i> OPD Records
                                 </a>
                             </li>
-                            <li ng-if="hasRole(['DOCTOR', 'ADMIN'])">
+                            <li ng-if="hasModule('OPD_CONSULT')">
                                 <a class="dropdown-item" href="#!/consultation/room">
                                     <i class="fas fa-stethoscope"></i> Consultation Room
+                                </a>
+                            </li>
+                            <li ng-if="hasModule('MED_MASTER')">
+                                <a class="dropdown-item" href="#!/master/medicine">
+                                    <i class="fas fa-capsules"></i> Medicine Master
                                 </a>
                             </li>
                         </ul>
                     </li>
 
                     <!-- Billing -->
-                    <li class="nav-item dropdown" ng-if="hasRole(['BILLING', 'DOCTOR', 'RECEPTIONIST', 'ADMIN'])">
+                    <li class="nav-item dropdown" ng-if="hasModule('BILLING')">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-file-invoice-dollar"></i> Billing
                         </a>
@@ -192,18 +202,15 @@
                                     <i class="fas fa-list"></i> Invoice List
                                 </a>
                             </li>
-                                        <!--                                        <li class="nav-item">
-                                                                                    <a class="nav-link" href="#!/billing/payment">Invoice Payment</a>
-                                                                                </li>-->
-                                        <!-- Payment History added -->
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="#!/billing/payment-history">Invoice History
+                            <li class="nav-item" ng-if="hasModule('PAYMENTS')">
+                                <a class="nav-link" href="#!/billing/payment-history">Invoice History
                                 </a>
                             </li>
                         </ul>
+                    </li>
 
                         <!-- Reports Module -->
-                    <li class="nav-item dropdown" ng-if="hasRole(['ADMIN','DOCTOR','RECEPTIONIST','BILLING','NURSE'])">
+                    <li class="nav-item dropdown" ng-if="hasModule('REPORTS')">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-chart-bar"></i> Reports
                         </a>
@@ -347,6 +354,7 @@
     <script src="app/services/opd.service.js"></script>
     <script src="app/services/billing.service.js"></script>
     <script src="app/services/user.service.js"></script>
+    <script src="app/services/medicine.service.js"></script>
 
     <!-- Controllers -->
     <script src="app/controllers/login.controller.js"></script>
@@ -363,12 +371,14 @@
     <script src="app/controllers/appointment-booking.controller.js"></script>
     <script src="app/controllers/appointment-list.controller.js"></script>
     <script src="app/controllers/user-list.controller.js"></script>
+    <script src="app/controllers/role-master.controller.js"></script>
 
     <script src="app/controllers/queue-management.controller.js"></script>
     <script src="app/controllers/consultation-room.controller.js?v=2"></script>
     <script src="app/controllers/prescription-create.controller.js?v=2"></script>
     <script src="app/controllers/consultation-management.controller.js"></script>
     <script src="app/controllers/opd-list.controller.js?v=2"></script>
+    <script src="app/controllers/medicine-master.controller.js"></script>
 
     <script src="app/controllers/invoice-details.controller.js"></script>
     <script src="app/controllers/invoice-list.controller.js"></script>
@@ -388,6 +398,7 @@
     <script src="app/controllers/report-patient.controller.js"></script>
     <script src="app/controllers/report-opd.controller.js"></script>
     <script src="app/controllers/report-billing-doctor.controller.js"></script>
+    <script src="app/controllers/report-patient-case-file.controller.js"></script>
 
     <!-- Super Admin Module -->
     <script src="app/services/superadmin.service.js"></script>
@@ -420,6 +431,108 @@
             </div>
         </div>
     </div>
+
+    <!-- ✅ PREMIUM SUCCESS/ERROR POPUP (Super Admin Style) -->
+    <div class="lp-popup-overlay" ng-if="premiumAlert.show" ng-click="premiumAlert.show=false">
+        <div class="lp-popup" ng-click="$event.stopPropagation()">
+            <div class="lp-popup-icon" ng-class="{
+                'lp-popup-icon--success': premiumAlert.type === 'success',
+                'lp-popup-icon--warning': premiumAlert.type === 'warning',
+                'lp-popup-icon--error': premiumAlert.type === 'error'
+            }">
+                <i class="fas" ng-class="premiumAlert.icon"></i>
+            </div>
+            <h3 class="lp-popup-title">{{premiumAlert.title}}</h3>
+            <p class="lp-popup-msg">{{premiumAlert.message}}</p>
+            <button class="lp-popup-btn" ng-click="premiumAlert.show=false">OK, Got It</button>
+        </div>
+    </div>
+
+    <style>
+        /* Premium Popup Styles */
+        .lp-popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10500;
+            animation: sadFadeIn 0.2s ease;
+        }
+        @keyframes sadFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .lp-popup {
+            background: #fff;
+            border-radius: 24px;
+            padding: 40px 36px 32px;
+            max-width: 400px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.2);
+            animation: sadPopIn 0.3s cubic-bezier(.175,.885,.32,1.275);
+        }
+        @keyframes sadPopIn { from { opacity:0; transform: scale(0.85) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
+
+        .lp-popup-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.8rem;
+        }
+        .lp-popup-icon--success {
+            background: #f0fdf4;
+            border: 3px solid #bbf7d0;
+            color: #16a34a;
+            animation: pulseSuccess 2s infinite;
+        }
+        .lp-popup-icon--warning {
+            background: #fffbeb;
+            border: 3px solid #fde68a;
+            color: #d97706;
+        }
+        .lp-popup-icon--error {
+            background: #fef2f2;
+            border: 3px solid #fecaca;
+            color: #ef4444;
+        }
+
+        @keyframes pulseSuccess {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.25); }
+            50% { box-shadow: 0 0 0 12px rgba(22,163,74,0); }
+        }
+
+        .lp-popup-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+        .lp-popup-msg {
+            font-size: 0.9rem;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .lp-popup-btn {
+            background: #18181b;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 32px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .lp-popup-btn:hover { background: #000; transform: translateY(-1px); }
+    </style>
 
     <!-- Custom Scripts -->
     <script src="assets/js/custom.js"></script>

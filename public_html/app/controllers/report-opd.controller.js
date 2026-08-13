@@ -97,8 +97,8 @@ app.controller('ReportOpdDeptController', ['$scope', '$rootScope', 'ReportServic
 
 
 // ── Report 10: CVR Summary ──────────────────────────
-app.controller('ReportCvrSummaryController', ['$scope', '$rootScope', 'ReportService',
-    function ($scope, $rootScope, ReportService) {
+app.controller('ReportCvrSummaryController', ['$scope', '$rootScope', 'ReportService', 'PatientService', 'DoctorService',
+    function ($scope, $rootScope, ReportService, PatientService, DoctorService) {
 
         $scope.reportTitle = 'CVR Summary Report';
         $scope.filter = {
@@ -142,7 +142,30 @@ app.controller('ReportCvrSummaryController', ['$scope', '$rootScope', 'ReportSer
                     } else {
                         $scope.cvrList = [];
                     }
-                    $scope.loading = false;
+                    
+                    DoctorService.getActiveDoctors().then(function(docRes) {
+                        var doctors = (docRes.data && docRes.data.data) ? docRes.data.data : [];
+                        
+                        $scope.cvrList.forEach(function(cvr) {
+                            // Map Doctor Name
+                            if (!cvr.doctorName && cvr.doctorId) {
+                                var doc = doctors.find(function(d) { return d.doctorId === cvr.doctorId; });
+                                if (doc) cvr.doctorName = doc.fullName;
+                            }
+                            
+                            // Map Patient Name
+                            if (cvr.pinNumber && !cvr.patientName) {
+                                PatientService.getByPin(cvr.pinNumber).then(function(res) {
+                                    if (res && res.data) {
+                                        cvr.patientName = res.data.firstName + ' ' + res.data.lastName;
+                                    }
+                                });
+                            }
+                        });
+                        $scope.loading = false;
+                    }).catch(function() {
+                        $scope.loading = false;
+                    });
                 }).catch(function (err) {
                     $scope.loading = false;
                     $scope.errorMsg = (err && err.message) ? err.message : 'Failed to load CVR report.';
@@ -157,8 +180,8 @@ app.controller('ReportCvrSummaryController', ['$scope', '$rootScope', 'ReportSer
 
 
 // ── Report 11: Prescription Report ─────────────────
-app.controller('ReportPrescriptionController', ['$scope', '$rootScope', 'ReportService',
-    function ($scope, $rootScope, ReportService) {
+app.controller('ReportPrescriptionController', ['$scope', '$rootScope', '$timeout', 'ReportService', 'PatientService',
+    function ($scope, $rootScope, $timeout, ReportService, PatientService) {
 
         $scope.reportTitle = 'Prescription Report';
         $scope.filter = {
@@ -170,11 +193,15 @@ app.controller('ReportPrescriptionController', ['$scope', '$rootScope', 'ReportS
         $scope.loading = false;
         $scope.reportData = null;
         $scope.prescriptions = [];
+        $scope.selectedPrescriptions = [];
+        $scope.allSelected = false;
         $scope.errorMsg = '';
 
         $scope.generateReport = function () {
             $scope.loading = true;
             $scope.reportData = null;
+            $scope.selectedPrescriptions = [];
+            $scope.allSelected = false;
             $scope.errorMsg = '';
             var params = {};
             if ($scope.filter.searchMode === 'pin' && $scope.filter.pinNumber) {
@@ -190,6 +217,26 @@ app.controller('ReportPrescriptionController', ['$scope', '$rootScope', 'ReportS
                     $scope.reportData = data;
                     $scope.prescriptions = (data.data && data.data.prescriptions) ? data.data.prescriptions
                         : Array.isArray(data.data) ? data.data : [];
+
+                    // Initialize checkbox state
+                    $scope.prescriptions.forEach(function(p) {
+                        p.$selected = false;
+                    });
+
+                    // Fetch patient names if missing
+                    $scope.prescriptions.forEach(function(p) {
+                        if (p.pinNumber && !p.patientName) {
+                            PatientService.getByPin(p.pinNumber).then(function(res) {
+                                if (res && res.data && res.data.data) {
+                                    var pt = res.data.data;
+                                    p.patientName = (pt.firstName || '') + ' ' + (pt.lastName || '');
+                                } else if (res && res.data && res.data.fullName) {
+                                    p.patientName = res.data.fullName;
+                                }
+                            });
+                        }
+                    });
+
                     $scope.loading = false;
                 }).catch(function (err) {
                     $scope.loading = false;
@@ -198,7 +245,42 @@ app.controller('ReportPrescriptionController', ['$scope', '$rootScope', 'ReportS
                 });
         };
 
+        // ── Multi-select helpers ──────────────────────
+        $scope.toggleSelectAll = function () {
+            $scope.prescriptions.forEach(function(p) {
+                p.$selected = $scope.allSelected;
+            });
+        };
+
+        $scope.updateAllSelected = function () {
+            $scope.allSelected = $scope.prescriptions.every(function(p) { return p.$selected; });
+        };
+
+        $scope.selectedCount = function () {
+            return $scope.prescriptions.filter(function(p) { return p.$selected; }).length;
+        };
+
+        // ── Print helpers ─────────────────────────────
+        $scope.printSelected = function () {
+            $scope.selectedPrescriptions = $scope.prescriptions.filter(function(p) { return p.$selected; });
+            if ($scope.selectedPrescriptions.length === 0) return;
+            $timeout(function() {
+                if ($rootScope.doPrint) { $rootScope.doPrint(); } else { window.print(); }
+            }, 200);
+        };
+
+        $scope.printSingle = function (rx) {
+            $scope.selectedPrescriptions = [rx];
+            $timeout(function() {
+                if ($rootScope.doPrint) { $rootScope.doPrint(); } else { window.print(); }
+            }, 200);
+        };
+
         $scope.printReport = function () {
-            if ($rootScope.doPrint) { $rootScope.doPrint(); } else { window.print(); }
+            $scope.selectedPrescriptions = angular.copy($scope.prescriptions);
+            $timeout(function() {
+                if ($rootScope.doPrint) { $rootScope.doPrint(); } else { window.print(); }
+            }, 200);
         };
     }]);
+

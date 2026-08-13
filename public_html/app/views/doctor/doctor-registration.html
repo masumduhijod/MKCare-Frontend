@@ -1,370 +1,269 @@
-<!DOCTYPE html>
 <div class="container-fluid mt-4">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="fw-bold">
-                <i class="fas fa-user-md text-primary"></i> Doctor Registration
-            </h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="#!/doctor/list">Doctor List</a></li>
-                    <li class="breadcrumb-item active">Register New Doctor</li>
-                </ol>
-            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-0 text-primary">
+                        <i class="fas fa-user-md me-2"></i>{{isEditMode ? 'Update Doctor Profile' : 'Doctor Registration'}}
+                    </h2>
+                    <p class="text-muted mb-0">{{isEditMode ? 'Modify existing doctor information' : 'Manage doctor profiles and consultation policies'}}</p>
+                </div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="#!/dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="#!/doctor/list">Doctor List</a></li>
+                        <li class="breadcrumb-item active">{{isEditMode ? 'Edit' : 'Register'}}</li>
+                    </ol>
+                </nav>
+            </div>
         </div>
     </div>
 
     <!-- Success Message -->
-    <div ng-if="registeredDoctorId" class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle"></i>
-        <strong>Success!</strong> Doctor registered successfully with ID: <strong>{{registeredDoctorId}}</strong>
+    <div ng-if="registeredDoctorId && !isEditMode" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle fa-2x me-3"></i>
+            <div>
+                <strong>Success!</strong> Doctor registered successfully. 
+                <span class="d-block">New Doctor ID: <strong class="badge bg-success fs-6">{{registeredDoctorId}}</strong></span>
+            </div>
+        </div>
         <button type="button" class="btn-close" ng-click="registeredDoctorId = null"></button>
     </div>
 
-    <!-- Loading Spinner -->
-    <div ng-if="loading" class="text-center my-5">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-            <span class="visually-hidden">Loading...</span>
+    <!-- Main Content -->
+    <div ng-if="!loading" class="card shadow border-0 overflow-hidden">
+        <div class="card-header bg-white border-0 p-0">
+            <!-- Custom Tabs Navigation -->
+            <ul class="nav nav-tabs nav-justified registration-tabs" id="registrationTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link py-3" ng-class="{'active': activeTab === 'personal'}" ng-click="setTab('personal')">
+                        <i class="fas fa-user me-2"></i>Personal Info
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link py-3" ng-class="{'active': activeTab === 'professional'}" ng-click="setTab('professional')">
+                        <i class="fas fa-graduation-cap me-2"></i>Professional
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link py-3" ng-class="{'active': activeTab === 'followup'}" ng-click="setTab('followup')">
+                        <i class="fas fa-history me-2"></i>Follow-up & Fees
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link py-3" ng-class="{'active': activeTab === 'additional'}" ng-click="setTab('additional')">
+                        <i class="fas fa-plus-circle me-2"></i>Additional Details
+                    </button>
+                </li>
+            </ul>
         </div>
-        <p class="mt-3 text-muted">Registering doctor...</p>
-    </div>
 
-    <!-- Registration Form -->
-    <div ng-if="!loading" class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-clipboard-list"></i> Doctor Information
-            </h5>
-        </div>
-        <div class="card-body">
+        <div class="card-body p-4 bg-light">
             <form name="doctorForm" ng-submit="registerDoctor()" novalidate>
                 
-                <!-- Personal Information Section -->
-                <div class="mb-4">
-                    <h6 class="text-primary border-bottom pb-2 mb-3">
-                        <i class="fas fa-user"></i> Personal Information
-                    </h6>
-                    <div class="row">
-                        <!-- First Name -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                First Name <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   ng-model="doctor.firstName" 
-                                   name="firstName"
-                                   placeholder="Enter first name"
-                                   required>
-                            <div class="text-danger small mt-1" 
-                                 ng-show="doctorForm.firstName.$touched && doctorForm.firstName.$invalid">
-                                First name is required
-                            </div>
+                <!-- Tab 1: Personal Information -->
+                <div ng-show="activeTab === 'personal'" class="tab-pane fade show active">
+                    <div class="row g-4">
+                        
+                        <div class="col-12 mb-2 mt-0">
+                            <h5 class="fw-bold text-primary border-bottom pb-2"><i class="fas fa-id-card me-2"></i>Personal Information</h5>
                         </div>
 
-                        <!-- Last Name -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                Last Name <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   ng-model="doctor.lastName" 
-                                   name="lastName"
-                                   placeholder="Enter last name"
-                                   required>
-                            <div class="text-danger small mt-1" 
-                                 ng-show="doctorForm.lastName.$touched && doctorForm.lastName.$invalid">
-                                Last name is required
-                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">First Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg shadow-sm" ng-model="doctor.firstName" name="firstName" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg shadow-sm" ng-model="doctor.lastName" name="lastName" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Contact Number <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control form-control-lg shadow-sm" ng-model="doctor.contactNumber" name="contactNumber" pattern="[0-9]{10}" maxlength="10" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email Address</label>
+                            <input type="email" class="form-control form-control-lg shadow-sm" ng-model="doctor.email" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Photo URL</label>
+                            <input type="url" class="form-control form-control-lg shadow-sm" ng-model="doctor.photoUrl">
                         </div>
 
-                        <!-- Contact Number -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                Contact Number <span class="text-danger">*</span>
-                            </label>
-                            <input type="tel" 
-                                   class="form-control" 
-                                   ng-model="doctor.contactNumber" 
-                                   name="contactNumber"
-                                   placeholder="10-digit mobile number"
-                                   pattern="[0-9]{10}"
-                                   maxlength="10"
-                                   required>
-                            <div class="text-danger small mt-1" 
-                                 ng-show="doctorForm.contactNumber.$touched && doctorForm.contactNumber.$invalid">
-                                Valid 10-digit contact number is required
-                            </div>
+                        <!-- Account Details (New Doctor Only) -->
+                        <div ng-if="!isEditMode" class="col-12 mt-4 mb-2">
+                            <h5 class="fw-bold text-primary border-bottom pb-2"><i class="fas fa-lock me-2"></i>Account Login Details</h5>
                         </div>
-
-                        <!-- Email -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">
-                                Email Address
-                            </label>
-                            <input type="email" 
-                                   class="form-control" 
-                                   ng-model="doctor.email" 
-                                   name="email"
-                                   placeholder="doctor@example.com">
-                            <div class="text-danger small mt-1" 
-                                 ng-show="doctorForm.email.$touched && doctorForm.email.$invalid">
-                                Please enter a valid email address
-                            </div>
+                        <div ng-if="!isEditMode" class="col-md-4">
+                            <label class="form-label fw-bold">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg shadow-sm" ng-model="doctor.username" name="username" ng-required="!isEditMode" minlength="3">
                         </div>
-
-                        <!-- Photo URL -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">
-                                Photo URL
-                            </label>
-                            <input type="url" 
-                                   class="form-control" 
-                                   ng-model="doctor.photoUrl" 
-                                   placeholder="http://example.com/photo.jpg">
-                            <small class="text-muted">Optional: Enter URL of doctor's photo</small>
+                        <div ng-if="!isEditMode" class="col-md-4">
+                            <label class="form-label fw-bold">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control form-control-lg shadow-sm" ng-model="doctor.password" name="password" ng-required="!isEditMode" minlength="6">
                         </div>
+                        <div ng-if="!isEditMode" class="col-md-4">
+                            <label class="form-label fw-bold">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control form-control-lg shadow-sm" ng-model="doctor.confirmPassword" name="confirmPassword" ng-required="!isEditMode" minlength="6">
+                        </div>
+                    </div>
+                    <div class="mt-5 d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary px-4 py-2" ng-click="setTab('professional')">
+                            Next: Professional <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Professional Information Section -->
-                <div class="mb-4">
-                    <h6 class="text-primary border-bottom pb-2 mb-3">
-                        <i class="fas fa-stethoscope"></i> Professional Information
-                    </h6>
-                    <div class="row">
-                        <!-- Department -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                Department <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select" 
-                                    ng-model="doctor.department" 
-                                    name="department"
-                                    required>
-                                <option value="">-- Select Department --</option>
+                <!-- Tab 2: Professional Information -->
+                <div ng-show="activeTab === 'professional'" class="tab-pane fade show active">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Department <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-lg shadow-sm" ng-model="doctor.department" name="department" required>
+                                <option value="">Select Dept</option>
                                 <option value="General Medicine">General Medicine</option>
                                 <option value="Cardiology">Cardiology</option>
-                                <option value="Orthopedics">Orthopedics</option>
                                 <option value="Pediatrics">Pediatrics</option>
-                                <option value="Dermatology">Dermatology</option>
+                                <option value="Orthopedics">Orthopedics</option>
                                 <option value="Gynecology">Gynecology</option>
-                                <option value="ENT">ENT</option>
-                                <option value="Neurology">Neurology</option>
-                                <option value="Ophthalmology">Ophthalmology</option>
-                                <option value="Psychiatry">Psychiatry</option>
-                                <option value="Surgery">Surgery</option>
-                                <option value="Emergency">Emergency</option>
                             </select>
-                            <div class="text-danger small mt-1" 
-                                 ng-show="doctorForm.department.$touched && doctorForm.department.$invalid">
-                                Department is required
-                            </div>
                         </div>
-
-                        <!-- Specialization -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                Specialization <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   ng-model="doctor.specialization" 
-                                   name="specialization"
-                                   placeholder="e.g., Cardiologist, Dermatologist"
-                                   required>
-                            <div class="text-danger small mt-1" 
-                                 ng-show="doctorForm.specialization.$touched && doctorForm.specialization.$invalid">
-                                Specialization is required
-                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Specialization <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg shadow-sm" ng-model="doctor.specialization" required>
                         </div>
-
-                        <!-- Qualification -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                Qualification <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   ng-model="doctor.qualification" 
-                                   name="qualification"
-                                   placeholder="e.g., MBBS, MD"
-                                   required>
-                            <div class="text-danger small mt-1" 
-                                 ng-show="doctorForm.qualification.$touched && doctorForm.qualification.$invalid">
-                                Qualification is required
-                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Qualification <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg shadow-sm" ng-model="doctor.qualification" required>
                         </div>
-
-                        <!-- Experience Years -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                Experience (Years) <span class="text-danger">*</span>
-                            </label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   ng-model="doctor.experienceYears" 
-                                   name="experienceYears"
-                                   min="0"
-                                   max="60"
-                                   placeholder="0"
-                                   required>
-                            <div class="text-danger small mt-1" 
-                                 ng-show="doctorForm.experienceYears.$touched && doctorForm.experienceYears.$invalid">
-                                Experience is required
-                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Experience (Years) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-lg shadow-sm" ng-model="doctor.experienceYears" min="0" required>
                         </div>
-
-                        <!-- License Number -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                License Number
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   ng-model="doctor.licenseNumber" 
-                                   placeholder="e.g., DN123456">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">License Number</label>
+                            <input type="text" class="form-control form-control-lg shadow-sm" ng-model="doctor.licenseNumber">
                         </div>
-
-                        <!-- Registration Number -->
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">
-                                Registration Number
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   ng-model="doctor.registrationNumber" 
-                                   placeholder="e.g., RN12345">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Room Number</label>
+                            <input type="text" class="form-control form-control-lg shadow-sm" ng-model="doctor.roomNumber">
                         </div>
-
-                        <!-- Languages Spoken -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">
-                                Languages Spoken
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   ng-model="doctor.languagesSpoken" 
-                                   placeholder="e.g., English, Hindi, Marathi">
-                            <small class="text-muted">Separate multiple languages with commas</small>
-                        </div>
-
-                        <!-- Room Number -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">
-                                Room Number
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   ng-model="doctor.roomNumber" 
-                                   placeholder="e.g., 301, A-Block">
-                        </div>
+                    </div>
+                    <div class="mt-5 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary px-4 py-2" ng-click="setTab('personal')">
+                            <i class="fas fa-arrow-left me-2"></i> Previous
+                        </button>
+                        <button type="button" class="btn btn-primary px-4 py-2" ng-click="setTab('followup')">
+                            Next: Follow-up <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Fee & Availability Section -->
-                <div class="mb-4">
-                    <h6 class="text-primary border-bottom pb-2 mb-3">
-                        <i class="fas fa-rupee-sign"></i> Fee & Availability
-                    </h6>
-                    <div class="row">
-                        <!-- Consultation Fee -->
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label fw-bold">
-                                Consultation Fee (₹) <span class="text-danger">*</span>
-                            </label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   ng-model="doctor.consultationFee" 
-                                   name="consultationFee"
-                                   min="0"
-                                   placeholder="500"
-                                   required>
-                        </div>
-
-                        <!-- Follow-up Fee -->
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label fw-bold">
-                                Follow-up Fee (₹) <span class="text-danger">*</span>
-                            </label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   ng-model="doctor.followUpFee" 
-                                   name="followUpFee"
-                                   min="0"
-                                   placeholder="200"
-                                   required>
-                        </div>
-
-                        <!-- Available for OPD -->
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label fw-bold d-block">
-                                OPD Availability
-                            </label>
-                            <div class="form-check form-switch mt-2">
-                                <input class="form-check-input" 
-                                       type="checkbox" 
-                                       id="opdAvailable"
-                                       ng-model="doctor.availableForOPD">
-                                <label class="form-check-label" for="opdAvailable">
-                                    Available for OPD
-                                </label>
+                <!-- Tab 3: Follow-up & Fees (NEW) -->
+                <div ng-show="activeTab === 'followup'" class="tab-pane fade show active">
+                    <div class="alert alert-info border-0 shadow-sm mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Define how follow-up visits should be billed for this doctor.
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-block mb-3">
+                                        <i class="fas fa-money-bill-wave fa-2x text-primary"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-3">Consultation Fee</h6>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-white border-end-0">₹</span>
+                                        <input type="number" class="form-control border-start-0" ng-model="doctor.consultationFee" placeholder="0" required>
+                                    </div>
+                                    <p class="small text-muted mt-2">Standard fee for new visits</p>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Available for Emergency -->
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label fw-bold d-block">
-                                Emergency Availability
-                            </label>
-                            <div class="form-check form-switch mt-2">
-                                <input class="form-check-input" 
-                                       type="checkbox" 
-                                       id="emergencyAvailable"
-                                       ng-model="doctor.availableForEmergency">
-                                <label class="form-check-label" for="emergencyAvailable">
-                                    Available for Emergency
-                                </label>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="rounded-circle bg-success bg-opacity-10 p-3 d-inline-block mb-3">
+                                        <i class="fas fa-sync-alt fa-2x text-success"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-3">Follow-up Fee</h6>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-white border-end-0">₹</span>
+                                        <input type="number" class="form-control border-start-0" ng-model="doctor.followUpFee" placeholder="0" required>
+                                    </div>
+                                    <p class="small text-muted mt-2">Discounted fee for return visits</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 d-inline-block mb-3">
+                                        <i class="fas fa-calendar-check fa-2x text-warning"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-3">Follow-up Limit (Days)</h6>
+                                    <div class="input-group input-group-lg">
+                                        <input type="number" class="form-control text-center" ng-model="doctor.followUpDaysLimit" placeholder="7" required>
+                                        <span class="input-group-text bg-white">Days</span>
+                                    </div>
+                                    <p class="small text-muted mt-2">Max days for follow-up discount</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mt-4">
+                            <div class="form-check form-switch p-4 bg-white rounded shadow-sm">
+                                <input class="form-check-input ms-0 me-3" type="checkbox" id="opdAvailable" ng-model="doctor.availableForOPD">
+                                <label class="form-check-label fw-bold" for="opdAvailable">Enable for OPD Appointments</label>
+                                <p class="small text-muted ms-5 mb-0">Allow patients to book regular OPD slots</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mt-4">
+                            <div class="form-check form-switch p-4 bg-white rounded shadow-sm">
+                                <input class="form-check-input ms-0 me-3" type="checkbox" id="emergencyAvailable" ng-model="doctor.availableForEmergency">
+                                <label class="form-check-label fw-bold" for="emergencyAvailable">Enable for Emergency Visits</label>
+                                <p class="small text-muted ms-5 mb-0">Doctor is available for urgent consultations</p>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Bio Section -->
-                <div class="mb-4">
-                    <h6 class="text-primary border-bottom pb-2 mb-3">
-                        <i class="fas fa-file-alt"></i> Additional Information
-                    </h6>
-                    <div class="row">
-                        <div class="col-12 mb-3">
-                            <label class="form-label fw-bold">
-                                Biography / About Doctor
-                            </label>
-                            <textarea class="form-control" 
-                                      ng-model="doctor.bio" 
-                                      rows="4"
-                                      placeholder="Enter doctor's professional background, expertise, achievements, etc."></textarea>
-                            <small class="text-muted">This information will be visible to patients</small>
-                        </div>
+                    <div class="mt-5 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary px-4 py-2" ng-click="setTab('professional')">
+                            <i class="fas fa-arrow-left me-2"></i> Previous
+                        </button>
+                        <button type="button" class="btn btn-primary px-4 py-2" ng-click="setTab('additional')">
+                            Next: Additional <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="button" 
-                                    class="btn btn-secondary btn-lg px-4"
-                                    ng-click="cancel()">
-                                <i class="fas fa-times"></i> Cancel
+                <!-- Tab 4: Additional Details -->
+                <div ng-show="activeTab === 'additional'" class="tab-pane fade show active">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Biography / About Doctor</label>
+                            <textarea class="form-control shadow-sm" ng-model="doctor.bio" rows="6" placeholder="Expertise, achievements, etc."></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Languages Spoken</label>
+                            <input type="text" class="form-control shadow-sm" ng-model="doctor.languagesSpoken" placeholder="English, Hindi, etc.">
+                        </div>
+                    </div>
+                    
+                    <hr class="my-5">
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-secondary px-5 py-3" ng-click="setTab('followup')">
+                            <i class="fas fa-arrow-left me-2"></i> Previous Section
+                        </button>
+                        <div class="d-flex gap-3">
+                            <button type="button" class="btn btn-light px-5 py-3" ng-click="cancel()">
+                                <i class="fas fa-times me-2"></i> Cancel
                             </button>
-                            <button type="submit" 
-                                    class="btn btn-primary btn-lg px-4"
-                                    ng-disabled="doctorForm.$invalid || loading">
-                                <i class="fas fa-save"></i> Register Doctor
+                            <button type="submit" class="btn btn-success px-5 py-3 shadow" ng-disabled="loading">
+                                <i class="fas fa-save me-2"></i> {{isEditMode ? 'UPDATE DOCTOR PROFILE' : 'REGISTER DOCTOR NOW'}}
                             </button>
                         </div>
                     </div>
@@ -374,141 +273,95 @@
         </div>
     </div>
 
-    <!-- Help Information -->
-    <div class="card mt-4 border-info">
-        <div class="card-header bg-info text-white">
-            <h6 class="mb-0">
-                <i class="fas fa-info-circle"></i> Registration Guidelines
-            </h6>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="text-info">
-                        <i class="fas fa-check-circle"></i> Required Fields:
-                    </h6>
-                    <ul class="small">
-                        <li>First Name, Last Name</li>
-                        <li>Contact Number (10 digits)</li>
-                        <li>Department & Specialization</li>
-                        <li>Qualification & Experience</li>
-                        <li>Consultation & Follow-up Fee</li>
-                    </ul>
-                </div>
-                <div class="col-md-6">
-                    <h6 class="text-info">
-                        <i class="fas fa-lightbulb"></i> Next Steps:
-                    </h6>
-                    <ul class="small">
-                        <li>After registration, you'll receive a Doctor ID</li>
-                        <li>Use this ID to create doctor's schedule</li>
-                        <li>Schedule determines appointment slot availability</li>
-                        <li>Doctor profile will be visible to patients for booking</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <!-- Loading Spinner -->
+    <div ng-if="loading" class="text-center my-5 p-5 card border-0 shadow">
+        <div class="spinner-grow text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+        <h4 class="fw-bold">{{isEditMode ? 'Updating Profile...' : 'Registering Doctor...'}}</h4>
+        <p class="text-muted">Please wait while we process the request.</p>
     </div>
 </div>
 
 <style>
-/* Form styling */
-.form-control:focus,
-.form-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+/* Modern Tab Styling */
+.registration-tabs {
+    background: #f8f9fa;
+    border-bottom: none;
 }
 
-.form-label {
-    margin-bottom: 0.5rem;
-    color: #495057;
+.registration-tabs .nav-link {
+    border: none;
+    border-radius: 0;
+    color: #6c757d;
+    font-weight: 600;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
 }
 
-.form-check-input:checked {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+.registration-tabs .nav-link:hover {
+    background: #e9ecef;
+    color: #0d6efd;
 }
 
-/* Validation styles */
-input.ng-invalid.ng-touched,
-select.ng-invalid.ng-touched,
-textarea.ng-invalid.ng-touched {
-    border-color: #dc3545;
+.registration-tabs .nav-link.active {
+    background: white;
+    color: #0d6efd;
+    border-bottom: 3px solid #0d6efd;
 }
 
-input.ng-valid.ng-touched,
-select.ng-valid.ng-touched {
-    border-color: #198754;
-}
-
-/* Card styling */
+/* Card & Shadow Effects */
 .card {
-    border-radius: 0.5rem;
+    border-radius: 15px;
 }
 
-.card-header {
-    border-radius: 0.5rem 0.5rem 0 0;
+.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,0.075)!important;
 }
 
-/* Button styling */
+.shadow {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,0.15)!important;
+}
+
+/* Form Elements */
+.form-control-lg, .form-select-lg {
+    font-size: 1rem;
+    border-radius: 10px;
+}
+
+.input-group-text {
+    border-radius: 10px 0 0 10px;
+}
+
+.input-group > .form-control {
+    border-radius: 0 10px 10px 0;
+}
+
+.form-switch .form-check-input {
+    width: 3em;
+    height: 1.5em;
+    cursor: pointer;
+}
+
+/* Buttons */
 .btn {
-    transition: all 0.3s ease;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.btn:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-
-/* Section headers */
-h6.text-primary {
+    border-radius: 10px;
     font-weight: 600;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .btn-lg {
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-    }
-    
-    .d-flex.gap-2 {
-        flex-direction: column;
-    }
-    
-    .d-flex.gap-2 .btn {
-        width: 100%;
-    }
+.btn-success {
+    background-color: #198754;
+    border: none;
 }
 
-/* Alert animations */
-.alert {
-    animation: slideDown 0.3s ease-out;
+/* Animations */
+.tab-pane {
+    animation: fadeIn 0.4s ease-in-out;
 }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Loading spinner */
-.spinner-border {
-    animation: spinner-border 0.75s linear infinite;
-}
-
-/* Success message */
-.alert-success {
-    border-left: 4px solid #198754;
-}
+/* Badge fs fix */
+.fs-6 { font-size: 1rem !important; }
 </style>

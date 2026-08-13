@@ -1,119 +1,515 @@
 <!-- ============================================================
-     LOGIN PAGE — Cloudy Minimalist Match
+     LOGIN PAGE — MKCare Split Layout
+     Left: MKCare Branding | Right: Login Form
      ============================================================ -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
 
-<div class="lp-wrapper">
-    <!-- Background overlay elements for that concentric circle effect -->
-    <div class="lp-circles">
-        <div class="circle circle-1"></div>
-        <div class="circle circle-2"></div>
-        <div class="circle circle-3"></div>
+<!-- Subscription Expired Popup Modal -->
+<div class="lp-popup-overlay" ng-show="subPopup.show" ng-click="subPopup.show=false">
+    <div class="lp-popup" ng-click="$event.stopPropagation()">
+        <div class="lp-popup-icon">
+            <i class="fas" ng-class="subPopup.icon || 'fa-ban'"></i>
+        </div>
+        <h3 class="lp-popup-title">{{subPopup.title}}</h3>
+        <p class="lp-popup-msg">{{subPopup.message}}</p>
+        <p class="lp-popup-time" ng-if="subPopup.time">
+            <i class="fas fa-clock"></i> {{subPopup.time}}
+        </p>
+        <button class="lp-popup-btn" ng-click="subPopup.show=false">OK, Got It</button>
+    </div>
+</div>
+
+<!-- Main Split Login Wrapper -->
+<div class="lp-split-wrapper">
+
+    <!-- ════════════════════════════════════════
+         LEFT PANEL — MKCare Brand
+         ════════════════════════════════════════ -->
+    <div class="lp-left-panel">
+        <!-- Mesh grid overlay -->
+        <div class="lp-mesh-grid"></div>
+
+        <!-- Glow orbs -->
+        <div class="lp-orb lp-orb1"></div>
+        <div class="lp-orb lp-orb2"></div>
+        <div class="lp-orb lp-orb3"></div>
+
+        <!-- Top accent bar -->
+        <div class="lp-top-bar"></div>
+
+        <!-- Brand Content -->
+        <div class="lp-brand-content">
+
+            <!-- Logo with glow ring -->
+            <div class="lp-logo-ring">
+                <div class="lp-logo-wrap">
+                    <img src="assets/images/mkcare-logo.png" alt="MKCare Logo" class="lp-logo-img">
+                </div>
+            </div>
+
+            <!-- Product Name -->
+            <div class="lp-name-wrap">
+                <h1 class="lp-product-name">MKCare</h1>
+                <div class="lp-name-underline"></div>
+            </div>
+
+            <!-- Tagline chip -->
+            <div class="lp-tagline-chip">
+                <i class="fas fa-shield-alt"></i>
+                <span>Smart Hospital Management</span>
+            </div>
+
+            <!-- Footer credit -->
+            <div class="lp-credit">
+                <div class="lp-credit-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="lp-credit-label">A Product of</span>
+                <span class="lp-credit-name">
+                    <i class="fas fa-code"></i> Masum Duhijod
+                </span>
+            </div>
+        </div>
     </div>
 
-    <!-- Top Left Brand -->
-    <div class="lp-brand">
-        <i class="fas fa-hospital-symbol"></i> HMIS
-    </div>
-
-    <!-- STEP 1: Enter Clinic ID -->
-    <div class="lp-card" ng-if="step === 1 && !clinicLoading">
-        <div class="lp-icon-top"><i class="fas fa-sign-in-alt"></i></div>
-        
-        <h2 class="lp-title" style="margin-bottom:24px;">Welcome to HMIS</h2>
-
-        <!-- Error Alert -->
-        <div ng-if="error" class="lp-error">
-            <span>{{error}}</span>
-            <i class="fas fa-times" ng-click="clearError()"></i>
+    <!-- ════════════════════════════════════════
+         RIGHT PANEL — Login Form
+         ════════════════════════════════════════ -->
+    <div class="lp-right-panel">
+        <!-- Background blur circles -->
+        <div class="lp-circles">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+            <div class="circle circle-3"></div>
         </div>
 
-        <form ng-submit="validateClinic()" class="lp-form">
-            <div class="lp-input-group">
-                <i class="fas fa-id-card lp-input-icon"></i>
-                <input type="text" class="lp-input" ng-model="clinicInput.id" placeholder="Enter Clinic ID" required autofocus style="text-transform:uppercase;">
+        <!-- STEP 1: Enter Clinic ID -->
+        <div class="lp-card" ng-if="step === 1 && !clinicLoading">
+            <div class="lp-icon-top"><i class="fas fa-sign-in-alt"></i></div>
+
+            <h2 class="lp-title" style="margin-bottom:6px;">Welcome Back</h2>
+            <p class="lp-subtitle">Enter your Clinic ID to continue</p>
+
+            <!-- Error Alert -->
+            <div ng-if="error" class="lp-error">
+                <span>{{error}}</span>
+                <i class="fas fa-times" ng-click="clearError()"></i>
             </div>
-            
-            <button type="submit" class="lp-btn-dark" ng-disabled="clinicLoading || !clinicInput.id">Continue</button>
-            
-            <div class="lp-divider"><span>Or access portal</span></div>
-            
-            <div class="lp-social-container">
-                <button type="button" class="lp-social-btn" ng-click="goToSuperAdmin()" style="width: 100%;">
-                    <i class="fas fa-user-shield text-danger"></i> <span style="margin-left:8px;font-size:0.9rem;font-weight:500;">Super Admin Portal</span>
-                </button>
-            </div>
-        </form>
-    </div>
 
-    <!-- Loading -->
-    <div class="lp-card" ng-if="clinicLoading" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 40px;">
-        <div class="lp-spinner"></div>
-        <p style="margin-top:16px; color:#6b7280; font-size:0.9rem;">Validating...</p>
-    </div>
+            <form ng-submit="validateClinic()" class="lp-form">
+                <div class="lp-input-group">
+                    <i class="fas fa-id-card lp-input-icon"></i>
+                    <input type="text" class="lp-input" ng-model="clinicInput.id"
+                        placeholder="Enter Clinic ID" required autofocus style="text-transform:uppercase;">
+                </div>
 
-    <!-- STEP 2: Sign in with email -->
-    <div class="lp-card" ng-if="step === 2">
-        <button type="button" class="lp-back-btn" ng-click="changeClinic()" title="Change Clinic"><i class="fas fa-arrow-left"></i></button>
-        
-        <div class="lp-icon-top">
-            <img ng-if="validatedClinic.logoPath" ng-src="{{validatedClinic.logoPath}}" alt="Logo" style="width: 100%; height: 100%; border-radius: 12px; object-fit: contain;">
-            <i ng-if="!validatedClinic.logoPath" class="fas fa-hospital-alt"></i>
-        </div>
-        
-        <h2 class="lp-title" style="margin-bottom:24px;">Sign in</h2>
+                <button type="submit" class="lp-btn-dark" ng-disabled="clinicLoading || !clinicInput.id">Continue</button>
 
-        <!-- Error Alert -->
-        <div ng-if="error" class="lp-error">
-            <span>{{error}}</span>
-            <i class="fas fa-times" ng-click="clearError()"></i>
+                <div class="lp-divider"><span>Or access portal</span></div>
+
+                <div class="lp-social-container">
+                    <button type="button" class="lp-social-btn" ng-click="goToSuperAdmin()" style="width: 100%;">
+                        <i class="fas fa-user-shield text-danger"></i>
+                        <span style="margin-left:8px;font-size:0.9rem;font-weight:500;">Super Admin Portal</span>
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <form ng-submit="login()" class="lp-form">
-            <div class="lp-input-group">
-                <i class="fas fa-user lp-input-icon"></i>
-                <input type="text" class="lp-input" ng-model="credentials.username" placeholder="Username" required autofocus autocomplete="username">
-            </div>
+        <!-- Loading -->
+        <div class="lp-card" ng-if="clinicLoading"
+            style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 40px;">
+            <div class="lp-spinner"></div>
+            <p style="margin-top:16px; color:#6b7280; font-size:0.9rem;">Validating...</p>
+        </div>
 
-            <div class="lp-input-group">
-                <i class="fas fa-lock lp-input-icon"></i>
-                <input type="{{showPassword ? 'text' : 'password'}}" class="lp-input" ng-model="credentials.password" placeholder="Password" required autocomplete="current-password">
-                <i class="fas lp-eye-icon" ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'" ng-click="showPassword = !showPassword"></i>
-            </div>
-            
-            <div class="lp-forgot-pass">
-                <a href="#">Forgot password?</a>
-            </div>
-            
-            <button type="submit" class="lp-btn-dark" ng-disabled="loading || !credentials.username || !credentials.password">
-                <span ng-if="!loading">Get Started</span>
-                <span ng-if="loading">Signing in...</span>
+        <!-- STEP 2: Sign in with credentials -->
+        <div class="lp-card" ng-if="step === 2">
+            <button type="button" class="lp-back-btn" ng-click="changeClinic()" title="Change Clinic">
+                <i class="fas fa-arrow-left"></i>
             </button>
-        </form>
+
+            <div class="lp-icon-top">
+                <img ng-if="validatedClinic.logoPath" ng-src="{{validatedClinic.logoPath}}" alt="Logo"
+                    style="width: 100%; height: 100%; border-radius: 12px; object-fit: contain;">
+                <i ng-if="!validatedClinic.logoPath" class="fas fa-hospital-alt"></i>
+            </div>
+
+            <h2 class="lp-title" style="margin-bottom:6px;">Sign In</h2>
+            <p class="lp-subtitle">Enter your credentials to access HMIS</p>
+
+            <!-- Error Alert -->
+            <div ng-if="error" class="lp-error">
+                <span>{{error}}</span>
+                <i class="fas fa-times" ng-click="clearError()"></i>
+            </div>
+
+            <form ng-submit="login()" class="lp-form">
+                <div class="lp-input-group">
+                    <i class="fas fa-user lp-input-icon"></i>
+                    <input type="text" class="lp-input" ng-model="credentials.username"
+                        placeholder="Username" required autofocus autocomplete="username">
+                </div>
+
+                <div class="lp-input-group">
+                    <i class="fas fa-lock lp-input-icon"></i>
+                    <input type="{{showPassword ? 'text' : 'password'}}" class="lp-input"
+                        ng-model="credentials.password" placeholder="Password" required autocomplete="current-password">
+                    <i class="fas lp-eye-icon" ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
+                        ng-click="showPassword = !showPassword"></i>
+                </div>
+
+                <div class="lp-forgot-pass">
+                    <a href="#">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="lp-btn-dark"
+                    ng-disabled="loading || !credentials.username || !credentials.password">
+                    <span ng-if="!loading">Get Started</span>
+                    <span ng-if="loading">Signing in...</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Right panel footer -->
+        <div class="lp-right-footer">
+            Powered by <strong>MKCare</strong> &copy; 2025
+        </div>
     </div>
 </div>
 
 <style>
-    /* Reset & Base */
-    .lp-wrapper *, .lp-wrapper *::before, .lp-wrapper *::after {
+    /* ═══════════════════════════════════════════════════
+       BASE RESET
+    ═══════════════════════════════════════════════════ */
+    .lp-split-wrapper *, .lp-split-wrapper *::before, .lp-split-wrapper *::after {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
     }
-    .lp-wrapper {
+
+    /* ═══════════════════════════════════════════════════
+       OUTER WRAPPER — Full Screen Split
+    ═══════════════════════════════════════════════════ */
+    .lp-split-wrapper {
         font-family: 'Inter', sans-serif;
         min-height: 100vh;
         width: 100%;
+        display: flex;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       LEFT PANEL — MKCare Branding
+    ═══════════════════════════════════════════════════ */
+    .lp-left-panel {
+        width: 45%;
+        min-height: 100vh;
+        /* Deep teal-midnight: perfectly complements cyan-blue MK logo */
+        background:
+            linear-gradient(160deg,
+                #020b18 0%,
+                #041525 30%,
+                #062035 60%,
+                #072a45 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         position: relative;
         overflow: hidden;
-        /* Custom cloudy sky gradient background to closely match the image provided */
-        background: linear-gradient(to top, #eef5ff 0%, #c4e0f9 40%, #9bcbf4 100%);
-        padding: 20px;
+        flex-shrink: 0;
     }
 
-    /* Concentric Background Circles */
-    .lp-circles {
+    /* Mesh Grid overlay */
+    .lp-mesh-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(0, 180, 255, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 180, 255, 0.04) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* Top accent bar */
+    .lp-top-bar {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #00c8ff, #1e78ff, #00c8ff, transparent);
+        z-index: 5;
+        animation: lp-bar-shine 3s ease-in-out infinite;
+    }
+    @keyframes lp-bar-shine {
+        0%, 100% { opacity: 0.6; }
+        50%       { opacity: 1; box-shadow: 0 0 16px rgba(0, 200, 255, 0.8); }
+    }
+
+    /* Glow Orbs */
+    .lp-orb {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        filter: blur(60px);
+    }
+    .lp-orb1 {
+        width: 320px; height: 320px;
+        top: -80px; right: -80px;
+        background: radial-gradient(circle, rgba(0, 120, 255, 0.25) 0%, transparent 70%);
+        animation: lp-float 8s ease-in-out infinite;
+    }
+    .lp-orb2 {
+        width: 260px; height: 260px;
+        bottom: -60px; left: -60px;
+        background: radial-gradient(circle, rgba(0, 200, 220, 0.2) 0%, transparent 70%);
+        animation: lp-float 10s ease-in-out infinite reverse;
+    }
+    .lp-orb3 {
+        width: 180px; height: 180px;
+        bottom: 35%; right: 8%;
+        background: radial-gradient(circle, rgba(30, 120, 255, 0.15) 0%, transparent 70%);
+        animation: lp-float 7s ease-in-out infinite 2s;
+    }
+    @keyframes lp-float {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50%       { transform: translateY(-20px) scale(1.08); }
+    }
+
+    /* Brand Content */
+    .lp-brand-content {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 40px 36px;
+        animation: fadeInLeft 0.7s ease-out both;
+    }
+    @keyframes fadeInLeft {
+        from { opacity: 0; transform: translateX(-30px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Logo glow ring */
+    .lp-logo-ring {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 28px;
+    }
+    .lp-logo-ring::before {
+        content: '';
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 200, 255, 0.18);
+        animation: lp-ring-pulse 3s ease-in-out infinite;
+    }
+    .lp-logo-ring::after {
+        content: '';
+        position: absolute;
+        width: 210px;
+        height: 210px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 200, 255, 0.07);
+        animation: lp-ring-pulse 3s ease-in-out infinite 1s;
+    }
+    @keyframes lp-ring-pulse {
+        0%, 100% { transform: scale(1); opacity: 0.6; }
+        50%       { transform: scale(1.06); opacity: 1; }
+    }
+
+    /* Logo container */
+    .lp-logo-wrap {
+        width: 155px;
+        height: 155px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 2;
+        transition: transform 0.35s ease;
+    }
+    .lp-logo-wrap:hover { transform: scale(1.06) translateY(-3px); }
+    .lp-logo-img {
+        width: 155px;
+        height: 155px;
+        object-fit: contain;
+        mix-blend-mode: screen;
+        filter:
+            drop-shadow(0 0 18px rgba(0, 200, 255, 0.55))
+            brightness(1.15)
+            contrast(1.05);
+        transition: filter 0.35s ease;
+    }
+    .lp-logo-wrap:hover .lp-logo-img {
+        filter:
+            drop-shadow(0 0 30px rgba(0, 200, 255, 0.85))
+            brightness(1.25)
+            contrast(1.08);
+    }
+
+    /* Product Name wrapper */
+    .lp-name-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    /* Product Name */
+    .lp-product-name {
+        font-family: 'Rajdhani', 'Inter', sans-serif;
+        font-size: 3.2rem;
+        font-weight: 700;
+        line-height: 0.95;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        background: linear-gradient(135deg,
+            #ffffff  0%,
+            #a8e6ff 35%,
+            #00c8ff  60%,
+            #aad4ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 0 20px rgba(0, 200, 255, 0.4));
+        animation: lp-name-glow 4s ease-in-out infinite;
+        margin-bottom: 10px;
+    }
+    @keyframes lp-name-glow {
+        0%, 100% { filter: drop-shadow(0 0 12px rgba(0, 200, 255, 0.3)); }
+        50%       { filter: drop-shadow(0 0 28px rgba(0, 200, 255, 0.7)); }
+    }
+    /* Underline accent */
+    .lp-name-underline {
+        width: 60px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00c8ff, transparent);
+        border-radius: 2px;
+        margin: 0 auto;
+        animation: lp-bar-shine 3s ease-in-out infinite;
+    }
+
+    /* Tagline chip */
+    .lp-tagline-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 200, 255, 0.06);
+        border: 1px solid rgba(0, 200, 255, 0.18);
+        border-radius: 30px;
+        padding: 7px 18px;
+        margin-bottom: 32px;
+        backdrop-filter: blur(6px);
+    }
+    .lp-tagline-chip i {
+        font-size: 0.7rem;
+        color: #00c8ff;
+    }
+    .lp-tagline-chip span {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: rgba(160, 220, 255, 0.85);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    /* Credit / Author */
+    .lp-credit {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        position: relative;
+        background: linear-gradient(135deg,
+            rgba(0, 200, 255, 0.05) 0%,
+            rgba(0, 100, 200, 0.08) 100%);
+        border: 1px solid rgba(0, 200, 255, 0.2);
+        border-radius: 16px;
+        padding: 16px 32px;
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        animation: lp-credit-glow 5s ease-in-out infinite;
+    }
+    /* Animated border shimmer */
+    @keyframes lp-credit-glow {
+        0%, 100% { border-color: rgba(0, 200, 255, 0.2); box-shadow: none; }
+        50%       { border-color: rgba(0, 200, 255, 0.45); box-shadow: 0 0 18px rgba(0, 200, 255, 0.12); }
+    }
+    /* Decorative top dots */
+    .lp-credit-dots {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 4px;
+    }
+    .lp-credit-dots span {
+        display: block;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: rgba(0, 200, 255, 0.5);
+    }
+    .lp-credit-dots span:nth-child(2) {
+        background: rgba(0, 200, 255, 0.8);
+        transform: scale(1.2);
+    }
+    .lp-credit-label {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: rgba(0, 200, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+    }
+    .lp-credit-name {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        background: linear-gradient(135deg,
+            #ffffff  0%,
+            #a8e6ff 40%,
+            #00c8ff  100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+    .lp-credit-name i {
+        font-size: 0.75rem;
+        -webkit-text-fill-color: rgba(0, 200, 255, 0.7);
+        color: rgba(0, 200, 255, 0.7);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RIGHT PANEL — Login Form Area
+    ═══════════════════════════════════════════════════ */
+    .lp-right-panel {
+        flex: 1;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(to top, #eef5ff 0%, #c4e0f9 40%, #9bcbf4 100%);
+        padding: 20px;
+        flex-direction: column;
+    }
+
+    /* Concentric Background Circles (right panel) */
+    .lp-right-panel .lp-circles {
         position: absolute;
         top: 50%;
         left: 50%;
@@ -129,48 +525,43 @@
         border: 1px solid rgba(255, 255, 255, 0.4);
         border-radius: 50%;
     }
-    .circle-1 { width: 500px; height: 500px; }
-    .circle-2 { width: 800px; height: 800px; border-color: rgba(255, 255, 255, 0.25); }
-    .circle-3 { width: 1200px; height: 1200px; border-color: rgba(255, 255, 255, 0.15); }
+    .circle-1 { width: 400px; height: 400px; }
+    .circle-2 { width: 650px; height: 650px; border-color: rgba(255, 255, 255, 0.25); }
+    .circle-3 { width: 900px; height: 900px; border-color: rgba(255, 255, 255, 0.15); }
 
-    /* Top Left Brand */
-    .lp-brand {
+    /* Right panel footer */
+    .lp-right-footer {
         position: absolute;
-        top: 30px;
-        left: 40px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 700;
-        font-size: 1.1rem;
-        color: #111827;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.75rem;
+        color: rgba(30, 60, 100, 0.55);
+        font-weight: 500;
+        white-space: nowrap;
         z-index: 10;
-        background: rgba(255, 255, 255, 0.7);
-        padding: 8px 14px;
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
     }
-    .lp-brand i { font-size: 1.25rem; }
 
-    /* Main Card */
+    /* ═══════════════════════════════════════════════════
+       CARD (Right side login box)
+    ═══════════════════════════════════════════════════ */
     .lp-card {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(16px);
         border-radius: 24px;
         width: 100%;
-        max-width: 440px;
+        max-width: 420px;
         padding: 40px 32px 36px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(255,255,255,0.6);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255,255,255,0.6);
         position: relative;
         z-index: 10;
         text-align: center;
         animation: fadeUp 0.5s ease-out both;
-        border-bottom: 3px solid rgba(255,255,255,0.7); /* small glare effect */
+        border-bottom: 3px solid rgba(255,255,255,0.7);
     }
-
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        to   { opacity: 1; transform: translateY(0); }
     }
 
     /* Back Button */
@@ -190,17 +581,17 @@
 
     /* Top Icon */
     .lp-icon-top {
-        width: 48px;
-        height: 48px;
-        margin: 0 auto 20px;
-        background: linear-gradient(135deg, #ffffff, #f9fafb);
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 18px;
+        background: linear-gradient(135deg, #ffffff, #f0f4ff);
         border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #374151;
         font-size: 1.3rem;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
         border: 1px solid #e5e7eb;
     }
 
@@ -213,18 +604,14 @@
         letter-spacing: -0.02em;
     }
     .lp-subtitle {
-        font-size: 0.85rem;
+        font-size: 0.83rem;
         color: #6b7280;
-        margin-bottom: 28px;
+        margin-bottom: 24px;
         line-height: 1.4;
-        padding: 0 10px;
     }
 
-    /* Form Fields */
-    .lp-form {
-        display: flex;
-        flex-direction: column;
-    }
+    /* Form */
+    .lp-form { display: flex; flex-direction: column; }
     .lp-input-group {
         display: flex;
         align-items: center;
@@ -238,22 +625,13 @@
     .lp-input-group:focus-within {
         background: #fff;
         border-color: #d1d5db;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
-
-    .lp-input-icon {
-        color: #9ca3af;
-        font-size: 0.9rem;
-        margin-right: 12px;
-    }
+    .lp-input-icon { color: #9ca3af; font-size: 0.9rem; margin-right: 12px; }
     .lp-eye-icon {
-        color: #9ca3af;
-        cursor: pointer;
-        padding: 10px;
-        transition: color 0.2s;
+        color: #9ca3af; cursor: pointer; padding: 10px; transition: color 0.2s;
     }
     .lp-eye-icon:hover { color: #4b5563; }
-
     .lp-input {
         flex: 1;
         background: transparent;
@@ -267,24 +645,17 @@
     }
     .lp-input::placeholder { color: #9ca3af; font-weight: 400; }
 
-    /* Forgot Password */
-    .lp-forgot-pass {
-        text-align: right;
-        margin-bottom: 24px;
-        margin-top: -2px;
-    }
+    /* Forgot password */
+    .lp-forgot-pass { text-align: right; margin-bottom: 24px; margin-top: -2px; }
     .lp-forgot-pass a {
-        color: #374151;
-        text-decoration: none;
-        font-size: 0.8rem;
-        font-weight: 600;
-        transition: color 0.2s;
+        color: #374151; text-decoration: none; font-size: 0.8rem;
+        font-weight: 600; transition: color 0.2s;
     }
     .lp-forgot-pass a:hover { color: #000; }
 
     /* Dark Button */
     .lp-btn-dark {
-        background: #18181b;
+        background: linear-gradient(135deg, #0d2348, #0e5ec4);
         color: #fff;
         border: none;
         border-radius: 10px;
@@ -295,87 +666,139 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s, transform 0.1s;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+        box-shadow: 0 4px 16px rgba(14, 94, 196, 0.3);
     }
-    .lp-btn-dark:hover:not(:disabled) { background: #000; transform: translateY(-1px); }
+    .lp-btn-dark:hover:not(:disabled) {
+        background: linear-gradient(135deg, #0a1628, #0a3a72);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(14, 94, 196, 0.4);
+    }
     .lp-btn-dark:disabled { opacity: 0.6; cursor: not-allowed; }
 
     /* Divider */
-    .lp-divider {
-        margin: 24px 0;
-        text-align: center;
-        position: relative;
-    }
+    .lp-divider { margin: 22px 0; text-align: center; position: relative; }
     .lp-divider::before {
         content: '';
         position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
+        top: 50%; left: 0; right: 0;
         border-top: 2px dotted #e5e7eb;
         z-index: 1;
     }
     .lp-divider span {
-        position: relative;
-        z-index: 2;
-        background: #fff;
-        padding: 0 12px;
-        color: #9ca3af;
-        font-size: 0.75rem;
-        font-weight: 500;
+        position: relative; z-index: 2;
+        background: #fff; padding: 0 12px;
+        color: #9ca3af; font-size: 0.75rem; font-weight: 500;
     }
 
     /* Social Buttons */
-    .lp-social-container {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-    }
+    .lp-social-container { display: flex; gap: 12px; justify-content: center; }
     .lp-social-btn {
-        flex: 1;
-        background: #fff;
+        flex: 1; background: #fff;
         border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-        font-size: 1.1rem;
+        border-radius: 10px; padding: 12px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.2s;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02); font-size: 1.1rem;
     }
     .lp-social-btn:hover {
-        background: #f9fafb;
-        border-color: #d1d5db;
-        transform: translateY(-1px);
+        background: #f0f5ff; border-color: #bcd4f8; transform: translateY(-1px);
     }
 
     /* Error Alert */
     .lp-error {
-        background: #fef2f2;
-        border-radius: 8px;
-        padding: 12px;
-        color: #dc2626;
-        font-size: 0.85rem;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        text-align: left;
+        background: #fef2f2; border-radius: 8px; padding: 12px;
+        color: #dc2626; font-size: 0.85rem; margin-bottom: 20px;
+        display: flex; align-items: center; justify-content: space-between; text-align: left;
     }
     .lp-error i { cursor: pointer; opacity: 0.6; }
     .lp-error i:hover { opacity: 1; }
 
     /* Spinner */
     .lp-spinner {
-        width: 30px;
-        height: 30px;
+        width: 30px; height: 30px;
         border: 3px solid #e5e7eb;
-        border-top-color: #111827;
+        border-top-color: #0e5ec4;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Subscription Expired Popup ─── */
+    .lp-popup-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(6px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999;
+        animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .lp-popup {
+        background: #fff; border-radius: 24px;
+        padding: 40px 36px 32px; max-width: 400px; width: 90%;
+        text-align: center;
+        box-shadow: 0 32px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04);
+        animation: popIn 0.3s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes popIn {
+        from { opacity:0; transform: scale(0.85) translateY(20px); }
+        to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+    .lp-popup-icon {
+        width: 72px; height: 72px; border-radius: 50%;
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        border: 3px solid #fecaca;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px; font-size: 1.8rem; color: #ef4444;
+        animation: pulse-red 2s infinite;
+    }
+    @keyframes pulse-red {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.25); }
+        50%       { box-shadow: 0 0 0 12px rgba(239,68,68,0); }
+    }
+    .lp-popup-title {
+        font-size: 1.25rem; font-weight: 700; color: #111827;
+        margin-bottom: 10px; letter-spacing: -0.02em;
+    }
+    .lp-popup-msg { font-size: 0.875rem; color: #6b7280; line-height: 1.6; margin-bottom: 14px; }
+    .lp-popup-time {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #fef2f2; border: 1px solid #fecaca;
+        color: #dc2626; font-size: 0.8rem; font-weight: 600;
+        padding: 6px 16px; border-radius: 20px; margin-bottom: 24px;
+    }
+    .lp-popup-btn {
+        background: linear-gradient(135deg, #0d2348, #0e5ec4);
+        color: #fff; border: none; border-radius: 10px;
+        padding: 13px 32px; font-size: 0.95rem; font-weight: 600;
+        cursor: pointer; width: 100%;
+        transition: all 0.2s;
+        box-shadow: 0 4px 16px rgba(14, 94, 196, 0.3);
+    }
+    .lp-popup-btn:hover {
+        background: linear-gradient(135deg, #0a1628, #0a3a72);
+        transform: translateY(-1px);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RESPONSIVE — Mobile: Stack vertically
+    ═══════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+        .lp-split-wrapper { flex-direction: column; }
+        .lp-left-panel {
+            width: 100%;
+            min-height: auto;
+            padding: 36px 20px 28px;
+        }
+        .lp-logo-ring::before { width: 120px; height: 120px; }
+        .lp-logo-ring::after  { width: 145px; height: 145px; }
+        .lp-logo-wrap { width: 100px; height: 100px; margin-bottom: 0; }
+        .lp-logo-img  { width: 100px; height: 100px; }
+        .lp-product-name { font-size: 2.2rem; }
+        .lp-tagline-chip { margin-bottom: 20px; }
+        .lp-credit { padding: 10px 20px; }
+        .lp-right-panel { padding: 24px 16px 50px; }
+        .lp-right-footer { font-size: 0.7rem; }
+    }
 </style>

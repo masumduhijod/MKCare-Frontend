@@ -300,17 +300,18 @@
         </div>
 
         <!-- ═══ TODAY'S TRANSACTIONS TABLE ═══ -->
-        <div class="ds-panel" ng-if="hasRole(['ADMIN','DOCTOR']) && revenue.transactions.length > 0"
+        <div class="ds-panel" ng-if="hasRole(['SUPER_ADMIN','ADMIN','DOCTOR'])"
             style="margin-bottom:18px">
             <div class="ds-panel-head ds-panel-head--green">
                 <h3><i class="fas fa-receipt"></i> Today's Transactions</h3>
                 <div style="display:flex;align-items:center;gap:10px">
-                    <span class="ds-count-badge">{{revenue.transactions.length}}</span>
+                    <span class="ds-count-badge">{{revenue.transactions.length || 0}}</span>
                     <a href="#!/reports/payment-collection" class="ds-link-btn">View All <i
                             class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
-            <div class="ds-tbl-wrap">
+            
+            <div class="ds-tbl-wrap" ng-if="revenue.transactions.length > 0">
                 <table class="ds-tbl">
                     <thead>
                         <tr>
@@ -337,6 +338,11 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            
+            <div ng-if="!revenue.transactions || revenue.transactions.length === 0" style="padding: 30px; text-align: center; color: #94a3b8;">
+                <i class="fas fa-receipt" style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3;"></i>
+                <h5 style="margin: 0; color: #64748b; font-size: 1rem;">No transactions yet for today</h5>
             </div>
         </div>
 

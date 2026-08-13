@@ -194,12 +194,19 @@ app.factory('CVRService', ['$http', '$q', function ($http, $q) {
         };
 
     
-         /**
-          * Get CVR by Appointment ID - GET /cvr/by-appointment/{appointmentId}
-          */
         service.getByAppointmentId = function (appointmentId) {
             var url = baseUrl + API_CONFIG.ENDPOINTS.CVR.GET_BY_APPOINTMENT_ID
                     .replace('{appointmentId}', appointmentId);
+            return $http.get(url);
+        };
+    
+        /**
+         * Get Active OP Cases for Follow-up - GET /cvr/active-cases/{pinNumber}/{doctorId}
+         */
+        service.getActiveOpCases = function(pinNumber, doctorId) {
+            var url = baseUrl + API_CONFIG.ENDPOINTS.CVR.GET_ACTIVE_CASES
+                .replace('{pinNumber}', pinNumber)
+                .replace('{doctorId}', doctorId);
             return $http.get(url);
         };
     

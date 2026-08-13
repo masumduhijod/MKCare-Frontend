@@ -85,7 +85,32 @@ app.controller('RootController', ['$scope', '$location', '$rootScope',
             return roles.indexOf($scope.currentUser.role) !== -1;
         };
 
+        // ⭐ RBAC: Check if user has access to a specific module
+        $scope.hasModule = function(moduleCode) {
+            if (!$scope.currentUser) return false;
+            
+            // 1. Admin and Super Admin always have all access
+            if ($scope.currentUser.role === 'ADMIN' || $scope.currentUser.role === 'SUPER_ADMIN') {
+                return true;
+            }
+
+            // 2. Check permissions list
+            var perms = $scope.currentUser.permissions || [];
+
+            // 3. Fallback permissions if backend returns empty
+            if (perms.length === 0) {
+                if ($scope.currentUser.role === 'DOCTOR') {
+                    perms = ['DASHBOARD', 'PATIENT_LIST', 'OPD_CONSULT', 'APP_LIST', 'REPORTS'];
+                } else if ($scope.currentUser.role === 'RECEPTIONIST') {
+                    perms = ['DASHBOARD', 'PATIENT_REG', 'PATIENT_LIST', 'APP_BOOKING', 'APP_LIST', 'OPD_QUEUE', 'BILLING', 'PAYMENTS', 'REPORTS'];
+                }
+            }
+
+            return perms.indexOf(moduleCode) !== -1;
+        };
+
         $rootScope.hasRole = $scope.hasRole;
+        $rootScope.hasModule = $scope.hasModule;
 
         /**
          * Logout Function
@@ -164,6 +189,18 @@ app.controller('RootController', ['$scope', '$location', '$rootScope',
             $rootScope.confirmDialog.show = true;
         };
 
+        // ✅ GLOBAL PREMIUM ALERT (Super Admin Style)
+        $rootScope.premiumAlert = { show: false };
+        $rootScope.showPremiumAlert = function(options) {
+            $rootScope.premiumAlert = {
+                show: true,
+                title: options.title || 'Notification',
+                message: options.message || '',
+                type: options.type || 'success', // success, warning, error
+                icon: options.icon || (options.type === 'error' ? 'fa-times-circle' : 'fa-check-circle')
+            };
+        };
+
         // Initialize - Just check auth, don't redirect
         $scope.checkAuth();
 
@@ -202,13 +239,27 @@ app.run(['$rootScope', '$location', '$http', function ($rootScope, $location, $h
     // Add auth token to all requests
     $http.defaults.headers.common['Content-Type'] = 'application/json';
 
+    // Set initially
+    var token = localStorage.getItem('authToken');
+    var tenantId = localStorage.getItem('tenantId');
+    if (token) $http.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+    if (tenantId) $http.defaults.headers.common['X-Tenant-ID'] = tenantId;
+
     // Interceptor for auth token
     $rootScope.$on('$routeChangeStart', function () {
         var token = localStorage.getItem('authToken');
+        var tenantId = localStorage.getItem('tenantId');
+        
         if (token) {
             $http.defaults.headers.common['Authorization'] = 'Bearer ' + token;
         } else {
             delete $http.defaults.headers.common['Authorization'];
+        }
+        
+        if (tenantId) {
+            $http.defaults.headers.common['X-Tenant-ID'] = tenantId;
+        } else {
+            delete $http.defaults.headers.common['X-Tenant-ID'];
         }
     });
 }]);

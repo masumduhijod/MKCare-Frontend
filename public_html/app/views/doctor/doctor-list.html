@@ -40,9 +40,14 @@ and open the template in the editor.
                                 <span class="badge bg-secondary" ng-if="doctor.status !== 'AVAILABLE'">{{doctor.status}}</span>
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-primary" ng-click="viewSchedule(doctor.doctorId)">
-                                    <i class="fas fa-calendar"></i> Schedule
-                                </button>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary" ng-click="viewSchedule(doctor.doctorId)">
+                                        <i class="fas fa-calendar"></i> Schedule
+                                    </button>
+                                    <button class="btn btn-sm btn-warning" ng-click="editDoctor(doctor.doctorId)" ng-if="canEditDoctor(doctor)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>

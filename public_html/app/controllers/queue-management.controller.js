@@ -2238,11 +2238,6 @@ app.controller('QueueManagementController',
         
         $scope.loadDoctors();
         
-        if ($scope.currentUser.role === 'DOCTOR') {
-            $scope.selectedDoctor = $scope.currentUser.username;
-            $scope.loadQueue();
-        }
-        
         if ($scope.autoRefresh) {
             $scope.startAutoRefresh();
         }
@@ -2257,6 +2252,24 @@ app.controller('QueueManagementController',
                 if (response.data.success) {
                     $scope.doctors = response.data.data;
                     console.log('✅ Loaded doctors:', $scope.doctors.length);
+                    
+                    if ($scope.currentUser.role === 'DOCTOR') {
+                        var myDoctor = $scope.doctors.find(function(d) {
+                             return (d.userId && d.userId == $scope.currentUser.userId) ||
+                                    (d.email && d.email === $scope.currentUser.email) || 
+                                    (d.username && d.username === $scope.currentUser.username) ||
+                                    (d.contactNumber && d.contactNumber === $scope.currentUser.contactNumber) ||
+                                    (d.doctorId === $scope.currentUser.username) ||
+                                    (d.fullName && $scope.currentUser.fullName && d.fullName.toLowerCase() === $scope.currentUser.fullName.toLowerCase());
+                        });
+                        
+                        if (myDoctor) {
+                            $scope.selectedDoctor = myDoctor.doctorId;
+                        } else {
+                            $scope.selectedDoctor = $scope.currentUser.username;
+                        }
+                        $scope.loadQueue();
+                    }
                 }
             },
             function(error) {
@@ -2331,15 +2344,26 @@ app.controller('QueueManagementController',
                         
                         console.log('✅ Queue loaded:', $scope.queue.length, 'appointments');
                         
-                        // Log CVR numbers
-                        $scope.queue.forEach(function(entry) {
-                            if (entry.cvrNumber) {
-                                console.log('  → Patient:', entry.patientName, '| CVR:', entry.cvrNumber, '| Status:', entry.status);
+                        // ✅ STRICT SELF-HEALING: Verify full clinical completion (Consultation + Prescription)
+                        OPDService.getClinicallyFinalizedCvrs($scope.selectedDoctor, formattedDate).then(
+                            function(finalizedResponse) {
+                                if (finalizedResponse.data.success && finalizedResponse.data.data) {
+                                    var finalizedCvrs = finalizedResponse.data.data;
+                                    console.log('🔍 Checking finalized clinical records for self-healing. Finalized CVRs:', finalizedCvrs);
+                                    
+                                    $scope.queue.forEach(function(entry) {
+                                        if ((entry.status === 'CONSULTING' || entry.status === 'IN_CONSULTATION') && 
+                                            finalizedCvrs.indexOf(entry.cvrNumber) !== -1) {
+                                            console.log('💡 Strict Healing: Marked', entry.patientName, 'as COMPLETED because both Consultation and Prescription exist');
+                                            entry.status = 'COMPLETED';
+                                        }
+                                    });
+                                }
                             }
+                        ).finally(function() {
+                            $scope.calculateStatistics();
+                            $scope.loading = false;
                         });
-                        
-                        $scope.calculateStatistics();
-                        $scope.loading = false;
                     });
                     
                 } else {
@@ -2695,48 +2719,38 @@ app.controller('QueueManagementController',
      * ✅ HELPER: Navigate to consultation room OR prescription room based on progress
      */
     function navigateToConsultationRoom(entry) {
-        console.log('✅ Checking if consultation already exists...');
+        console.log('✅ Checking if consultation already exists for CVR:', entry.cvrNumber);
         
         $scope.loading = true;
-        // Check if consultation exists
-        var apiUrl = API_CONFIG.GATEWAY_URL + API_CONFIG.ENDPOINTS.CONSULTATION.GET_BY_CVR.replace('{cvrNumber}', entry.cvrNumber);
         
-        $.ajax({
-            url: apiUrl,
-            type: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-            },
-            success: function(response) {
-                $scope.$apply(function() {
-                    $scope.loading = false;
-                    if (response && response.success && response.data) {
-                        // Consultation already done! Go to prescription.
-                        console.log('✅ Consultation already exists. Navigating to prescription room...', response.data.consultationId);
-                        $location.path('/prescription/create/' + response.data.consultationId).search({edit: 'true'});
-                    } else {
-                        // No consultation yet. Go to consultation room.
-                        console.log('✅ No consultation yet. Redirecting to consultation room...');
-                        $location.path('/consultation/room').search({
-                            appointmentId: entry.appointmentId,
-                            pinNumber: entry.pinNumber,
-                            cvrNumber: entry.cvrNumber
-                        });
-                    }
-                });
-            },
-            error: function() {
-                $scope.$apply(function() {
-                    $scope.loading = false;
-                    console.log('✅ Redirecting to consultation room...');
+        // Use OPDService instead of raw AJAX
+        OPDService.getConsultationByCvr(entry.cvrNumber).then(
+            function(response) {
+                $scope.loading = false;
+                if (response.data.success && response.data.data) {
+                    // Consultation already done! Go to prescription.
+                    console.log('✅ Consultation already exists. Navigating to prescription room...', response.data.data.consultationId);
+                    $location.path('/prescription/create/' + response.data.data.consultationId).search({edit: 'true'});
+                } else {
+                    // No consultation yet. Go to consultation room.
+                    console.log('✅ No consultation yet. Redirecting to consultation room...');
                     $location.path('/consultation/room').search({
                         appointmentId: entry.appointmentId,
                         pinNumber: entry.pinNumber,
                         cvrNumber: entry.cvrNumber
                     });
+                }
+            },
+            function(error) {
+                $scope.loading = false;
+                console.warn('⚠️ Error checking consultation, defaulting to consultation room:', error);
+                $location.path('/consultation/room').search({
+                    appointmentId: entry.appointmentId,
+                    pinNumber: entry.pinNumber,
+                    cvrNumber: entry.cvrNumber
                 });
             }
-        });
+        );
     }
     
     /**

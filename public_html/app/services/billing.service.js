@@ -143,13 +143,34 @@ app.service('BillingService', ['$http', function($http) {
         return ['CASH', 'UPI', 'CARD', 'NET_BANKING', 'CHEQUE'];
     };
     /**
- * Get invoice by consultation ID
- * @param {Number} consultationId
- */
-this.getInvoiceByConsultation = function(consultationId) {
-    var url = API_CONFIG.ENDPOINTS.INVOICE.GET_BY_CONSULTATION
-        .replace('{consultationId}', consultationId);
-    return $http.get(baseUrl + url);
-};
+     * Get invoice by consultation ID
+     * @param {Number} consultationId
+     */
+    this.getInvoiceByConsultation = function(consultationId) {
+        var url = API_CONFIG.ENDPOINTS.INVOICE.GET_BY_CONSULTATION
+            .replace('{consultationId}', consultationId);
+        return $http.get(baseUrl + url);
+    };
+
+    /**
+     * Get invoices by doctor and date — routes via Gateway (has X-Tenant-ID)
+     * @param {String} doctorId
+     * @param {String} date  - yyyy-MM-dd
+     */
+    this.getInvoicesByDoctorDate = function(doctorId, date) {
+        var url = API_CONFIG.ENDPOINTS.INVOICE.GET_BY_DOCTOR_DATE
+            .replace('{doctorId}', doctorId)
+            .replace('{date}', date);
+        return $http.get(baseUrl + url);
+    };
+
+    /**
+     * Get invoices for a list of CVR numbers
+     * @param {Array} cvrNumbers
+     */
+    this.getInvoicesByCvrs = function(cvrNumbers) {
+        var url = API_CONFIG.ENDPOINTS.INVOICE.GET_BY_CVRS;
+        return $http.post(baseUrl + url, cvrNumbers);
+    };
 
 }]);

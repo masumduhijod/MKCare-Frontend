@@ -1,0 +1,553 @@
+<!-- User Role Master (Clinic Admin) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<div class="role-master-root">
+    <!-- Header Section -->
+    <div class="rm-header">
+        <div class="rm-header-content">
+            <div class="rm-title-group">
+                <div class="rm-icon"><i class="fas fa-user-shield"></i></div>
+                <div>
+                    <h1 class="rm-title">User Role Master</h1>
+                    <p class="rm-subtitle">Manage role and user access in your clinic.</p>
+                </div>
+            </div>
+            <div class="rm-actions">
+                <a href="#!/user/list" class="rm-btn rm-btn--outline">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="rm-container">
+        <!-- Mode Toggle -->
+        <div class="rm-mode-selector mb-3">
+            <button class="rm-mode-btn" ng-class="{'rm-mode-btn--active': rbacMode === 'role'}" ng-click="setMode('role')">
+                <i class="fas fa-user-tag"></i> Role Level
+            </button>
+            <button class="rm-mode-btn" ng-class="{'rm-mode-btn--active': rbacMode === 'user'}" ng-click="setMode('user')">
+                <i class="fas fa-user-cog"></i> User Level
+            </button>
+        </div>
+
+        <div class="rm-layout">
+            <!-- Sidebar: Roles or Users -->
+            <div class="rm-sidebar">
+                <div class="rm-card">
+                    <div class="rm-card-header">
+                        <i class="fas" ng-class="rbacMode === 'role' ? 'fa-user-tag' : 'fa-users'"></i> 
+                        {{rbacMode === 'role' ? 'System Roles' : 'Clinic Users'}}
+                    </div>
+                    
+                    <!-- Role List -->
+                    <div class="rm-role-list" ng-if="rbacMode === 'role'">
+                        <div class="rm-role-item" 
+                             ng-repeat="role in roles" 
+                             ng-class="{'rm-role-item--active': selectedRole === role}"
+                             ng-click="selectRole(role)">
+                            <div class="rm-role-icon">
+                                <i class="fas" ng-class="{
+                                    'fa-user-cog': role === 'ADMIN',
+                                    'fa-user-md': role === 'DOCTOR',
+                                    'fa-user-nurse': role === 'NURSE',
+                                    'fa-user-tie': role === 'RECEPTIONIST',
+                                    'fa-file-invoice-dollar': role === 'BILLING',
+                                    'fa-pills': role === 'PHARMACIST',
+                                    'fa-microscope': role === 'LAB_TECH'
+                                } || 'fa-user'"></i>
+                            </div>
+                            <div class="rm-role-info">
+                                <span class="rm-role-name">{{role}}</span>
+                            </div>
+                            <i class="fas fa-chevron-right rm-chevron" ng-if="selectedRole === role"></i>
+                        </div>
+                    </div>
+
+                    <!-- User List -->
+                    <div class="rm-role-list" ng-if="rbacMode === 'user'">
+                        <div class="p-2">
+                            <input type="text" class="form-control form-control-sm" placeholder="Search user..." ng-model="userSearch">
+                        </div>
+                        <div class="rm-role-item" 
+                             ng-repeat="u in users | filter:userSearch" 
+                             ng-class="{'rm-role-item--active': selectedUser.userId === u.userId}"
+                             ng-click="selectUser(u)">
+                            <div class="rm-role-icon">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="rm-role-info">
+                                <div class="rm-role-name">{{u.fullName}}</div>
+                                <small class="text-muted">@{{u.username}} ({{u.role}})</small>
+                            </div>
+                            <i class="fas fa-chevron-right rm-chevron" ng-if="selectedUser.userId === u.userId"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Panel: Modules -->
+            <div class="rm-main">
+                <div class="rm-card rm-card--full" ng-if="selectedRole || selectedUser">
+                    <div class="rm-card-header rm-card-header--flex">
+                        <div>
+                            <i class="fas fa-th-large"></i> 
+                            Permissions for: <strong>{{rbacMode === 'role' ? selectedRole : selectedUser.fullName}}</strong>
+                        </div>
+                        <div class="rm-header-btns">
+                            <button class="rm-btn rm-btn--sm rm-btn--light" ng-click="selectAll()">Select All</button>
+                            <button class="rm-btn rm-btn--sm rm-btn--light" ng-click="deselectAll()">Deselect All</button>
+                        </div>
+                    </div>
+                    <div class="rm-card-body">
+                        <div class="rm-info-box" ng-if="rbacMode === 'role'">
+                            <i class="fas fa-info-circle"></i>
+                            Changes made here will define what users with the <strong>{{selectedRole}}</strong> role can see in their sidebar menu.
+                        </div>
+                        <div class="rm-info-box rm-info-box--warning" ng-if="rbacMode === 'user'">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Override Mode:</strong> Setting custom permissions for <strong>{{selectedUser.fullName}}</strong> will override their default <strong>{{selectedUser.role}}</strong> role settings.
+                        </div>
+
+                        <div class="rm-module-grid">
+                            <div class="rm-module-card" 
+                                 ng-repeat="mod in modules" 
+                                 ng-class="{'rm-module-card--active': selectedModules[mod.module_code]}"
+                                 ng-click="toggleModule(mod.module_code)">
+                                <div class="rm-mod-check">
+                                    <i class="fas" ng-class="selectedModules[mod.module_code] ? 'fa-check-circle' : 'fa-circle'"></i>
+                                </div>
+                                <div class="rm-mod-icon">
+                                    <i class="fas {{mod.icon || 'fa-cube'}}"></i>
+                                </div>
+                                <div class="rm-mod-info">
+                                    <div class="rm-mod-name">{{mod.module_name}}</div>
+                                    <div class="rm-mod-code">{{mod.module_code}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rm-card-footer">
+                        <button class="rm-btn rm-btn--primary rm-btn--lg" ng-click="savePermissions()" ng-disabled="saving">
+                            <span ng-if="!saving"><i class="fas fa-save"></i> Save Changes</span>
+                            <span ng-if="saving"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="rm-empty" ng-if="!selectedRole">
+                    <div class="rm-empty-icon"><i class="fas fa-user-shield"></i></div>
+                    <h3>Select a Role</h3>
+                    <p>Choose a system role from the left sidebar to manage its module access permissions for your clinic.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Premium Role Master Styles */
+    .role-master-root {
+        font-family: 'Inter', sans-serif;
+        background: #f4f7fa;
+        min-height: calc(100vh - 60px);
+        padding-bottom: 40px;
+    }
+
+    /* Header */
+    .rm-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: #fff;
+        padding: 20px 0 40px; /* Compact */
+    }
+
+    .rm-header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .rm-title-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .rm-icon {
+        width: 44px; /* Compact */
+        height: 44px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #38bdf8;
+    }
+
+    .rm-title {
+        font-size: 1.4rem; /* Compact */
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .rm-subtitle {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin: 2px 0 0;
+    }
+
+    /* Mode Selector */
+    .rm-mode-selector {
+        display: flex;
+        gap: 12px;
+        background: #fff;
+        padding: 8px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        width: fit-content;
+    }
+
+    .rm-mode-btn {
+        padding: 10px 20px;
+        border: none;
+        background: transparent;
+        border-radius: 12px;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .rm-mode-btn:hover {
+        color: #1e293b;
+        background: #f8fafc;
+    }
+
+    .rm-mode-btn--active {
+        background: #1e293b;
+        color: #fff !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Container & Layout */
+    .rm-container {
+        max-width: 1400px; /* Wider */
+        margin: -30px auto 0;
+        padding: 0 20px;
+    }
+
+    .rm-layout {
+        display: grid;
+        grid-template-columns: 240px 1fr; /* Narrower sidebar */
+        gap: 16px;
+        align-items: start;
+    }
+
+    /* Sticky Sidebar */
+    .rm-sidebar {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+    }
+
+    /* Cards */
+    .rm-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .rm-card-header {
+        padding: 12px 18px; /* Compact */
+        background: #fff;
+        border-bottom: 1px solid #f1f5f9;
+        font-weight: 700;
+        font-size: 0.9rem; /* Compact */
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .rm-card-header i {
+        color: #3b82f6;
+    }
+
+    .rm-card-header--flex {
+        justify-content: space-between;
+    }
+
+    .rm-card-body {
+        padding: 16px; /* Compact */
+        max-height: calc(100vh - 220px); /* Internal scroll to avoid page scroll */
+        overflow-y: auto;
+    }
+
+    .rm-card-footer {
+        padding: 20px 24px;
+        background: #f8fafc;
+        border-top: 1px solid #f1f5f9;
+        text-align: right;
+    }
+
+    /* Role List */
+    .rm-role-list {
+        padding: 10px;
+    }
+
+    .rm-role-item {
+        display: flex;
+        align-items: center;
+        padding: 14px 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 4px;
+        color: #64748b;
+        position: relative;
+    }
+
+    .rm-role-item:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+
+    .rm-role-item--active {
+        background: #eff6ff;
+        color: #2563eb;
+        font-weight: 600;
+    }
+
+    .rm-role-icon {
+        width: 32px;
+        font-size: 1.1rem;
+    }
+
+    .rm-role-info {
+        flex: 1;
+    }
+
+    .rm-chevron {
+        font-size: 0.8rem;
+        opacity: 0.5;
+    }
+
+    /* Module Grid */
+    .rm-module-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* More compact */
+        gap: 12px;
+    }
+
+    .rm-module-card {
+        background: #fff;
+        border: 2px solid #f1f5f9;
+        border-radius: 12px;
+        padding: 14px; /* Compact */
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        position: relative;
+    }
+
+    .rm-module-card:hover {
+        border-color: #e2e8f0;
+        background: #f8fafc;
+        transform: translateY(-2px);
+    }
+
+    .rm-module-card--active {
+        background: #f0f9ff;
+        border-color: #0ea5e9;
+    }
+
+    .rm-mod-check {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 1.2rem;
+        color: #e2e8f0;
+    }
+
+    .rm-module-card--active .rm-mod-check {
+        color: #0ea5e9;
+    }
+
+    .rm-mod-icon {
+        font-size: 1.6rem; /* Smaller */
+        color: #94a3b8;
+        margin-bottom: 10px;
+        transition: all 0.2s;
+    }
+
+    .rm-module-card--active .rm-mod-icon {
+        color: #0ea5e9;
+        transform: scale(1.1);
+    }
+
+    .rm-mod-name {
+        font-weight: 700;
+        font-size: 0.85rem; /* Smaller */
+        color: #1e293b;
+    }
+
+    .rm-mod-code {
+        font-size: 0.65rem; /* Smaller */
+        color: #94a3b8;
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
+    /* Buttons */
+    .rm-btn {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .rm-btn--primary {
+        background: #2563eb;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .rm-btn--primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+    }
+
+    .rm-btn--outline {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    .rm-btn--outline:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .rm-btn--sm {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .rm-btn--light {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .rm-btn--light:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+    }
+
+    .rm-btn--lg {
+        padding: 14px 32px;
+        font-size: 1rem;
+    }
+
+    /* Info Box */
+    .rm-info-box {
+        background: #f0f9ff;
+        border-left: 4px solid #0ea5e9;
+        padding: 16px;
+        border-radius: 0 8px 8px 0;
+        font-size: 0.9rem;
+        color: #0369a1;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .rm-info-box i {
+        font-size: 1.2rem;
+    }
+
+    /* Empty State */
+    .rm-empty {
+        background: #fff;
+        border-radius: 20px;
+        padding: 80px 40px;
+        text-align: center;
+        color: #94a3b8;
+    }
+
+    .rm-empty-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+
+    .rm-empty h3 {
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+
+    /* Alerts */
+    .rm-alert {
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: rmSlideIn 0.3s ease;
+    }
+
+    @keyframes rmSlideIn {
+        from { transform: translateY(-10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .rm-alert--success {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .rm-alert--error {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .rm-layout {
+            grid-template-columns: 1fr;
+        }
+        .rm-sidebar {
+            order: 2;
+        }
+        .rm-main {
+            order: 1;
+        }
+    }
+</style>

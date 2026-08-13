@@ -10,9 +10,9 @@
  * ============================================
  */
 
-app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$location', '$routeParams', '$window',
-    'OPDService', 'AppointmentService', 'CVRService',
-    function ($scope, $rootScope, $location, $routeParams, $window, OPDService, AppointmentService, CVRService) {
+app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$location', '$routeParams', '$window', '$q', '$timeout',
+    'OPDService', 'AppointmentService', 'CVRService', 'PatientService',
+    function ($scope, $rootScope, $location, $routeParams, $window, $q, $timeout, OPDService, AppointmentService, CVRService, PatientService) {
 
         var consultationId = $routeParams.consultationId;
         var currentUser = $rootScope.currentUser;
@@ -126,6 +126,18 @@ app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$locati
                             $scope.prescription.consultationNumber = $scope.consultation.consultationNumber;
                             $scope.prescription.pinNumber = $scope.consultation.pinNumber;
 
+                            // FETCH PATIENT DATA FOR UI AND PRINT
+                            if ($scope.consultation.pinNumber) {
+                                PatientService.getByPin($scope.consultation.pinNumber).then(function(pRes) {
+                                    if (pRes.data && pRes.data.success && pRes.data.data) {
+                                        var p = pRes.data.data;
+                                        $scope.consultation.patientName = p.firstName + (p.lastName ? ' ' + p.lastName : '');
+                                        $scope.consultation.patientAge = p.age || '';
+                                        $scope.consultation.patientGender = p.gender || '';
+                                    }
+                                });
+                            }
+
                             console.log('✅ Consultation loaded:', $scope.consultation);
 
                             // 🔥 NOW load prescription AFTER consultation
@@ -196,31 +208,125 @@ app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$locati
         $scope.selectMedicine = function (medicine) {
             $scope.currentItem.medicineName = medicine.name;
             $scope.currentItem.dosage = medicine.dosage;
+            // Quick defaults to save clicks
+            $scope.currentItem.morning = true;
+            $scope.currentItem.afternoon = false;
+            $scope.currentItem.evening = false;
+            $scope.currentItem.night = true;
+            $scope.currentItem.frequency = 'Twice daily';
+            $scope.currentItem.duration = '5 days';
+            $scope.currentItem.afterFood = true;
+            $scope.currentItem.beforeFood = false;
+            $scope.calculateQuantity();
+        };
+
+        /**
+         * ✅ ON MEDICINE SELECT FROM LOV
+         */
+        $scope.onMedicineSelect = function(medicine) {
+            console.log("Selected Medicine from LOV:", medicine);
+            $scope.currentItem.medicineName = medicine.medicineName;
+            
+            // Format dosage from strength and unit
+            if (medicine.strength && medicine.unit) {
+                $scope.currentItem.dosage = medicine.strength + ' ' + medicine.unit;
+            } else if (medicine.strength) {
+                $scope.currentItem.dosage = medicine.strength;
+            } else {
+                $scope.currentItem.dosage = '';
+            }
+
+            // Set default timing based on type if needed, or just defaults
+            $scope.currentItem.morning = true;
+            $scope.currentItem.afternoon = false;
+            $scope.currentItem.evening = false;
+            $scope.currentItem.night = true;
+            $scope.currentItem.frequency = 'Twice daily';
+            $scope.currentItem.duration = '5 days';
+            $scope.currentItem.afterFood = true;
+            $scope.currentItem.beforeFood = false;
+            
+            // If medicine has composition, add it to instructions or log it
+            if (medicine.composition) {
+                $scope.currentItem.instructions = medicine.composition;
+            }
+            
+            $scope.calculateQuantity();
         };
 
         /**
          * ✅ UPDATE FREQUENCY BASED ON TIMING
          */
+        $scope.calculateQuantity = function () {
+            var days = 0;
+            if ($scope.currentItem.duration) {
+                if ($scope.currentItem.duration.includes('day')) {
+                    days = parseInt($scope.currentItem.duration);
+                } else if ($scope.currentItem.duration.includes('month')) {
+                    days = 30 * parseInt($scope.currentItem.duration);
+                } else if ($scope.currentItem.duration.includes('week')) {
+                    days = 7 * parseInt($scope.currentItem.duration);
+                }
+            }
+
+            var daily = 0;
+            if ($scope.currentItem.morning) daily++;
+            if ($scope.currentItem.afternoon) daily++;
+            if ($scope.currentItem.evening) daily++;
+            if ($scope.currentItem.night) daily++;
+
+            if (days > 0 && daily > 0) {
+                $scope.currentItem.quantity = days * daily;
+            } else if ($scope.currentItem.duration && $scope.currentItem.frequency) {
+               // Fallback if timings aren't checked
+               var f = $scope.currentItem.frequency;
+               if (f === 'Once daily') daily = 1;
+               else if (f === 'Twice daily' || f === 'Every 12 hours') daily = 2;
+               else if (f === 'Three times daily' || f === 'Every 8 hours') daily = 3;
+               else if (f === 'Four times daily') daily = 4;
+               
+               if (days > 0 && daily > 0) $scope.currentItem.quantity = days * daily;
+            }
+        };
+
         $scope.updateFrequency = function () {
             var count = 0;
-            if ($scope.currentItem.morning)
-                count++;
-            if ($scope.currentItem.afternoon)
-                count++;
-            if ($scope.currentItem.evening)
-                count++;
-            if ($scope.currentItem.night)
-                count++;
+            if ($scope.currentItem.morning) count++;
+            if ($scope.currentItem.afternoon) count++;
+            if ($scope.currentItem.evening) count++;
+            if ($scope.currentItem.night) count++;
 
-            if (count === 1) {
-                $scope.currentItem.frequency = 'Once daily';
-            } else if (count === 2) {
-                $scope.currentItem.frequency = 'Twice daily';
-            } else if (count === 3) {
-                $scope.currentItem.frequency = 'Three times daily';
-            } else if (count === 4) {
-                $scope.currentItem.frequency = 'Four times daily';
+            if (count === 1) $scope.currentItem.frequency = 'Once daily';
+            else if (count === 2) $scope.currentItem.frequency = 'Twice daily';
+            else if (count === 3) $scope.currentItem.frequency = 'Three times daily';
+            else if (count === 4) $scope.currentItem.frequency = 'Four times daily';
+            
+            $scope.calculateQuantity();
+        };
+
+        $scope.updateTimingsFromFrequency = function () {
+            var f = $scope.currentItem.frequency;
+            $scope.currentItem.morning = false;
+            $scope.currentItem.afternoon = false;
+            $scope.currentItem.evening = false;
+            $scope.currentItem.night = false;
+            
+            if (f === 'Once daily') {
+                $scope.currentItem.morning = true;
+            } else if (f === 'Twice daily' || f === 'Every 12 hours') {
+                $scope.currentItem.morning = true;
+                $scope.currentItem.night = true;
+            } else if (f === 'Three times daily' || f === 'Every 8 hours') {
+                $scope.currentItem.morning = true;
+                $scope.currentItem.afternoon = true;
+                $scope.currentItem.night = true;
+            } else if (f === 'Four times daily') {
+                $scope.currentItem.morning = true;
+                $scope.currentItem.afternoon = true;
+                $scope.currentItem.evening = true;
+                $scope.currentItem.night = true;
             }
+            $scope.calculateQuantity();
         };
 
         /**
@@ -248,6 +354,24 @@ app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$locati
                 return;
             }
 
+            // ✅ DUPLICATE CHECK
+            var medicineExists = $scope.prescription.items.some(function(item) {
+                return item.medicineName.trim().toLowerCase() === $scope.currentItem.medicineName.trim().toLowerCase();
+            });
+
+            if (medicineExists) {
+                $scope.addMedicineError = 'This medicine is already added!';
+                $rootScope.showAlert('warning', 'This medicine is already added to the prescription.');
+                
+                // Clear error after 3 seconds
+                setTimeout(function() {
+                    $scope.addMedicineError = '';
+                    $scope.$apply();
+                }, 3000);
+                return;
+            }
+
+            $scope.addMedicineError = '';
             // Add to items
             $scope.prescription.items.push(angular.copy($scope.currentItem));
 
@@ -318,6 +442,11 @@ app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$locati
 
         $scope.executeSavePrescription = function() {
             $scope.loading = true;
+            
+            // ✅ Add creator/modifier info for auditing
+            var currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            $scope.prescription.createdBy = currentUser.username || 'System';
+            
             var request;
 
             if ($scope.isEditMode) {
@@ -338,16 +467,16 @@ app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$locati
 
                             $rootScope.showAlert('success', '✅ Prescription saved successfully!');
 
-                            // ✅ COMPLETE THE CONSULTATION
-                            $scope.completeConsultation();
-
-                            // ✅ REDIRECT TO INVOICE LIST AFTER SAVE / EDIT
-                            setTimeout(function () {
-                                console.log("👉 NOW GOING TO /billing/invoice/list");
-                                $scope.$apply(function () {
-                                    $location.path('/billing/invoice/list').replace();
-                                });
-                            }, 600);
+                            // ✅ COMPLETE THE CONSULTATION FLOW
+                            $scope.completeConsultation().then(function() {
+                                console.log("✅ All completion steps finished. Redirecting in 1s...");
+                                
+                                // ✅ REDIRECT TO OPD QUEUE AFTER SAVE / EDIT
+                                $timeout(function () {
+                                    console.log("👉 NOW GOING TO /opd/queue");
+                                    $location.path('/opd/queue').replace();
+                                }, 1000);
+                            });
 
                         } else {
                             $rootScope.showAlert('danger', response.data.message || 'Failed to save prescription');
@@ -371,40 +500,61 @@ app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$locati
          * ✅ COMPLETE CONSULTATION (Update status)
          */
         $scope.completeConsultation = function () {
+            var deferred = $q.defer();
+            
             if (!$scope.consultation || !$scope.consultation.consultationId) {
-                return;
+                console.warn('⚠️ No consultation data found for completion');
+                deferred.resolve();
+                return deferred.promise;
             }
+
+            console.log('🚀 Finalizing consultation:', $scope.consultation.consultationId);
+            console.log('📦 Linked Appointment ID:', $scope.consultation.appointmentId);
+            console.log('📦 Linked CVR Number:', $scope.consultation.cvrNumber);
 
             OPDService.completeConsultation($scope.consultation.consultationId).then(
                     function (response) {
-                        console.log('✅ Consultation marked as completed');
+                        console.log('✅ Consultation marked as COMPLETED in backend');
 
-                        // ✅ UPDATE CVR STATUS TO COMPLETED
+                        var promises = [];
+
+                        // ✅ 1. UPDATE CVR STATUS TO COMPLETED
                         if ($scope.consultation.cvrNumber) {
-                            $scope.completeCVR($scope.consultation.cvrNumber);
+                            console.log('🔄 Triggering CVR completion for:', $scope.consultation.cvrNumber);
+                            promises.push($scope.completeCVR($scope.consultation.cvrNumber));
                         }
 
-                        // ✅ UPDATE APPOINTMENT STATUS TO COMPLETED
+                        // ✅ 2. UPDATE APPOINTMENT STATUS TO COMPLETED
                         if ($scope.consultation.appointmentId) {
-                            $scope.completeAppointment($scope.consultation.appointmentId);
+                            console.log('🔄 Triggering Appointment completion for:', $scope.consultation.appointmentId);
+                            promises.push($scope.completeAppointment($scope.consultation.appointmentId));
                         }
+
+                        // ✅ Wait for all updates
+                        $q.all(promises).finally(function() {
+                            console.log('🏁 All completion triggers sent');
+                            deferred.resolve();
+                        });
                     },
                     function (error) {
-                        console.error('Error completing consultation:', error);
+                        console.error('❌ Failed to complete consultation:', error);
+                        deferred.resolve(); // Still resolve to allow redirect
                     }
             );
+            
+            return deferred.promise;
         };
 
         /**
          * ✅ COMPLETE CVR
          */
         $scope.completeCVR = function (cvrNumber) {
-            CVRService.completeConsultation(cvrNumber).then(
+            return CVRService.completeConsultation(cvrNumber).then(
                     function (response) {
-                        console.log('✅ CVR marked as completed');
+                        console.log('✅ CVR marked as COMPLETED');
                     },
                     function (error) {
-                        console.error('Error completing CVR:', error);
+                        console.error('❌ Failed to complete CVR:', error);
                     }
             );
         };
@@ -413,12 +563,12 @@ app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$locati
          * ✅ COMPLETE APPOINTMENT
          */
         $scope.completeAppointment = function (appointmentId) {
-            AppointmentService.completeConsultation(appointmentId).then(
+            return AppointmentService.completeConsultation(appointmentId).then(
                     function (response) {
-                        console.log('✅ Appointment marked as completed');
+                        console.log('✅ Appointment marked as COMPLETED');
                     },
                     function (error) {
-                        console.error('Error completing appointment:', error);
+                        console.error('❌ Failed to complete Appointment:', error);
                     }
             );
         };
@@ -432,8 +582,31 @@ app.controller('PrescriptionCreateController', ['$scope', '$rootScope', '$locati
                 return;
             }
 
-            // Open print preview
-            $window.print();
+            // Prepare data for printing
+            var printData = {
+                clinicName: localStorage.getItem('clinicName') || 'Hospital Management System',
+                clinicLogo: localStorage.getItem('clinicLogo') || '',
+                clinicAddress: localStorage.getItem('clinicAddress') || 'N/A',
+                clinicPhone: localStorage.getItem('clinicPhone') || 'N/A',
+                loginName: currentUser ? currentUser.fullName : 'Admin',
+                role: currentUser ? currentUser.role : '',
+                patientName: $scope.consultation ? $scope.consultation.patientName : '',
+                patientAge: $scope.consultation ? $scope.consultation.patientAge : '',
+                patientGender: $scope.consultation ? $scope.consultation.patientGender : '',
+                pinNumber: $scope.consultation ? $scope.consultation.pinNumber : '',
+                cvrNumber: $scope.consultation ? $scope.consultation.cvrNumber : '',
+                prescriptionNo: $scope.prescription ? $scope.prescription.consultationNumber : '',
+                dateTime: new Date().toLocaleString(),
+                items: $scope.prescription.items || [],
+                instructions: $scope.prescription.instructions || '',
+                validityDays: $scope.prescription.validityDays || 0
+            };
+
+            // Save to localStorage
+            localStorage.setItem('printPrescriptionData', JSON.stringify(printData));
+
+            // Open print preview in new tab
+            $window.open('print-prescription.html', '_blank');
         };
 
         /**

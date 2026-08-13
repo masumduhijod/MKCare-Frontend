@@ -30,10 +30,13 @@ app.controller('ReportAppointmentScheduleController', ['$scope', '$rootScope', '
             }
             $scope.loading = true;
             $scope.errorMsg = '';
+            
+            // âœ… EASY FIX: Format dates to yyyy-MM-dd
             var params = {
-                fromDate: $scope.filter.fromDate,
-                toDate: $scope.filter.toDate
+                fromDate: new Date($scope.filter.fromDate).toISOString().split('T')[0],
+                toDate: new Date($scope.filter.toDate).toISOString().split('T')[0]
             };
+            
             if ($scope.filter.doctorId) params.doctorId = $scope.filter.doctorId;
             if ($scope.filter.status) params.status = $scope.filter.status;
 
@@ -75,7 +78,12 @@ app.controller('ReportAppointmentStatusController', ['$scope', '$rootScope', 'Re
         $scope.generateReport = function () {
             $scope.loading = true;
             $scope.errorMsg = '';
-            ReportService.getAppointmentStatusSummary($scope.filter.fromDate, $scope.filter.toDate)
+            
+            // âœ… FIX: Format dates to yyyy-MM-dd
+            var fromDate = new Date($scope.filter.fromDate).toISOString().split('T')[0];
+            var toDate = new Date($scope.filter.toDate).toISOString().split('T')[0];
+            
+            ReportService.getAppointmentStatusSummary(fromDate, toDate)
                 .then(function (data) {
                     $scope.reportData = data;
                     $scope.summary = data.data || {};
@@ -113,7 +121,11 @@ app.controller('ReportDoctorAvailabilityController', ['$scope', '$rootScope', 'R
         $scope.generateReport = function () {
             $scope.loading = true;
             $scope.errorMsg = '';
-            ReportService.getDoctorAvailability($scope.filter.date)
+            
+            // âœ… FIX: Format date to yyyy-MM-dd
+            var formattedDate = new Date($scope.filter.date).toISOString().split('T')[0];
+            
+            ReportService.getDoctorAvailability(formattedDate)
                 .then(function (data) {
                     $scope.reportData = data;
                     $scope.summary = data.data || {};
@@ -138,8 +150,8 @@ app.controller('ReportDoctorAvailabilityController', ['$scope', '$rootScope', 'R
 // ══════════════════════════════════════════════════════
 
 // ── Report 12: Invoice Summary ──────────────────────
-app.controller('ReportInvoiceSummaryController', ['$scope', '$rootScope', 'ReportService',
-    function ($scope, $rootScope, ReportService) {
+app.controller('ReportInvoiceSummaryController', ['$scope', '$rootScope', 'ReportService', 'PatientService',
+    function ($scope, $rootScope, ReportService, PatientService) {
 
         $scope.reportTitle = 'Invoice Summary Report';
         $scope.filter = {
@@ -166,12 +178,27 @@ app.controller('ReportInvoiceSummaryController', ['$scope', '$rootScope', 'Repor
             } else if ($scope.filter.searchMode === 'invoice' && $scope.filter.invoiceNumber) {
                 params.invoiceNumber = $scope.filter.invoiceNumber;
             } else {
-                if ($scope.filter.fromDate) params.fromDate = $scope.filter.fromDate;
-                if ($scope.filter.toDate) params.toDate = $scope.filter.toDate;
+                // âœ… ADD THIS: Format dates to yyyy-MM-dd
+                if ($scope.filter.fromDate) {
+                    var fromDate = new Date($scope.filter.fromDate);
+                    params.fromDate = fromDate.getFullYear() + '-' + 
+                                     String(fromDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                                     String(fromDate.getDate()).padStart(2, '0');
             }
+                if ($scope.filter.toDate) {
+                    var toDate = new Date($scope.filter.toDate);
+                    params.toDate = toDate.getFullYear() + '-' + 
+                                   String(toDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                                   String(toDate.getDate()).padStart(2, '0');
+                }
+            }
+
+            console.log('Invoice params:', params); // Debug log
 
             ReportService.getInvoiceSummary(params)
                 .then(function (data) {
+                    console.log('Invoice response:', data); // Debug log
+                    
                     $scope.reportData = data;
                     var d = data.data || {};
                     if (d.invoiceNumber) {
@@ -187,6 +214,21 @@ app.controller('ReportInvoiceSummaryController', ['$scope', '$rootScope', 'Repor
                         outstandingAmount: d.outstandingAmount || $scope.invoices.reduce(function (a, i) { return a + (i.outstandingAmount || 0); }, 0)
                     };
                     $scope.loading = false;
+                    
+                    // Fetch patient names if missing
+                    $scope.invoices.forEach(function(inv) {
+                        if (inv.pinNumber && !inv.patientName) {
+                            PatientService.getByPin(inv.pinNumber).then(function(res) {
+                                if (res && res.data) {
+                                    inv.patientName = res.data.firstName + ' ' + res.data.lastName;
+                                }
+                            });
+                        }
+                    });
+                    
+                    if ($scope.invoices.length === 0) {
+                        $scope.errorMsg = 'No invoices found for the selected criteria.';
+                    }
                 }).catch(function (err) {
                     $scope.loading = false;
                     $scope.errorMsg = (err && err.message) ? err.message : 'Failed to load invoice summary.';
@@ -218,36 +260,66 @@ app.controller('ReportPaymentCollectionController', ['$scope', '$rootScope', 'Re
         $scope.errorMsg = '';
 
         $scope.generateReport = function () {
+            if (!$scope.filter.fromDate || !$scope.filter.toDate) {
+                $scope.errorMsg = 'Please select both From Date and To Date.';
+                return;
+            }
+            
             $scope.loading = true;
             $scope.errorMsg = '';
+            
+            // âœ… FIX: Format dates to yyyy-MM-dd
+            var fromDate = new Date($scope.filter.fromDate);
+            var toDate = new Date($scope.filter.toDate);
+            
             var params = {
-                fromDate: $scope.filter.fromDate,
-                toDate: $scope.filter.toDate
+                fromDate: fromDate.getFullYear() + '-' + 
+                          String(fromDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                          String(fromDate.getDate()).padStart(2, '0'),
+                toDate: toDate.getFullYear() + '-' + 
+                        String(toDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(toDate.getDate()).padStart(2, '0')
             };
-            if ($scope.filter.doctorId) params.doctorId = $scope.filter.doctorId;
+
+            if ($scope.filter.doctorId) {
+                params.doctorId = $scope.filter.doctorId;
+            }
+
+            console.log('Payment Collection Params:', params);
 
             ReportService.getPaymentCollection(params)
                 .then(function (data) {
+                    console.log('Payment Collection Response:', data);
+                    
                     $scope.reportData = data;
                     $scope.summary = data.data || {};
                     $scope.payments = $scope.summary.payments || [];
                     $scope.modeArr = toArr($scope.summary.paymentModeWise);
+                    
+                    if ($scope.payments.length === 0) {
+                        $scope.errorMsg = 'No payments found for the selected date range.';
+                    }
+                    
                     $scope.loading = false;
                 }).catch(function (err) {
                     $scope.loading = false;
                     $scope.errorMsg = (err && err.message) ? err.message : 'Failed to load payment collection.';
-                    console.error('[Payment Collection Report]', err);
+                    console.error('[Payment Collection Report] Error:', err);
                 });
         };
 
         function toArr(obj) {
             if (!obj) return [];
-            return Object.keys(obj).map(function (k) { return { mode: k, amount: obj[k] }; });
+            return Object.keys(obj).map(function (k) { 
+                return { mode: k, amount: obj[k] }; 
+            });
         }
 
         $scope.printReport = function () {
             if ($rootScope.doPrint) { $rootScope.doPrint(); } else { window.print(); }
         };
+        
+        // Auto-generate on load
         $scope.generateReport();
     }]);
 
@@ -291,39 +363,83 @@ app.controller('ReportRevenueAnalysisController', ['$scope', '$rootScope', 'Repo
     function ($scope, $rootScope, ReportService) {
 
         $scope.reportTitle = 'Revenue Analysis Report';
+        
+        // Helper function to convert string to Date object
+        function toDateObject(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr instanceof Date) return dateStr;
+            var parts = dateStr.split('-');
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+        
         $scope.filter = {
-            fromDate: ReportService.firstOfMonth(),
-            toDate: ReportService.today()
+            fromDate: toDateObject(ReportService.firstOfMonth()),
+            toDate: toDateObject(ReportService.today())
         };
+        
         $scope.loading = false;
         $scope.reportData = null;
         $scope.typeArr = [];
         $scope.errorMsg = '';
 
+        // Helper function to format date
+        function formatDate(dateValue) {
+            if (!dateValue) return null;
+            var date = new Date(dateValue);
+            return date.getFullYear() + '-' + 
+                   String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                   String(date.getDate()).padStart(2, '0');
+        }
+
         $scope.generateReport = function () {
+            if (!$scope.filter.fromDate || !$scope.filter.toDate) {
+                $scope.errorMsg = 'Please select both From Date and To Date.';
+                return;
+            }
+            
             $scope.loading = true;
             $scope.errorMsg = '';
-            ReportService.getRevenueAnalysis($scope.filter.fromDate, $scope.filter.toDate)
+            
+            // Format dates before sending
+            var formattedFromDate = formatDate($scope.filter.fromDate);
+            var formattedToDate = formatDate($scope.filter.toDate);
+            
+            console.log('Revenue Analysis - Sending:', {
+                fromDate: formattedFromDate,
+                toDate: formattedToDate
+            });
+            
+            ReportService.getRevenueAnalysis(formattedFromDate, formattedToDate)
                 .then(function (data) {
+                    console.log('Revenue Analysis Response:', data);
+                    
                     $scope.reportData = data;
                     $scope.data = data.data || {};
                     $scope.typeArr = toArr($scope.data.invoiceTypeWiseRevenue);
                     $scope.loading = false;
+                    
+                    if ($scope.data.totalInvoices === 0 || !$scope.data.totalInvoices) {
+                        $scope.errorMsg = 'No revenue data found for selected dates.';
+                    }
                 }).catch(function (err) {
                     $scope.loading = false;
                     $scope.errorMsg = (err && err.message) ? err.message : 'Failed to load revenue analysis.';
-                    console.error('[Revenue Analysis Report]', err);
+                    console.error('[Revenue Analysis Report] Error:', err);
                 });
         };
 
         function toArr(obj) {
             if (!obj) return [];
-            return Object.keys(obj).map(function (k) { return { type: k, amount: obj[k] }; });
+            return Object.keys(obj).map(function (k) { 
+                return { type: k, amount: obj[k] }; 
+            });
         }
 
         $scope.printReport = function () {
             if ($rootScope.doPrint) { $rootScope.doPrint(); } else { window.print(); }
         };
+        
+        // Auto-generate on load
         $scope.generateReport();
     }]);
 
@@ -396,25 +512,84 @@ app.controller('ReportDoctorScheduleController', ['$scope', '$rootScope', 'Repor
             $scope.loading = true;
             $scope.errorMsg = '';
             var params = {};
-            if ($scope.filter.doctorId) params.doctorId = $scope.filter.doctorId;
-            if ($scope.filter.fromDate) params.fromDate = $scope.filter.fromDate;
-            if ($scope.filter.toDate) params.toDate = $scope.filter.toDate;
+
+            if ($scope.filter.doctorId) {
+                params.doctorId = $scope.filter.doctorId;
+            }
+            
+            // Format dates
+            if ($scope.filter.fromDate) {
+                var fromDate = new Date($scope.filter.fromDate);
+                params.fromDate = fromDate.getFullYear() + '-' + 
+                                 String(fromDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                                 String(fromDate.getDate()).padStart(2, '0');
+            }
+            
+            if ($scope.filter.toDate) {
+                var toDate = new Date($scope.filter.toDate);
+                params.toDate = toDate.getFullYear() + '-' + 
+                               String(toDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                               String(toDate.getDate()).padStart(2, '0');
+            }
+
+            console.log('Doctor Schedule Params:', params);
 
             ReportService.getDoctorSchedule(params)
                 .then(function (data) {
+                    console.log('Doctor Schedule Response:', data);
+                    
                     $scope.reportData = data;
-                    $scope.summary = data.data || {};
-                    $scope.doctors = $scope.summary.doctorSchedules || [];
+                    
+                    if (data.data) {
+                        var schedulesData = data.data;
+                        
+                        // âœ… FIX: Map schedules to upcomingSchedules for the template
+                        if (schedulesData.schedules && Array.isArray(schedulesData.schedules)) {
+                            // Create doctor object with upcomingSchedules
+                            var doctorObj = {
+                                doctorId: schedulesData.doctorId,
+                                doctorName: schedulesData.doctorName,
+                                specialization: schedulesData.specialization,
+                                department: schedulesData.department,
+                                upcomingSchedules: schedulesData.schedules  // Map to upcomingSchedules
+                            };
+                            $scope.doctors = [doctorObj];
+                        } 
+                        // Handle multiple doctors case
+                        else if (schedulesData.doctorSchedules && Array.isArray(schedulesData.doctorSchedules)) {
+                            $scope.doctors = schedulesData.doctorSchedules.map(function(doc) {
+                                return {
+                                    doctorId: doc.doctorId,
+                                    doctorName: doc.doctorName,
+                                    specialization: doc.specialization,
+                                    department: doc.department,
+                                    upcomingSchedules: doc.schedules || doc.upcomingSchedules || []
+                                };
+                            });
+                        }
+                        else {
+                            $scope.doctors = [];
+                        }
+                    }
+                    
+                    console.log('Final doctors with upcomingSchedules:', $scope.doctors);
+                    console.log('Number of doctors:', $scope.doctors.length);
+                    
+                    if ($scope.doctors.length === 0) {
+                        $scope.errorMsg = 'No schedules found for the selected criteria.';
+                    }
+                    
                     $scope.loading = false;
                 }).catch(function (err) {
                     $scope.loading = false;
                     $scope.errorMsg = (err && err.message) ? err.message : 'Failed to load doctor schedule.';
-                    console.error('[Doctor Schedule Report]', err);
+                    console.error('[Doctor Schedule Report] Error:', err);
                 });
         };
 
         $scope.printReport = function () {
             if ($rootScope.doPrint) { $rootScope.doPrint(); } else { window.print(); }
         };
+        
         $scope.generateReport();
     }]);
