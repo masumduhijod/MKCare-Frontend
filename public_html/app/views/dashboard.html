@@ -15,8 +15,8 @@
         <div class="ds-banner-content">
             <div class="ds-banner-left">
                 <div class="ds-banner-avatar">
-                    <img ng-if="clinicLogo" ng-src="{{clinicLogo}}" alt="Logo">
-                    <i ng-if="!clinicLogo" class="fas fa-hospital text-primary"></i>
+                    <img ng-if="clinicLogo && clinicLogo !== 'null'" ng-src="{{clinicLogo}}" alt="Logo">
+                    <i ng-if="!clinicLogo || clinicLogo === 'null'" class="fas fa-hospital text-primary"></i>
                 </div>
                 <div class="ds-banner-text">
                     <h1 class="ds-banner-greeting">
