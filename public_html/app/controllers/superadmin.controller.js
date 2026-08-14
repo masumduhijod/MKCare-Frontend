@@ -103,11 +103,37 @@ app.controller('SuperAdminDashboardController', ['$scope', '$location', 'SuperAd
             address: '',
             phone: '',
             email: '',
+            logoPath: '',
             adminUsername: '',
             adminPassword: '',
             adminEmail: '',
             adminFirstName: '',
             adminLastName: ''
+        };
+
+        // ── Logo Selection Helpers ──
+        $scope.triggerLogoSelect = function () {
+            var input = document.getElementById('clinicLogoFileInput');
+            if (input) input.click();
+        };
+
+        $scope.onLogoFileSelect = function (element) {
+            var file = element.files && element.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $scope.$apply(function () {
+                        $scope.newClinic.logoPath = e.target.result;
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        $scope.clearSelectedLogo = function () {
+            $scope.newClinic.logoPath = '';
+            var input = document.getElementById('clinicLogoFileInput');
+            if (input) input.value = '';
         };
 
         // Admin form

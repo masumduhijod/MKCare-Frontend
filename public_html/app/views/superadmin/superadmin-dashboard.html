@@ -225,6 +225,24 @@
                         <input type="email" ng-model="newClinic.email" placeholder="info@clinic.com"
                             class="sad-form-input">
                     </div>
+                    <div class="sad-form-group">
+                        <label><i class="fas fa-image" style="color:#6366f1;"></i> Select Clinic Logo</label>
+                        <div style="display:flex; align-items:center; gap:8px; background:#f9fafb; border:1px dashed #d1d5db; padding:6px 12px; border-radius:6px;">
+                            <input type="file" id="clinicLogoFileInput" accept="image/*" style="display:none;" onchange="angular.element(this).scope().onLogoFileSelect(this)">
+                            <div style="flex:1; cursor:pointer;" ng-click="triggerLogoSelect()">
+                                <img ng-if="newClinic.logoPath" ng-src="{{newClinic.logoPath}}" alt="Logo" style="max-height:36px; max-width:120px; object-fit:contain; border-radius:4px; vertical-align:middle;">
+                                <span ng-if="!newClinic.logoPath" style="color:#6b7280; font-size:13px;">
+                                    <i class="fas fa-folder-open" style="color:#6366f1; margin-right:4px;"></i> Choose Logo from folder...
+                                </span>
+                            </div>
+                            <button type="button" class="sad-act-btn" ng-click="triggerLogoSelect()" title="Select Logo File" style="padding:4px 10px; font-size:12px; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; border-radius:4px; cursor:pointer;">
+                                <i class="fas fa-upload"></i> Browse
+                            </button>
+                            <button type="button" ng-if="newClinic.logoPath" ng-click="clearSelectedLogo()" title="Remove Logo" style="padding:4px 8px; font-size:12px; background:#fee2e2; color:#ef4444; border:1px solid #fca5a5; border-radius:4px; cursor:pointer;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Subscription Section -->
